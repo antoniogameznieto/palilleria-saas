@@ -112,7 +112,8 @@ export function DrawingDetectedMetadataReview({
           Metadatos detectados pendientes de revisión
         </h4>
         <p className="mt-1 text-xs text-muted-foreground">
-          Revisa los metadatos propuestos desde el nombre del archivo.
+          Revisa los metadatos propuestos desde el nombre del archivo y/o el
+          texto embebido del PDF.
         </p>
         <div className="mt-4">{content}</div>
       </div>
@@ -124,8 +125,8 @@ export function DrawingDetectedMetadataReview({
       <CardHeader>
         <CardTitle>Metadatos detectados pendientes de revisión</CardTitle>
         <CardDescription>
-          Revisa los metadatos propuestos desde el nombre del archivo antes de
-          marcar el plano como revisado.
+          Revisa los metadatos propuestos desde el nombre del archivo y/o el
+          texto embebido del PDF antes de marcar el plano como revisado.
         </CardDescription>
       </CardHeader>
       <CardContent>{content}</CardContent>

@@ -78,40 +78,43 @@ export function DrawingDetectionControl({
 
   const content = (
     <div className="space-y-4">
-        <FeedbackMessage state={feedback} />
+      <FeedbackMessage state={feedback} />
 
-        {isProcessing ? (
-          <p className="text-sm text-muted-foreground">
-            El plano está en procesamiento. Usa el botón siguiente para simular
-            la finalización de la detección.
-          </p>
+      {isProcessing ? (
+        <p className="text-sm text-muted-foreground">
+          El plano está en procesamiento. Al completar, se analizarán el nombre
+          del archivo y el texto embebido del PDF para proponer metadatos.
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Propone número de plano, línea y revisión desde el nombre del archivo
+          y, si hay texto embebido, desde el contenido del PDF.
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {!isProcessing ? (
+          <form action={startAction}>
+            <input type="hidden" name="companyId" value={companyId} />
+            <input type="hidden" name="jobId" value={jobId} />
+            <input type="hidden" name="drawingId" value={drawingId} />
+            <Button type="submit" disabled={isStarting}>
+              {isStarting ? "Iniciando..." : "Detectar metadatos"}
+            </Button>
+          </form>
         ) : null}
 
-        <div className="flex flex-wrap gap-2">
-          {!isProcessing ? (
-            <form action={startAction}>
-              <input type="hidden" name="companyId" value={companyId} />
-              <input type="hidden" name="jobId" value={jobId} />
-              <input type="hidden" name="drawingId" value={drawingId} />
-              <Button type="submit" disabled={isStarting}>
-                {isStarting ? "Iniciando..." : "Detectar metadatos"}
-              </Button>
-            </form>
-          ) : null}
-
-          {isProcessing ? (
-            <form action={completeAction}>
-              <input type="hidden" name="companyId" value={companyId} />
-              <input type="hidden" name="jobId" value={jobId} />
-              <input type="hidden" name="drawingId" value={drawingId} />
-              <Button type="submit" variant="outline" disabled={isCompleting}>
-                {isCompleting
-                  ? "Completando..."
-                  : "Completar detección simulada"}
-              </Button>
-            </form>
-          ) : null}
-        </div>
+        {isProcessing ? (
+          <form action={completeAction}>
+            <input type="hidden" name="companyId" value={companyId} />
+            <input type="hidden" name="jobId" value={jobId} />
+            <input type="hidden" name="drawingId" value={drawingId} />
+            <Button type="submit" variant="outline" disabled={isCompleting}>
+              {isCompleting ? "Completando..." : "Completar detección"}
+            </Button>
+          </form>
+        ) : null}
+      </div>
     </div>
   );
 
@@ -124,8 +127,8 @@ export function DrawingDetectionControl({
       <CardHeader>
         <CardTitle>Detección automática</CardTitle>
         <CardDescription>
-          Inicia el flujo de detección de metadatos del plano. Por ahora se
-          analiza el nombre del archivo, sin leer el contenido del PDF.
+          Analiza el nombre del archivo y el texto embebido del PDF para
+          proponer metadatos. Solo rellena campos vacíos.
         </CardDescription>
       </CardHeader>
       <CardContent>{content}</CardContent>

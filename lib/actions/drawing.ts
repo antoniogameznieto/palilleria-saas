@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import {
-  buildSimulatedDetectionUpdate,
+  buildDrawingDetectionUpdate,
   logDrawingDetectionDebug,
   resolveDrawingFileNameForDetection,
 } from "@/lib/drawings/detection-apply";
@@ -525,6 +525,8 @@ export async function completeSimulatedDrawingDetectionAction(
       drawingNumber: true,
       lineNumber: true,
       revision: true,
+      storagePath: true,
+      mimeType: true,
     },
   });
 
@@ -538,12 +540,17 @@ export async function completeSimulatedDrawingDetectionAction(
     };
   }
 
-  const detectionResult = buildSimulatedDetectionUpdate(drawing);
+  const detectionResult = await buildDrawingDetectionUpdate(drawing);
 
   logDrawingDetectionDebug("complete:pre-update", {
     drawingId,
     resolvedFileName: detectionResult.fileName,
+    filenameDetected: detectionResult.filenameDetected,
+    pdfTextDetected: detectionResult.pdfTextDetected,
     detected: detectionResult.detected,
+    sourcesUsed: detectionResult.sourcesUsed,
+    pdfTextAttempted: detectionResult.pdfTextAttempted,
+    hasEmbeddedText: detectionResult.hasEmbeddedText,
     currentRevision: drawing.revision,
     metadataUpdate: detectionResult.metadataUpdate,
     updateData: detectionResult.updateData,
@@ -596,11 +603,14 @@ export async function completeSimulatedDrawingDetectionAction(
     type: "detection_completed",
     message: buildDetectionCompletedActivityMessage(
       detectionResult.appliedFields,
+      detectionResult.sourcesUsed,
     ),
     metadata: {
       appliedFields: detectionResult.appliedFields,
+      sourcesUsed: detectionResult.sourcesUsed,
       previousStatus: "processing",
       nextStatus: "detected",
+      hasEmbeddedText: detectionResult.hasEmbeddedText,
     },
   });
 

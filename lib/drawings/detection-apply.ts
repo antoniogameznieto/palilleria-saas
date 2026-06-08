@@ -2,10 +2,15 @@ import type { DrawingStatus } from "@prisma/client";
 
 import {
   buildDetectionCompletionMessage,
-  mergeDetectedMetadata,
+  mergeDetectionFromSources,
+  type DetectionSource,
+} from "@/lib/drawings/detection-merge";
+import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
+import {
   parseDrawingMetadataFromFileName,
   type ParsedDrawingMetadata,
 } from "@/lib/drawings/parse-filename";
+import { extractDrawingPdfTextForDetection } from "@/lib/drawings/pdf-text-extract";
 
 type DrawingForDetection = {
   originalFileName: string;
@@ -13,10 +18,14 @@ type DrawingForDetection = {
   drawingNumber: string | null;
   lineNumber: string | null;
   revision: string | null;
+  storagePath: string;
+  mimeType: string | null;
 };
 
-export type SimulatedDetectionUpdate = {
+export type DrawingDetectionUpdate = {
   fileName: string;
+  filenameDetected: ParsedDrawingMetadata;
+  pdfTextDetected: ParsedDrawingMetadata;
   detected: ParsedDrawingMetadata;
   metadataUpdate: {
     drawingNumber?: string;
@@ -30,6 +39,9 @@ export type SimulatedDetectionUpdate = {
     revision?: string;
   };
   appliedFields: string[];
+  sourcesUsed: DetectionSource[];
+  pdfTextAttempted: boolean;
+  hasEmbeddedText: boolean;
   message: string;
 };
 
@@ -44,21 +56,53 @@ export function resolveDrawingFileNameForDetection(
   return drawing.fileName?.trim() ?? "";
 }
 
-export function buildSimulatedDetectionUpdate(
+export async function buildDrawingDetectionUpdate(
   drawing: DrawingForDetection,
-): SimulatedDetectionUpdate {
+): Promise<DrawingDetectionUpdate> {
   const fileName = resolveDrawingFileNameForDetection(drawing);
-  const detected = parseDrawingMetadataFromFileName(fileName);
-  const { metadataUpdate, appliedFields } = mergeDetectedMetadata(
+  const filenameDetected = parseDrawingMetadataFromFileName(fileName);
+  let pdfTextDetected: ParsedDrawingMetadata = {
+    drawingNumber: null,
+    lineNumber: null,
+    revision: null,
+  };
+  let pdfTextAttempted = false;
+  let hasEmbeddedText = false;
+
+  if (drawing.storagePath) {
+    pdfTextAttempted = true;
+
+    try {
+      const pdfTextResult = await extractDrawingPdfTextForDetection({
+        storagePath: drawing.storagePath,
+        mimeType: drawing.mimeType,
+      });
+      hasEmbeddedText = pdfTextResult.hasEmbeddedText;
+
+      if (pdfTextResult.hasEmbeddedText) {
+        pdfTextDetected = parseDrawingMetadataFromPdfText(pdfTextResult.text);
+      }
+    } catch {
+      hasEmbeddedText = false;
+    }
+  }
+
+  const {
+    merged,
+    metadataUpdate,
+    appliedFields,
+    sourcesUsed,
+  } = mergeDetectionFromSources(
     {
       drawingNumber: drawing.drawingNumber,
       lineNumber: drawing.lineNumber,
       revision: drawing.revision,
     },
-    detected,
+    filenameDetected,
+    pdfTextDetected,
   );
 
-  const updateData: SimulatedDetectionUpdate["updateData"] = {
+  const updateData: DrawingDetectionUpdate["updateData"] = {
     status: "detected",
   };
 
@@ -76,11 +120,20 @@ export function buildSimulatedDetectionUpdate(
 
   return {
     fileName,
-    detected,
+    filenameDetected,
+    pdfTextDetected,
+    detected: merged,
     metadataUpdate,
     updateData,
     appliedFields,
-    message: buildDetectionCompletionMessage(appliedFields),
+    sourcesUsed,
+    pdfTextAttempted,
+    hasEmbeddedText,
+    message: buildDetectionCompletionMessage(
+      appliedFields,
+      sourcesUsed,
+      pdfTextAttempted,
+    ),
   };
 }
 

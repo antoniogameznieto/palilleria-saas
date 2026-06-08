@@ -84,17 +84,21 @@ export function buildStatusUpdatedActivityMessage(
 }
 
 export function buildDetectionStartedActivityMessage(fileName: string): string {
-  return `Detección de metadatos iniciada desde el nombre del archivo (${fileName}).`;
+  return `Detección de metadatos iniciada. Se analizarán el nombre del archivo (${fileName}) y el texto embebido del PDF.`;
 }
 
 export function buildDetectionCompletedActivityMessage(
   appliedFields: string[],
+  sourcesUsed: string[] = [],
 ): string {
   if (appliedFields.length === 0) {
-    return "Detección completada sin metadatos nuevos en el nombre del archivo.";
+    return "Detección completada sin metadatos nuevos aplicables.";
   }
 
-  return `Detección completada. Campos aplicados: ${appliedFields.join(", ")}.`;
+  const sourceSuffix =
+    sourcesUsed.length > 0 ? ` Origen: ${sourcesUsed.join(", ")}.` : "";
+
+  return `Detección completada. Campos aplicados: ${appliedFields.join(", ")}.${sourceSuffix}`;
 }
 
 export function buildMetadataConfirmedActivityMessage(): string {

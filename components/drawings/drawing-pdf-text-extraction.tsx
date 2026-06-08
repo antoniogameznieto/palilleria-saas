@@ -80,8 +80,8 @@ export function DrawingPdfTextExtraction({
       <CardHeader>
         <CardTitle>Extracción de texto del PDF</CardTitle>
         <CardDescription>
-          Experimental. Intenta leer texto embebido del PDF sin OCR, sin IA y sin
-          modificar metadatos ni palillería.
+          Experimental. Muestra una vista previa del texto embebido sin OCR ni IA.
+          La detección de metadatos ya usa este texto automáticamente.
         </CardDescription>
       </CardHeader>
       <CardContent>{content}</CardContent>

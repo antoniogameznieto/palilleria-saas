@@ -138,7 +138,8 @@ export default async function DrawingDetailPage({
               <section className="space-y-3">
                 <h3 className="text-sm font-medium">Detección automática</h3>
                 <p className="text-xs text-muted-foreground">
-                  Analiza el nombre del archivo para proponer metadatos.
+                  Analiza el nombre del archivo y el texto embebido del PDF.
+                  Solo rellena campos vacíos.
                 </p>
                 <DrawingDetectionControl
                   companyId={companyId}
@@ -154,7 +155,8 @@ export default async function DrawingDetailPage({
               <section className="space-y-3">
                 <h3 className="text-sm font-medium">Extracción de texto</h3>
                 <p className="text-xs text-muted-foreground">
-                  Experimental. Lee texto embebido del PDF sin OCR ni IA.
+                  Experimental. Vista previa del texto embebido sin OCR ni IA.
+                  La detección de metadatos ya usa este texto automáticamente.
                 </p>
                 <DrawingPdfTextExtraction
                   companyId={companyId}
