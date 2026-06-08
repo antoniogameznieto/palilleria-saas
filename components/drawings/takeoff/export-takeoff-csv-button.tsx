@@ -33,20 +33,24 @@ export function ExportTakeoffCsvButton({
     downloadTakeoffCsv(csv, fileName);
   };
 
+  const disabledTitle = "No hay líneas de palillería para exportar";
+  const enabledTitle = "Exportar todas las líneas de palillería a CSV";
+
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size={size}
-      disabled={!hasItems}
-      onClick={handleExport}
-      title={
-        hasItems
-          ? "Exportar todas las líneas de palillería a CSV"
-          : "No hay líneas de palillería para exportar"
-      }
+    <span
+      className="inline-flex"
+      title={hasItems ? enabledTitle : disabledTitle}
     >
-      Exportar CSV
-    </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size={size}
+        disabled={!hasItems}
+        onClick={handleExport}
+        aria-label={hasItems ? enabledTitle : disabledTitle}
+      >
+        Exportar CSV
+      </Button>
+    </span>
   );
 }

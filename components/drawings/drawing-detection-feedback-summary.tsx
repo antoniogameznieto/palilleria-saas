@@ -30,7 +30,7 @@ export function DrawingDetectionFeedbackSummary({
   const appliedLabels = new Set(feedback.appliedFields);
 
   return (
-    <div className="space-y-4 rounded-lg border bg-muted/20 p-4 text-sm">
+    <div className="space-y-4 rounded-md bg-muted/15 px-3 py-3 text-sm">
       {feedback.detectedFields.length > 0 ? (
         <FeedbackSection title="Detectado">
           <ul className="space-y-1">

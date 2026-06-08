@@ -5,6 +5,8 @@ import type { DetectionFeedbackSummary } from "@/lib/drawings/detection-merge";
 import type { DrawingStatus } from "@prisma/client";
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/utils";
+
 type DrawingAutomationPanelProps = {
   companyId: string;
   jobId: string;
@@ -23,13 +25,15 @@ function AutomationBlock({
   title,
   description,
   children,
+  className,
 }: {
   title: string;
   description: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="space-y-4 rounded-lg border bg-card p-4">
+    <section className={cn("space-y-3", className)}>
       <div className="space-y-1">
         <h3 className="text-sm font-medium">{title}</h3>
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -82,6 +86,7 @@ export function DrawingAutomationPanel({
         <AutomationBlock
           title="Detectar metadatos"
           description="Busca número de plano, línea y revisión usando el nombre del archivo y el texto embebido del PDF."
+          className={isDetected ? "border-t border-border/60 pt-6" : undefined}
         >
           <DrawingDetectionControl
             companyId={companyId}
@@ -98,6 +103,11 @@ export function DrawingAutomationPanel({
         <AutomationBlock
           title="Herramientas de diagnóstico"
           description="Vista previa del texto embebido del PDF. No modifica metadatos ni palillería."
+          className={
+            isDetected || canStartDetection
+              ? "border-t border-border/60 pt-6"
+              : undefined
+          }
         >
           <p className="text-xs text-muted-foreground">
             No necesitas ejecutar esto para detectar metadatos; la detección ya

@@ -107,15 +107,15 @@ export function DrawingDetectedMetadataReview({
 
   if (plain) {
     return (
-      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
+      <div className="space-y-3 rounded-md border-l-2 border-amber-500/50 bg-amber-500/5 px-3 py-3">
         <h4 className="text-sm font-medium">
           Metadatos detectados pendientes de revisión
         </h4>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Revisa los metadatos propuestos desde el nombre del archivo y/o el
           texto embebido del PDF.
         </p>
-        <div className="mt-4">{content}</div>
+        <div className="pt-1">{content}</div>
       </div>
     );
   }

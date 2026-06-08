@@ -44,18 +44,19 @@ export function DrawingDetailWorkspace({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)] lg:items-start">
       <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">{pdf}</div>
 
       <Card className="min-w-0">
-        <CardHeader className="space-y-3 border-b pb-3">
-          <div className="flex flex-wrap gap-2">
+        <CardHeader className="border-b pb-3">
+          <div className="-mx-1 flex flex-nowrap gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]">
             {TAB_OPTIONS.map((tab) => (
               <Button
                 key={tab.id}
                 type="button"
-                size="sm"
+                size="xs"
                 variant={activeTab === tab.id ? "default" : "outline"}
+                className="shrink-0 whitespace-nowrap"
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
@@ -63,7 +64,9 @@ export function DrawingDetailWorkspace({
             ))}
           </div>
         </CardHeader>
-        <CardContent className={cn("pt-4", "max-h-[calc(85vh-4rem)] overflow-y-auto")}>
+        <CardContent
+          className={cn("pt-4", "max-h-[calc(85vh-4rem)] overflow-y-auto")}
+        >
           {tabContent[activeTab]}
         </CardContent>
       </Card>
