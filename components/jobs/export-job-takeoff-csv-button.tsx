@@ -12,12 +12,14 @@ type ExportJobTakeoffCsvButtonProps = {
   items: SerializedJobTakeoffExportItem[];
   jobName: string;
   jobId: string;
+  size?: "default" | "sm";
 };
 
 export function ExportJobTakeoffCsvButton({
   items,
   jobName,
   jobId,
+  size = "default",
 }: ExportJobTakeoffCsvButtonProps) {
   const hasItems = items.length > 0;
 
@@ -35,6 +37,7 @@ export function ExportJobTakeoffCsvButton({
     <Button
       type="button"
       variant="outline"
+      size={size}
       disabled={!hasItems}
       onClick={handleExport}
       title={

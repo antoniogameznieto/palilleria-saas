@@ -7,13 +7,23 @@ import {
 
 type JobSettingsSummaryProps = {
   settings: JobSettings;
+  plain?: boolean;
 };
 
-export function JobSettingsSummary({ settings }: JobSettingsSummaryProps) {
+export function JobSettingsSummary({
+  settings,
+  plain = false,
+}: JobSettingsSummaryProps) {
   const booleanLabel = (value: boolean) => (value ? "Sí" : "No");
 
   return (
-    <dl className="grid gap-3 rounded-lg border bg-card p-4 text-sm md:grid-cols-2">
+    <dl
+      className={
+        plain
+          ? "grid gap-3 text-sm md:grid-cols-2"
+          : "grid gap-3 rounded-lg border bg-card p-4 text-sm md:grid-cols-2"
+      }
+    >
       <div>
         <dt className="text-muted-foreground">Criterio de longitud</dt>
         <dd className="mt-1 font-medium">
