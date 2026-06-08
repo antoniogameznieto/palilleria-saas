@@ -100,3 +100,21 @@ export function buildDetectionCompletedActivityMessage(
 export function buildMetadataConfirmedActivityMessage(): string {
   return "Metadatos detectados confirmados. El plano pasó a estado Revisado.";
 }
+
+export function buildTakeoffItemCreatedActivityMessage(
+  description: string,
+): string {
+  return `Línea de palillería añadida: ${description}`;
+}
+
+export function buildTakeoffItemUpdatedActivityMessage(
+  description: string,
+): string {
+  return `Línea de palillería actualizada: ${description}`;
+}
+
+export function buildTakeoffItemDeletedActivityMessage(
+  description: string,
+): string {
+  return `Línea de palillería eliminada: ${description}`;
+}

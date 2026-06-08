@@ -14,6 +14,7 @@ const CONFIRM_DETECTED_DRAWING_METADATA_ROLES: CompanyRole[] = [
   "admin",
   "engineer",
 ];
+const MANAGE_TAKEOFF_ITEM_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const DELETE_DRAWING_ROLES: CompanyRole[] = ["owner", "admin"];
 
 export function canUploadDrawings(role: CompanyRole): boolean {
@@ -34,6 +35,10 @@ export function canStartDrawingDetection(role: CompanyRole): boolean {
 
 export function canConfirmDetectedDrawingMetadata(role: CompanyRole): boolean {
   return CONFIRM_DETECTED_DRAWING_METADATA_ROLES.includes(role);
+}
+
+export function canManageTakeoffItems(role: CompanyRole): boolean {
+  return MANAGE_TAKEOFF_ITEM_ROLES.includes(role);
 }
 
 export function canDeleteDrawings(role: CompanyRole): boolean {

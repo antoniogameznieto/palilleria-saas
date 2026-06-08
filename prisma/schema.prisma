@@ -89,6 +89,9 @@ enum DrawingActivityType {
   detection_started
   detection_completed
   metadata_confirmed
+  takeoff_item_created
+  takeoff_item_updated
+  takeoff_item_deleted
 }
 
 model User {
@@ -106,6 +109,7 @@ model User {
   createdAnnotations Annotation[]    @relation("AnnotationCreatedBy")
   createdExports     Export[]        @relation("ExportCreatedBy")
   drawingActivities  DrawingActivity[] @relation("DrawingActivityActor")
+  takeoffItems       DrawingTakeoffItem[] @relation("TakeoffItemCreatedBy")
 }
 
 model Company {
@@ -119,9 +123,10 @@ model Company {
   jobs         Job[]
   drawings     Drawing[]
   jobSettings  JobSettings[]
-  pipeSegments PipeSegment[]
-  annotations  Annotation[]
-  exports      Export[]
+  pipeSegments  PipeSegment[]
+  annotations   Annotation[]
+  exports       Export[]
+  takeoffItems  DrawingTakeoffItem[]
 }
 
 model CompanyMember {
@@ -157,6 +162,7 @@ model Job {
   pipeSegments PipeSegment[]
   annotations  Annotation[]
   exports      Export[]
+  takeoffItems DrawingTakeoffItem[]
 
   @@index([companyId])
   @@index([createdById])
@@ -185,10 +191,37 @@ model Drawing {
   pipeSegments PipeSegment[]
   annotations  Annotation[]
   activities   DrawingActivity[]
+  takeoffItems DrawingTakeoffItem[]
 
   @@index([companyId])
   @@index([jobId])
   @@index([createdById])
+}
+
+model DrawingTakeoffItem {
+  id          String   @id @default(cuid())
+  companyId   String
+  jobId       String
+  drawingId   String
+  reference   String?
+  description String
+  quantity    Decimal  @db.Decimal(12, 3)
+  unit        String?
+  length      Decimal? @db.Decimal(12, 3)
+  width       Decimal? @db.Decimal(12, 3)
+  height      Decimal? @db.Decimal(12, 3)
+  notes       String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  drawing   Drawing @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("TakeoffItemCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([companyId, jobId, drawingId])
+  @@index([drawingId])
 }
 
 model DrawingActivity {

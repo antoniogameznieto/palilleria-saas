@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { DrawingTakeoffSection } from "@/components/drawings/takeoff/drawing-takeoff-section";
 import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
@@ -12,11 +13,13 @@ import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { getDrawingRecentActivity } from "@/lib/drawings/activity";
+import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
+  canManageTakeoffItems,
   canStartDrawingDetection,
   requireDrawingAccess,
   requireJobAccess,
@@ -34,17 +37,20 @@ export default async function DrawingDetailPage({
   params,
 }: DrawingDetailPageProps) {
   const { companyId, jobId, drawingId } = await params;
-  const [{ membership, drawing }, { job }, activities] = await Promise.all([
-    requireDrawingAccess(companyId, jobId, drawingId),
-    requireJobAccess(companyId, jobId),
-    getDrawingRecentActivity(companyId, jobId, drawingId),
-  ]);
+  const [{ membership, drawing }, { job }, activities, takeoffItems] =
+    await Promise.all([
+      requireDrawingAccess(companyId, jobId, drawingId),
+      requireJobAccess(companyId, jobId),
+      getDrawingRecentActivity(companyId, jobId, drawingId),
+      getDrawingTakeoffItems(companyId, jobId, drawingId),
+    ]);
 
   const canEditMetadata = canEditDrawingMetadata(membership.role);
   const canEditStatus = canEditDrawingStatus(membership.role);
   const canStartDetection = canStartDrawingDetection(membership.role);
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
+  const canEditTakeoff = canManageTakeoffItems(membership.role);
   const isDetected = drawing.status === "detected";
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
@@ -129,6 +135,14 @@ export default async function DrawingDetailPage({
       <DrawingActivityCard activities={activities} />
 
       <PdfViewer drawingId={drawing.id} fileName={drawing.originalFileName} />
+
+      <DrawingTakeoffSection
+        companyId={companyId}
+        jobId={jobId}
+        drawingId={drawing.id}
+        items={takeoffItems}
+        canEdit={canEditTakeoff}
+      />
     </div>
   );
 }
