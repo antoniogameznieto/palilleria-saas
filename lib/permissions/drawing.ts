@@ -8,6 +8,7 @@ import { requireCompanyMember } from "@/lib/permissions/company";
 const UPLOAD_DRAWING_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const EDIT_DRAWING_METADATA_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const EDIT_DRAWING_STATUS_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
+const START_DRAWING_DETECTION_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const DELETE_DRAWING_ROLES: CompanyRole[] = ["owner", "admin"];
 
 export function canUploadDrawings(role: CompanyRole): boolean {
@@ -20,6 +21,10 @@ export function canEditDrawingMetadata(role: CompanyRole): boolean {
 
 export function canEditDrawingStatus(role: CompanyRole): boolean {
   return EDIT_DRAWING_STATUS_ROLES.includes(role);
+}
+
+export function canStartDrawingDetection(role: CompanyRole): boolean {
+  return START_DRAWING_DETECTION_ROLES.includes(role);
 }
 
 export function canDeleteDrawings(role: CompanyRole): boolean {

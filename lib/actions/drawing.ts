@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
+import { detectDrawingMetadataPlaceholder } from "@/lib/drawings/detection";
 import { prisma } from "@/lib/db";
 import {
   buildDrawingStoragePath,
@@ -16,6 +17,7 @@ import {
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
+  canStartDrawingDetection,
   canUploadDrawings,
   requireDrawingAccess,
   requireJobAccess,
@@ -25,6 +27,35 @@ import {
   updateDrawingStatusSchema,
   validatePdfFiles,
 } from "@/lib/validations/drawing";
+
+function parseDrawingScopeFormData(formData: FormData) {
+  const companyId = formData.get("companyId");
+  const jobId = formData.get("jobId");
+  const drawingId = formData.get("drawingId");
+
+  if (typeof companyId !== "string" || companyId.length === 0) {
+    return { error: "Empresa no válida." as const };
+  }
+
+  if (typeof jobId !== "string" || jobId.length === 0) {
+    return { error: "Trabajo no válido." as const };
+  }
+
+  if (typeof drawingId !== "string" || drawingId.length === 0) {
+    return { error: "Plano no válido." as const };
+  }
+
+  return { companyId, jobId, drawingId };
+}
+
+function revalidateDrawingPages(
+  companyId: string,
+  jobId: string,
+  drawingId: string,
+) {
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+}
 
 export async function uploadDrawingsAction(
   _prevState: AuthActionState,
@@ -194,8 +225,7 @@ export async function updateDrawingMetadataAction(
     },
   });
 
-  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
-  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+  revalidateDrawingPages(companyId, jobId, drawingId);
 
   return { success: "Metadatos guardados correctamente." };
 }
@@ -250,8 +280,103 @@ export async function updateDrawingStatusAction(
     },
   });
 
-  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
-  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+  revalidateDrawingPages(companyId, jobId, drawingId);
 
   return { success: "Estado actualizado correctamente." };
+}
+
+export async function startDrawingDetectionAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canStartDrawingDetection(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  if (drawing.status === "processing") {
+    return { error: "La detección ya está en curso para este plano." };
+  }
+
+  await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+    },
+    data: {
+      status: "processing",
+    },
+  });
+
+  await detectDrawingMetadataPlaceholder(drawingId);
+
+  revalidateDrawingPages(companyId, jobId, drawingId);
+
+  return {
+    success:
+      "Detección iniciada. El plano está en procesamiento. En esta fase aún no se analiza el PDF.",
+  };
+}
+
+export async function completeSimulatedDrawingDetectionAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canStartDrawingDetection(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  if (drawing.status !== "processing") {
+    return {
+      error: "Solo se puede completar la detección simulada cuando el plano está en procesamiento.",
+    };
+  }
+
+  await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+    },
+    data: {
+      status: "detected",
+    },
+  });
+
+  revalidateDrawingPages(companyId, jobId, drawingId);
+
+  return {
+    success:
+      "Detección simulada completada. El plano está marcado como Detectado. Los metadatos no se han modificado en esta fase.",
+  };
 }
