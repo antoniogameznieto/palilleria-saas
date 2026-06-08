@@ -10,7 +10,6 @@ import {
   buildTakeoffItemDuplicatedActivityMessage,
   buildTakeoffItemsImportedActivityMessage,
   buildTakeoffItemUpdatedActivityMessage,
-  recordDrawingActivity,
 } from "@/lib/drawings/activity";
 import {
   extractTakeoffCsvImportRows,
@@ -133,9 +132,7 @@ export async function createTakeoffItemAction(
   );
 
   if (!canManageTakeoffItems(membership.role)) {
-    redirect(
-      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
-    );
+    return { error: "No tienes permiso para gestionar la palillería." };
   }
 
   const parsed = parseTakeoffItemFormData(formData);
@@ -147,27 +144,31 @@ export async function createTakeoffItemAction(
     };
   }
 
-  const item = await prisma.drawingTakeoffItem.create({
-    data: {
-      companyId,
-      jobId,
-      drawingId,
-      createdById: user.id,
-      ...toTakeoffItemData(parsed.data),
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    const created = await tx.drawingTakeoffItem.create({
+      data: {
+        companyId,
+        jobId,
+        drawingId,
+        createdById: user.id,
+        ...toTakeoffItemData(parsed.data),
+      },
+    });
 
-  await recordDrawingActivity({
-    drawingId,
-    companyId,
-    jobId,
-    actorUserId: user.id,
-    type: "takeoff_item_created",
-    message: buildTakeoffItemCreatedActivityMessage(item.description),
-    metadata: {
-      takeoffItemId: item.id,
-      reference: item.reference,
-    },
+    await tx.drawingActivity.create({
+      data: {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        type: "takeoff_item_created",
+        message: buildTakeoffItemCreatedActivityMessage(created.description),
+        metadata: {
+          takeoffItemId: created.id,
+          reference: created.reference,
+        },
+      },
+    });
   });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
@@ -193,9 +194,7 @@ export async function updateTakeoffItemAction(
   );
 
   if (!canManageTakeoffItems(membership.role)) {
-    redirect(
-      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
-    );
+    return { error: "No tienes permiso para gestionar la palillería." };
   }
 
   const existing = await prisma.drawingTakeoffItem.findFirst({
@@ -246,32 +245,42 @@ export async function updateTakeoffItemAction(
     return { success: "La línea de palillería no ha cambiado." };
   }
 
-  const updated = await prisma.drawingTakeoffItem.updateMany({
-    where: {
-      id: takeoffItemId,
-      companyId,
-      jobId,
-      drawingId,
-    },
-    data: toTakeoffItemData(parsed.data),
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.drawingTakeoffItem.updateMany({
+      where: {
+        id: takeoffItemId,
+        companyId,
+        jobId,
+        drawingId,
+      },
+      data: toTakeoffItemData(parsed.data),
+    });
+
+    if (result.count === 0) {
+      return result;
+    }
+
+    await tx.drawingActivity.create({
+      data: {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        type: "takeoff_item_updated",
+        message: buildTakeoffItemUpdatedActivityMessage(parsed.data.description),
+        metadata: {
+          takeoffItemId,
+          reference: parsed.data.reference,
+        },
+      },
+    });
+
+    return result;
   });
 
   if (updated.count === 0) {
     return { error: "No se pudo actualizar la línea de palillería." };
   }
-
-  await recordDrawingActivity({
-    drawingId,
-    companyId,
-    jobId,
-    actorUserId: user.id,
-    type: "takeoff_item_updated",
-    message: buildTakeoffItemUpdatedActivityMessage(parsed.data.description),
-    metadata: {
-      takeoffItemId,
-      reference: parsed.data.reference,
-    },
-  });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
 
@@ -311,29 +320,33 @@ export async function deleteTakeoffItemAction(
     redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
   }
 
-  const deleted = await prisma.drawingTakeoffItem.deleteMany({
-    where: {
-      id: takeoffItemId,
-      companyId,
-      jobId,
-      drawingId,
-    },
-  });
-
-  if (deleted.count > 0) {
-    await recordDrawingActivity({
-      drawingId,
-      companyId,
-      jobId,
-      actorUserId: user.id,
-      type: "takeoff_item_deleted",
-      message: buildTakeoffItemDeletedActivityMessage(existing.description),
-      metadata: {
-        takeoffItemId,
-        reference: existing.reference,
+  await prisma.$transaction(async (tx) => {
+    const deleted = await tx.drawingTakeoffItem.deleteMany({
+      where: {
+        id: takeoffItemId,
+        companyId,
+        jobId,
+        drawingId,
       },
     });
-  }
+
+    if (deleted.count > 0) {
+      await tx.drawingActivity.create({
+        data: {
+          drawingId,
+          companyId,
+          jobId,
+          actorUserId: user.id,
+          type: "takeoff_item_deleted",
+          message: buildTakeoffItemDeletedActivityMessage(existing.description),
+          metadata: {
+            takeoffItemId,
+            reference: existing.reference,
+          },
+        },
+      });
+    }
+  });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
 
@@ -373,36 +386,38 @@ export async function duplicateTakeoffItemAction(
     redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
   }
 
-  const duplicated = await prisma.drawingTakeoffItem.create({
-    data: {
-      companyId,
-      jobId,
-      drawingId,
-      createdById: user.id,
-      reference: existing.reference,
-      description: existing.description,
-      quantity: existing.quantity,
-      unit: existing.unit,
-      length: existing.length,
-      width: existing.width,
-      height: existing.height,
-      notes: existing.notes,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    const duplicated = await tx.drawingTakeoffItem.create({
+      data: {
+        companyId,
+        jobId,
+        drawingId,
+        createdById: user.id,
+        reference: existing.reference,
+        description: existing.description,
+        quantity: existing.quantity,
+        unit: existing.unit,
+        length: existing.length,
+        width: existing.width,
+        height: existing.height,
+        notes: existing.notes,
+      },
+    });
 
-  await recordDrawingActivity({
-    drawingId,
-    companyId,
-    jobId,
-    actorUserId: user.id,
-    type: "takeoff_item_duplicated",
-    message: buildTakeoffItemDuplicatedActivityMessage(),
-    metadata: {
-      originalItemId: takeoffItemId,
-      duplicatedItemId: duplicated.id,
-      reference: existing.reference,
-      description: existing.description,
-    },
+    await tx.drawingActivity.create({
+      data: {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        type: "takeoff_item_duplicated",
+        message: buildTakeoffItemDuplicatedActivityMessage(),
+        metadata: {
+          originalItemId: takeoffItemId,
+          duplicatedItemId: duplicated.id,
+        },
+      },
+    });
   });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
@@ -462,9 +477,9 @@ export async function importTakeoffItemsAction(
     return { error: "El CSV no contiene líneas para importar." };
   }
 
-  await prisma.$transaction(
-    items.map((item) =>
-      prisma.drawingTakeoffItem.create({
+  await prisma.$transaction(async (tx) => {
+    for (const item of items) {
+      await tx.drawingTakeoffItem.create({
         data: {
           companyId,
           jobId,
@@ -479,20 +494,22 @@ export async function importTakeoffItemsAction(
           height: item.data.height,
           notes: item.data.notes,
         },
-      }),
-    ),
-  );
+      });
+    }
 
-  await recordDrawingActivity({
-    drawingId,
-    companyId,
-    jobId,
-    actorUserId: user.id,
-    type: "takeoff_items_imported",
-    message: buildTakeoffItemsImportedActivityMessage(items.length),
-    metadata: {
-      importedCount: items.length,
-    },
+    await tx.drawingActivity.create({
+      data: {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        type: "takeoff_items_imported",
+        message: buildTakeoffItemsImportedActivityMessage(items.length),
+        metadata: {
+          importedCount: items.length,
+        },
+      },
+    });
   });
 
   revalidateDrawingPage(companyId, jobId, drawingId);

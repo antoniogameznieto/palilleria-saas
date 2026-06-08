@@ -1,10 +1,19 @@
 import { z } from "zod";
 
+import { hasCsvFormulaInjectionRisk } from "@/lib/drawings/csv-safety";
+
+const csvFormulaInjectionMessage =
+  "El valor no puede empezar por =, +, - o @.";
+
+const rejectCsvFormulaInjection = (value: string) =>
+  value.length === 0 || !hasCsvFormulaInjectionRisk(value);
+
 const optionalTextField = (max: number) =>
   z
     .string()
     .trim()
     .max(max)
+    .refine(rejectCsvFormulaInjection, csvFormulaInjectionMessage)
     .optional()
     .transform((value) => (value && value.length > 0 ? value : null));
 
@@ -33,7 +42,8 @@ export const takeoffCsvImportRowSchema = z.object({
     .string()
     .trim()
     .min(1, "La descripción es obligatoria.")
-    .max(500, "Máximo 500 caracteres."),
+    .max(500, "Máximo 500 caracteres.")
+    .refine(rejectCsvFormulaInjection, csvFormulaInjectionMessage),
   quantity: requiredQuantityField,
   unit: optionalTextField(50),
   length: optionalDecimalField,

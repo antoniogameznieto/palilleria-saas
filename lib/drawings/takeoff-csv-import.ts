@@ -1,3 +1,4 @@
+import { normalizeCsvImportTextField } from "@/lib/drawings/csv-safety";
 import type { TakeoffCsvImportRowInput } from "@/lib/validations/takeoff-import";
 
 export const TAKEOFF_CSV_IMPORT_COLUMNS = [
@@ -96,6 +97,21 @@ function isHeaderRow(cells: string[]): boolean {
   );
 }
 
+function normalizeImportTextFields(
+  row: TakeoffCsvImportRowInput,
+): TakeoffCsvImportRowInput {
+  return {
+    reference: normalizeCsvImportTextField(row.reference ?? ""),
+    description: normalizeCsvImportTextField(row.description ?? ""),
+    quantity: row.quantity?.trim() ?? "",
+    unit: normalizeCsvImportTextField(row.unit ?? ""),
+    length: row.length?.trim() ?? "",
+    width: row.width?.trim() ?? "",
+    height: row.height?.trim() ?? "",
+    notes: normalizeCsvImportTextField(row.notes ?? ""),
+  };
+}
+
 function mapRowByHeaders(
   headers: string[],
   cells: string[],
@@ -121,11 +137,11 @@ function mapRowByHeaders(
     }
   });
 
-  return mapped;
+  return normalizeImportTextFields(mapped);
 }
 
 function mapRowByFixedOrder(cells: string[]): TakeoffCsvImportRowInput {
-  return {
+  return normalizeImportTextFields({
     reference: cells[0]?.trim() ?? "",
     description: cells[1]?.trim() ?? "",
     quantity: cells[2]?.trim() ?? "",
@@ -134,7 +150,7 @@ function mapRowByFixedOrder(cells: string[]): TakeoffCsvImportRowInput {
     width: cells[5]?.trim() ?? "",
     height: cells[6]?.trim() ?? "",
     notes: cells[7]?.trim() ?? "",
-  };
+  });
 }
 
 export function extractTakeoffCsvImportRows(

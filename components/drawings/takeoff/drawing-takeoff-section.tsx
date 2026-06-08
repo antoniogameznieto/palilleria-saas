@@ -84,7 +84,11 @@ export function DrawingTakeoffSection({
   );
 
   useEffect(() => {
-    if (createState.success || updateState.success) {
+    const updateChanged =
+      updateState.success &&
+      updateState.success !== "La línea de palillería no ha cambiado.";
+
+    if (createState.success || updateChanged) {
       router.refresh();
     }
   }, [createState.success, router, updateState.success]);

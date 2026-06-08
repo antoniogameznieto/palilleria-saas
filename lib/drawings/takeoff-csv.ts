@@ -1,3 +1,4 @@
+import { protectCsvExportCell } from "@/lib/drawings/csv-safety";
 import type { SerializedJobTakeoffExportItem } from "@/lib/drawings/job-takeoff-export";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
@@ -15,13 +16,14 @@ export const TAKEOFF_CSV_HEADERS = [
 ] as const;
 
 export function escapeCsvCell(value: string | null | undefined): string {
-  const normalized = value ?? "";
+  const normalized = protectCsvExportCell(value ?? "");
   const mustQuote =
     normalized.includes(",") ||
     normalized.includes('"') ||
     normalized.includes("\n") ||
     normalized.includes("\r") ||
-    normalized.includes(";");
+    normalized.includes(";") ||
+    normalized.startsWith("'");
 
   const escaped = normalized.replace(/"/g, '""');
 
