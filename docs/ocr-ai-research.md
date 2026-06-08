@@ -341,10 +341,10 @@ Reutilizar patrón de **metadatos detectados**:
 - No hay botón «Aplicar» — candidatos no se guardan.
 - Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
 
-### Próximos pasos (10D+)
+### Próximos pasos (10E+)
 
 1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
-2. Ajuste de ROI por tipo de plano o detección de rectángulo del cajetín.
+2. Templates de ROI por cliente/proyecto (persistidos) tras validar con 10D.
 3. Cola background + timeout para PDFs grandes.
 4. Evaluar cloud OCR / multimodal solo tras baseline local validada.
 5. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
@@ -390,4 +390,59 @@ Validar visualmente si el recorte heurístico captura el cajetín antes de ajust
 | Formato | JPEG (calidad 82) |
 | Tamaño máximo binario | 400 KB |
 | Persistencia | Ninguna (solo respuesta HTTP efímera) |
+
+---
+
+## Fase 10D — Ajuste manual experimental del ROI (implementado)
+
+> **Estado:** experimental, misma feature flag `EXPERIMENTAL_TITLE_BLOCK_OCR`.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| `lib/drawings/experimental-title-block-crop-params.ts` | Defaults, presets, validación de porcentajes, parse desde FormData |
+| `lib/drawings/experimental-title-block-crop.ts` | `computeTitleBlockCropRectFromPercents` |
+| Server action | Acepta `xPercent`, `yPercent`, `widthPercent`, `heightPercent` |
+| UI | Presets + campos numéricos; etiqueta «Zona: X …%» junto a la preview |
+
+### Defaults (equivalente al bottom-right 35 % × 25 %)
+
+| Parámetro | Valor |
+|-----------|-------|
+| X | 65 % |
+| Y | 75 % |
+| Ancho | 35 % |
+| Alto | 25 % |
+
+### Presets en UI
+
+- Abajo derecha (default)
+- Abajo izquierda
+- Arriba derecha
+- Arriba izquierda
+- Centro inferior
+
+### Validación en servidor
+
+- X, Y: 0–95
+- Ancho, alto: 5–100
+- X + ancho ≤ 100, Y + alto ≤ 100
+- Si falla → error claro en la server action (sin ejecutar OCR)
+
+### Persistencia
+
+**No se persiste** la configuración del recorte ni los resultados OCR. Los valores viven solo en estado React del componente; al refrescar la página vuelven al default.
+
+### Utilidad
+
+Comparar formatos de cajetín entre planos/clientes antes de diseñar templates de ROI por proyecto.
+
+### Verificación local
+
+```bash
+npm run verify:title-block-crop   # incluye validación de % y presets
+npm run lint
+npm run build
+```
 

@@ -9,8 +9,13 @@ import { PDFParse } from "pdf-parse";
 
 import {
   TITLE_BLOCK_SCREENSHOT_WIDTH_PX,
-  computeTitleBlockCropRect,
+  computeTitleBlockCropRectFromPercents,
 } from "@/lib/drawings/experimental-title-block-crop";
+import {
+  DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+  formatTitleBlockCropZoneLabel,
+  type TitleBlockCropPercents,
+} from "@/lib/drawings/experimental-title-block-crop-params";
 import { encodeTitleBlockCropPreview } from "@/lib/drawings/experimental-title-block-crop-preview";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
 import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
@@ -24,6 +29,8 @@ const TESSERACT_TIMEOUT_MS = 45_000;
 export type ExperimentalTitleBlockOcrResult = {
   hasPreview: boolean;
   cropImageDataUrl: string | null;
+  cropZoneLabel: string;
+  usedCropPercents: TitleBlockCropPercents;
   extractedText: string | null;
   textPreview: string | null;
   metadataCandidates: ParsedDrawingMetadata;
@@ -81,10 +88,18 @@ async function cropTitleBlockFromPagePng(
   pagePng: Uint8Array,
   pageWidth: number,
   pageHeight: number,
-): Promise<{ buffer: Buffer; crop: ReturnType<typeof computeTitleBlockCropRect> }> {
+  cropPercents: TitleBlockCropPercents,
+): Promise<{
+  buffer: Buffer;
+  crop: ReturnType<typeof computeTitleBlockCropRectFromPercents>;
+}> {
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   const image = await loadImage(Buffer.from(pagePng));
-  const crop = computeTitleBlockCropRect(pageWidth, pageHeight);
+  const crop = computeTitleBlockCropRectFromPercents(
+    pageWidth,
+    pageHeight,
+    cropPercents,
+  );
   const canvas = createCanvas(crop.width, crop.height);
   const context = canvas.getContext("2d");
 
@@ -156,6 +171,7 @@ async function runTesseractOnPng(pngBuffer: Buffer): Promise<string | null> {
 
 export async function analyzeTitleBlockFromPdfBuffer(
   buffer: Buffer,
+  cropPercents: TitleBlockCropPercents = DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
 ): Promise<ExperimentalTitleBlockOcrResult> {
   const warnings: string[] = [];
 
@@ -184,6 +200,7 @@ export async function analyzeTitleBlockFromPdfBuffer(
       pageScreenshot.data,
       pageScreenshot.width,
       pageScreenshot.height,
+      cropPercents,
     );
     titleBlockPng = cropped.buffer;
     cropWidth = cropped.crop.width;
@@ -261,6 +278,8 @@ export async function analyzeTitleBlockFromPdfBuffer(
   return {
     hasPreview,
     cropImageDataUrl,
+    cropZoneLabel: formatTitleBlockCropZoneLabel(cropPercents),
+    usedCropPercents: cropPercents,
     extractedText,
     textPreview: buildTextPreview(extractedText),
     metadataCandidates,
@@ -271,6 +290,7 @@ export async function analyzeTitleBlockFromPdfBuffer(
 export async function analyzeTitleBlockFromDrawingStorage(params: {
   storagePath: string | null;
   mimeType: string | null;
+  cropPercents?: TitleBlockCropPercents;
 }): Promise<ExperimentalTitleBlockOcrResult> {
   if (params.mimeType && params.mimeType !== PDF_MIME_TYPE) {
     throw new Error("El archivo no es un PDF válido.");
@@ -282,5 +302,8 @@ export async function analyzeTitleBlockFromDrawingStorage(params: {
 
   const buffer = await getFile({ storagePath: params.storagePath });
 
-  return analyzeTitleBlockFromPdfBuffer(buffer);
+  return analyzeTitleBlockFromPdfBuffer(
+    buffer,
+    params.cropPercents ?? DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+  );
 }

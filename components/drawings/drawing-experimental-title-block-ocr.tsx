@@ -1,13 +1,20 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   analyzeExperimentalTitleBlockOcrAction,
   type ExperimentalTitleBlockOcrActionState,
 } from "@/lib/actions/experimental-title-block-ocr";
+import {
+  DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+  TITLE_BLOCK_CROP_PRESETS,
+  type TitleBlockCropPercents,
+} from "@/lib/drawings/experimental-title-block-crop-params";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type DrawingExperimentalTitleBlockOcrProps = {
   companyId: string;
@@ -17,6 +24,16 @@ type DrawingExperimentalTitleBlockOcrProps = {
 
 const initialState: ExperimentalTitleBlockOcrActionState = {};
 
+type CropField = keyof TitleBlockCropPercents;
+
+const CROP_FIELDS: { key: CropField; label: string; min: number; max: number }[] =
+  [
+    { key: "xPercent", label: "X", min: 0, max: 95 },
+    { key: "yPercent", label: "Y", min: 0, max: 95 },
+    { key: "widthPercent", label: "Ancho", min: 5, max: 100 },
+    { key: "heightPercent", label: "Alto", min: 5, max: 100 },
+  ];
+
 function formatCandidate(value: string | null | undefined): string {
   if (value == null || value.trim() === "") {
     return "—";
@@ -25,11 +42,24 @@ function formatCandidate(value: string | null | undefined): string {
   return value;
 }
 
+function parseCropFieldValue(value: string, fallback: number): number {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.round(parsed);
+}
+
 export function DrawingExperimentalTitleBlockOcr({
   companyId,
   jobId,
   drawingId,
 }: DrawingExperimentalTitleBlockOcrProps) {
+  const [cropParams, setCropParams] = useState<TitleBlockCropPercents>(
+    DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+  );
   const [state, formAction, isPending] = useActionState(
     analyzeExperimentalTitleBlockOcrAction,
     initialState,
@@ -37,13 +67,61 @@ export function DrawingExperimentalTitleBlockOcr({
 
   const hasResult = state.success != null || state.error != null;
 
+  function updateCropField(key: CropField, rawValue: string) {
+    setCropParams((current) => ({
+      ...current,
+      [key]: parseCropFieldValue(rawValue, current[key]),
+    }));
+  }
+
   return (
     <div className="space-y-4">
       <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100">
-        Funcionalidad <strong>experimental</strong> (Fases 10B–10C). Analiza la
-        zona del cajetín con OCR local si Tesseract está disponible. No aplica
-        metadatos automáticamente ni persiste resultados.
+        Funcionalidad <strong>experimental</strong> (Fases 10B–10D). Analiza la
+        zona del cajetín con OCR local si Tesseract está disponible. Puedes
+        ajustar el recorte manualmente para probar distintos formatos. No aplica
+        metadatos automáticamente ni persiste resultados ni configuración del
+        recorte.
       </p>
+
+      <div className="space-y-3 rounded-lg border bg-muted/10 p-4">
+        <p className="text-sm font-medium">Zona del cajetín (experimental)</p>
+        <p className="text-xs text-muted-foreground">
+          Valores en porcentaje respecto a la primera página renderizada. Solo
+          viven en esta sesión del navegador; al refrescar vuelven al default.
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {TITLE_BLOCK_CROP_PRESETS.map((preset) => (
+            <Button
+              key={preset.id}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCropParams({ ...preset.params })}
+            >
+              {preset.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {CROP_FIELDS.map(({ key, label, min, max }) => (
+            <div key={key} className="space-y-1">
+              <Label htmlFor={`crop-${key}`}>{label} (%)</Label>
+              <Input
+                id={`crop-${key}`}
+                type="number"
+                min={min}
+                max={max}
+                step={1}
+                value={cropParams[key]}
+                onChange={(event) => updateCropField(key, event.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
 
       {state.error ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -60,10 +138,14 @@ export function DrawingExperimentalTitleBlockOcr({
       {state.cropImageDataUrl ? (
         <div className="space-y-2">
           <p className="text-sm font-medium">Vista previa del cajetín analizado</p>
+          {state.cropZoneLabel ? (
+            <p className="text-xs font-medium text-muted-foreground">
+              {state.cropZoneLabel}
+            </p>
+          ) : null}
           <p className="text-xs text-muted-foreground">
-            Esta es la zona inferior derecha del plano usada para OCR
-            experimental (recorte heurístico 35 % × 25 %). No se guarda en
-            disco ni en base de datos.
+            Recorte usado para OCR experimental. No se guarda en disco ni en
+            base de datos.
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element -- ephemeral data URL from server action */}
           <img
@@ -125,6 +207,18 @@ export function DrawingExperimentalTitleBlockOcr({
         <input type="hidden" name="companyId" value={companyId} />
         <input type="hidden" name="jobId" value={jobId} />
         <input type="hidden" name="drawingId" value={drawingId} />
+        <input type="hidden" name="xPercent" value={cropParams.xPercent} />
+        <input type="hidden" name="yPercent" value={cropParams.yPercent} />
+        <input
+          type="hidden"
+          name="widthPercent"
+          value={cropParams.widthPercent}
+        />
+        <input
+          type="hidden"
+          name="heightPercent"
+          value={cropParams.heightPercent}
+        />
         <Button type="submit" variant="outline" disabled={isPending}>
           {isPending ? "Analizando cajetín..." : "Analizar cajetín con OCR"}
         </Button>
