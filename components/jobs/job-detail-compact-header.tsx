@@ -3,6 +3,7 @@ import type { JobStatus } from "@prisma/client";
 
 import { ArchiveJobButton } from "@/components/jobs/archive-job-button";
 import { ExportJobTakeoffCsvButton } from "@/components/jobs/export-job-takeoff-csv-button";
+import { ExportJobTakeoffExcelButton } from "@/components/jobs/export-job-takeoff-excel-button";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,13 @@ export function JobDetailCompactHeader({
             items={takeoffItems}
             jobName={name}
             jobId={jobId}
+            size="sm"
+          />
+
+          <ExportJobTakeoffExcelButton
+            companyId={companyId}
+            jobId={jobId}
+            itemCount={takeoffItems.length}
             size="sm"
           />
 

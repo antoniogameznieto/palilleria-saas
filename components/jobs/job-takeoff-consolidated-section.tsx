@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ExportJobTakeoffExcelButton } from "@/components/jobs/export-job-takeoff-excel-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
@@ -196,11 +197,19 @@ export function JobTakeoffConsolidatedSection({
 
   return (
     <Card>
-      <CardHeader className="border-b pb-3">
-        <CardTitle>Consolidado de palillería</CardTitle>
-        <CardDescription>
-          Cantidades globales agrupadas por referencia, descripción y unidad.
-        </CardDescription>
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 border-b pb-3">
+        <div>
+          <CardTitle>Consolidado de palillería</CardTitle>
+          <CardDescription>
+            Cantidades globales agrupadas por referencia, descripción y unidad.
+          </CardDescription>
+        </div>
+        <ExportJobTakeoffExcelButton
+          companyId={companyId}
+          jobId={jobId}
+          itemCount={items.length}
+          size="sm"
+        />
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         {jobWidePendingDrawings > 0 ? (
