@@ -1,14 +1,17 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
-import { DeleteDrawingButton } from "@/components/drawings/delete-drawing-button";
+import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
   canDeleteDrawings,
   canEditDrawingMetadata,
   requireDrawingAccess,
+  requireJobAccess,
 } from "@/lib/permissions";
 
 type DrawingDetailPageProps = {
@@ -23,21 +26,21 @@ export default async function DrawingDetailPage({
   params,
 }: DrawingDetailPageProps) {
   const { companyId, jobId, drawingId } = await params;
-  const { membership, drawing } = await requireDrawingAccess(
-    companyId,
-    jobId,
-    drawingId,
-  );
+  const [{ membership, drawing }, { job }] = await Promise.all([
+    requireDrawingAccess(companyId, jobId, drawingId),
+    requireJobAccess(companyId, jobId),
+  ]);
 
   const canEdit = canEditDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
+  const jobHref = `/companies/${companyId}/jobs/${jobId}`;
 
   const metadataProps = {
-    originalFileName: drawing.originalFileName,
-    status: drawing.status,
+    companyId,
+    jobId,
+    drawingId: drawing.id,
     fileSize: drawing.fileSize,
-    createdAt: drawing.createdAt,
     drawingNumber: drawing.drawingNumber,
     lineNumber: drawing.lineNumber,
     revision: drawing.revision,
@@ -46,49 +49,39 @@ export default async function DrawingDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {drawing.originalFileName}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Detalle del plano isométrico.
-          </p>
-        </div>
-        <Link href={`/companies/${companyId}/jobs/${jobId}`}>
-          <Button variant="outline">Volver al trabajo</Button>
-        </Link>
-      </div>
+      <AppBreadcrumbs
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Trabajos", href: `/companies/${companyId}/jobs` },
+          { label: job.name, href: jobHref },
+          { label: drawing.originalFileName },
+        ]}
+      />
+
+      <Link href={jobHref}>
+        <Button variant="outline" type="button">
+          <ArrowLeft className="size-4" />
+          Volver al trabajo
+        </Button>
+      </Link>
+
+      <DrawingDetailHeader
+        companyId={companyId}
+        jobId={jobId}
+        drawingId={drawing.id}
+        fileName={drawing.originalFileName}
+        status={drawing.status}
+        createdAt={drawing.createdAt}
+        canDelete={canDelete}
+      />
 
       {canEdit ? (
-        <DrawingMetadataForm
-          companyId={companyId}
-          jobId={jobId}
-          drawingId={drawing.id}
-          {...metadataProps}
-        />
+        <DrawingMetadataForm {...metadataProps} />
       ) : (
         <DrawingMetadataReadonly {...metadataProps} />
       )}
 
       <PdfViewer drawingId={drawing.id} fileName={drawing.originalFileName} />
-
-      <div className="flex flex-wrap gap-2">
-        <a
-          href={`/api/files/drawings/${drawing.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button>Abrir PDF</Button>
-        </a>
-        {canDelete ? (
-          <DeleteDrawingButton
-            companyId={companyId}
-            jobId={jobId}
-            drawingId={drawing.id}
-          />
-        ) : null}
-      </div>
     </div>
   );
 }

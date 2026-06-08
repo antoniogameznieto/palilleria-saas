@@ -1,11 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { DrawingStatus } from "@prisma/client";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import { updateDrawingMetadataAction } from "@/lib/actions/drawing";
-import { DrawingStatusBadge } from "@/components/drawings/drawing-status-badge";
 import { FileSize } from "@/components/drawings/file-size";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,10 +19,7 @@ type DrawingMetadataFormProps = {
   companyId: string;
   jobId: string;
   drawingId: string;
-  originalFileName: string;
-  status: DrawingStatus;
   fileSize: bigint | null;
-  createdAt: Date;
   drawingNumber: string | null;
   lineNumber: string | null;
   revision: string | null;
@@ -37,10 +32,7 @@ export function DrawingMetadataForm({
   companyId,
   jobId,
   drawingId,
-  originalFileName,
-  status,
   fileSize,
-  createdAt,
   drawingNumber,
   lineNumber,
   revision,
@@ -65,25 +57,9 @@ export function DrawingMetadataForm({
       <CardContent className="space-y-6">
         <dl className="grid gap-4 text-sm md:grid-cols-2">
           <div>
-            <dt className="text-muted-foreground">Archivo</dt>
-            <dd className="mt-1 font-medium">{originalFileName}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Estado</dt>
-            <dd className="mt-1">
-              <DrawingStatusBadge status={status} />
-            </dd>
-          </div>
-          <div>
             <dt className="text-muted-foreground">Tamaño</dt>
             <dd className="mt-1 font-medium">
               <FileSize bytes={fileSize} />
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Fecha de subida</dt>
-            <dd className="mt-1 font-medium">
-              {createdAt.toLocaleString("es-ES")}
             </dd>
           </div>
           <div>
