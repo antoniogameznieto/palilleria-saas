@@ -20,3 +20,11 @@ export {
   requireJobAccess,
   requireJobRole,
 } from "@/lib/permissions/job";
+
+export {
+  canDeleteDrawings,
+  canUploadDrawings,
+  getDrawingForUser,
+  getJobDrawings,
+  requireDrawingAccess,
+} from "@/lib/permissions/drawing";

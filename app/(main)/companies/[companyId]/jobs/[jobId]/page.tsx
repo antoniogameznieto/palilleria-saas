@@ -1,12 +1,16 @@
 import Link from "next/link";
 
+import { DrawingsTable } from "@/components/drawings/drawings-table";
 import { ArchiveJobButton } from "@/components/jobs/archive-job-button";
 import { JobSettingsSummary } from "@/components/jobs/job-settings-summary";
 import { JobSummaryCard } from "@/components/jobs/job-summary-card";
 import { Button } from "@/components/ui/button";
 import {
   canArchiveJob,
+  canDeleteDrawings,
   canEditJob,
+  canUploadDrawings,
+  getJobDrawings,
   requireJobAccess,
 } from "@/lib/permissions";
 
@@ -20,9 +24,12 @@ type JobDetailPageProps = {
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { companyId, jobId } = await params;
   const { membership, job } = await requireJobAccess(companyId, jobId);
+  const drawings = await getJobDrawings(companyId, jobId);
 
   const canEdit = canEditJob(membership.role);
   const canArchive = canArchiveJob(membership.role);
+  const canUpload = canUploadDrawings(membership.role);
+  const canDelete = canDeleteDrawings(membership.role);
 
   return (
     <div className="space-y-6">
@@ -32,7 +39,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             Detalle del trabajo
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Resumen, settings y placeholders de planos y palillería.
+            Resumen, settings, planos y palillería del trabajo.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -70,12 +77,23 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       ) : null}
 
       <section className="space-y-3">
-        <h3 className="text-lg font-medium">Planos</h3>
-        <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          {job._count.drawings} plano{job._count.drawings === 1 ? "" : "s"}{" "}
-          subido{job._count.drawings === 1 ? "" : "s"}. La subida de PDFs estará
-          disponible en la siguiente fase.
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-lg font-medium">Planos</h3>
+          {canUpload ? (
+            <Link
+              href={`/companies/${companyId}/jobs/${jobId}/drawings/upload`}
+            >
+              <Button>Subir planos</Button>
+            </Link>
+          ) : null}
         </div>
+
+        <DrawingsTable
+          companyId={companyId}
+          jobId={jobId}
+          drawings={drawings}
+          canDelete={canDelete}
+        />
       </section>
 
       <section className="space-y-3">
