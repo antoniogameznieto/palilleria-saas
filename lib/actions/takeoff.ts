@@ -8,13 +8,26 @@ import {
   buildTakeoffItemCreatedActivityMessage,
   buildTakeoffItemDeletedActivityMessage,
   buildTakeoffItemDuplicatedActivityMessage,
+  buildTakeoffItemsImportedActivityMessage,
   buildTakeoffItemUpdatedActivityMessage,
   recordDrawingActivity,
 } from "@/lib/drawings/activity";
+import {
+  extractTakeoffCsvImportRows,
+  parseCsvContent,
+  TAKEOFF_CSV_IMPORT_MAX_FILE_SIZE_BYTES,
+} from "@/lib/drawings/takeoff-csv-import";
 import { takeoffItemsEqual } from "@/lib/drawings/takeoff";
 import { prisma } from "@/lib/db";
 import { canManageTakeoffItems, requireDrawingAccess } from "@/lib/permissions";
+import { validateTakeoffCsvImportRows } from "@/lib/validations/takeoff-import";
 import { takeoffItemFormSchema } from "@/lib/validations/takeoff";
+
+export type TakeoffImportActionState = {
+  error?: string;
+  success?: string;
+  importErrors?: Array<{ row: number; message: string }>;
+};
 
 function parseDrawingScopeFormData(formData: FormData) {
   const companyId = formData.get("companyId");
@@ -395,4 +408,96 @@ export async function duplicateTakeoffItemAction(
   revalidateDrawingPage(companyId, jobId, drawingId);
 
   redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+}
+
+export async function importTakeoffItemsAction(
+  _prevState: TakeoffImportActionState,
+  formData: FormData,
+): Promise<TakeoffImportActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { user, membership } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canManageTakeoffItems(membership.role)) {
+    return { error: "No tienes permiso para importar palillería." };
+  }
+
+  const csvContent = formData.get("csvContent");
+
+  if (typeof csvContent !== "string" || csvContent.trim().length === 0) {
+    return { error: "No se recibió ningún contenido CSV." };
+  }
+
+  if (Buffer.byteLength(csvContent, "utf8") > TAKEOFF_CSV_IMPORT_MAX_FILE_SIZE_BYTES) {
+    return {
+      error: "El archivo CSV supera el tamaño máximo permitido.",
+    };
+  }
+
+  const extracted = extractTakeoffCsvImportRows(parseCsvContent(csvContent));
+
+  if (!extracted.ok) {
+    return { error: extracted.error };
+  }
+
+  const { items, errors } = validateTakeoffCsvImportRows(extracted.rows);
+
+  if (errors.length > 0) {
+    return {
+      error: "No se importó ninguna línea. Corrige los errores del CSV.",
+      importErrors: errors,
+    };
+  }
+
+  if (items.length === 0) {
+    return { error: "El CSV no contiene líneas para importar." };
+  }
+
+  await prisma.$transaction(
+    items.map((item) =>
+      prisma.drawingTakeoffItem.create({
+        data: {
+          companyId,
+          jobId,
+          drawingId,
+          createdById: user.id,
+          reference: item.data.reference,
+          description: item.data.description,
+          quantity: item.data.quantity,
+          unit: item.data.unit,
+          length: item.data.length,
+          width: item.data.width,
+          height: item.data.height,
+          notes: item.data.notes,
+        },
+      }),
+    ),
+  );
+
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "takeoff_items_imported",
+    message: buildTakeoffItemsImportedActivityMessage(items.length),
+    metadata: {
+      importedCount: items.length,
+    },
+  });
+
+  revalidateDrawingPage(companyId, jobId, drawingId);
+
+  return {
+    success: `Se importaron ${items.length} líneas de palillería correctamente.`,
+  };
 }

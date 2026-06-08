@@ -122,3 +122,9 @@ export function buildTakeoffItemDeletedActivityMessage(
 export function buildTakeoffItemDuplicatedActivityMessage(): string {
   return "Se duplicó una línea de palillería";
 }
+
+export function buildTakeoffItemsImportedActivityMessage(
+  importedCount: number,
+): string {
+  return `Se importaron ${importedCount} líneas de palillería desde CSV`;
+}

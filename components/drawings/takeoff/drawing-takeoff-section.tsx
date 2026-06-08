@@ -11,6 +11,7 @@ import {
 import { DeleteTakeoffItemButton } from "@/components/drawings/takeoff/delete-takeoff-item-button";
 import { DuplicateTakeoffItemButton } from "@/components/drawings/takeoff/duplicate-takeoff-item-button";
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
+import { ImportTakeoffCsvButton } from "@/components/drawings/takeoff/import-takeoff-csv-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
 import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
 import { Button } from "@/components/ui/button";
@@ -115,12 +116,19 @@ export function DrawingTakeoffSection({
             ahora, sin extracción automática.
           </CardDescription>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <ExportTakeoffCsvButton
             items={items}
             drawingNumber={drawingNumber}
             drawingId={drawingId}
           />
+          {canEdit ? (
+            <ImportTakeoffCsvButton
+              companyId={companyId}
+              jobId={jobId}
+              drawingId={drawingId}
+            />
+          ) : null}
           {canEdit ? (
             <Button
               type="button"

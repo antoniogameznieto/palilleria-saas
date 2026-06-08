@@ -93,6 +93,7 @@ enum DrawingActivityType {
   takeoff_item_updated
   takeoff_item_deleted
   takeoff_item_duplicated
+  takeoff_items_imported
 }
 
 model User {
