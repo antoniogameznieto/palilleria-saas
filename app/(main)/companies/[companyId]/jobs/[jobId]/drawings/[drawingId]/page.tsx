@@ -99,7 +99,10 @@ export default async function DrawingDetailPage({
       ) : null}
 
       {canEditMetadata ? (
-        <DrawingMetadataForm {...metadataProps} />
+        <DrawingMetadataForm
+          key={`${drawing.id}:${drawing.drawingNumber ?? ""}:${drawing.lineNumber ?? ""}:${drawing.revision ?? ""}`}
+          {...metadataProps}
+        />
       ) : (
         <DrawingMetadataReadonly {...metadataProps} />
       )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { DrawingStatus } from "@prisma/client";
 
 import type { AuthActionState } from "@/lib/actions/auth";
@@ -60,6 +61,13 @@ export function DrawingDetectionControl({
     completeSimulatedDrawingDetectionAction,
     initialState,
   );
+  const router = useRouter();
+
+  useEffect(() => {
+    if (startState.success || completeState.success) {
+      router.refresh();
+    }
+  }, [completeState.success, router, startState.success]);
 
   const isProcessing = status === "processing";
   const feedback = startState.error || startState.success
@@ -71,8 +79,8 @@ export function DrawingDetectionControl({
       <CardHeader>
         <CardTitle>Detección automática</CardTitle>
         <CardDescription>
-          Inicia el flujo de detección de metadatos del plano. En esta fase el
-          PDF no se analiza todavía.
+          Inicia el flujo de detección de metadatos del plano. Por ahora se
+          analiza el nombre del archivo, sin leer el contenido del PDF.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
