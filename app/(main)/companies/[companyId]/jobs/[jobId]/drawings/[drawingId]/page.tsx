@@ -1,13 +1,11 @@
 import { DrawingTakeoffSection } from "@/components/drawings/takeoff/drawing-takeoff-section";
 import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
-import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
-import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
+import { DrawingAutomationPanel } from "@/components/drawings/drawing-automation-panel";
 import { DrawingDetailCompactHeader } from "@/components/drawings/drawing-detail-compact-header";
 import { DrawingDetailSummaryTab } from "@/components/drawings/drawing-detail-summary-tab";
 import { DrawingDetailWorkspace } from "@/components/drawings/drawing-detail-workspace";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
-import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
@@ -51,7 +49,6 @@ export default async function DrawingDetailPage({
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
   const canEditTakeoff = canManageTakeoffItems(membership.role);
-  const isDetected = drawing.status === "detected";
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
   const takeoffSummary = buildTakeoffSummary(takeoffItems);
@@ -122,60 +119,19 @@ export default async function DrawingDetailPage({
           )
         }
         automatizacion={
-          <div className="space-y-6">
-            {isDetected ? (
-              <DrawingDetectedMetadataReview
-                companyId={companyId}
-                jobId={jobId}
-                drawingId={drawing.id}
-                drawingNumber={drawing.drawingNumber}
-                lineNumber={drawing.lineNumber}
-                revision={drawing.revision}
-                canConfirm={canConfirmDetected}
-                plain
-              />
-            ) : null}
-
-            {canStartDetection ? (
-              <section className="space-y-3">
-                <h3 className="text-sm font-medium">Detección automática</h3>
-                <p className="text-xs text-muted-foreground">
-                  Analiza el nombre del archivo y el texto embebido del PDF.
-                  Solo rellena campos vacíos.
-                </p>
-                <DrawingDetectionControl
-                  companyId={companyId}
-                  jobId={jobId}
-                  drawingId={drawing.id}
-                  status={drawing.status}
-                  lastDetectionFeedback={lastDetectionFeedback}
-                  plain
-                />
-              </section>
-            ) : null}
-
-            {canExtractPdfText ? (
-              <section className="space-y-3">
-                <h3 className="text-sm font-medium">Extracción de texto</h3>
-                <p className="text-xs text-muted-foreground">
-                  Experimental. Vista previa del texto embebido sin OCR ni IA.
-                  La detección de metadatos ya usa este texto automáticamente.
-                </p>
-                <DrawingPdfTextExtraction
-                  companyId={companyId}
-                  jobId={jobId}
-                  drawingId={drawing.id}
-                  plain
-                />
-              </section>
-            ) : null}
-
-            {!isDetected && !canStartDetection && !canExtractPdfText ? (
-              <p className="text-sm text-muted-foreground">
-                No tienes permisos para ejecutar automatizaciones en este plano.
-              </p>
-            ) : null}
-          </div>
+          <DrawingAutomationPanel
+            companyId={companyId}
+            jobId={jobId}
+            drawingId={drawing.id}
+            status={drawing.status}
+            drawingNumber={drawing.drawingNumber}
+            lineNumber={drawing.lineNumber}
+            revision={drawing.revision}
+            canStartDetection={canStartDetection}
+            canExtractPdfText={canExtractPdfText}
+            canConfirmDetected={canConfirmDetected}
+            lastDetectionFeedback={lastDetectionFeedback}
+          />
         }
         actividad={
           <DrawingActivityCard

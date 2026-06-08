@@ -90,23 +90,12 @@ export function DrawingDetectionControl({
 
   const content = (
     <div className="space-y-4">
-      <FeedbackMessage state={actionFeedback} />
-
-      {showFeedbackSummary ? (
-        <DrawingDetectionFeedbackSummary feedback={feedback} />
-      ) : null}
-
       {isProcessing ? (
         <p className="text-sm text-muted-foreground">
-          El plano está en procesamiento. Al completar, se analizarán el nombre
-          del archivo y el texto embebido del PDF para proponer metadatos.
+          El plano está en procesamiento. Usa «Completar detección» para
+          analizar el archivo y aplicar metadatos en campos vacíos.
         </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Propone número de plano, línea y revisión desde el nombre del archivo
-          y, si hay texto embebido, desde el contenido del PDF.
-        </p>
-      )}
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {!isProcessing ? (
@@ -131,6 +120,12 @@ export function DrawingDetectionControl({
           </form>
         ) : null}
       </div>
+
+      <FeedbackMessage state={actionFeedback} />
+
+      {showFeedbackSummary ? (
+        <DrawingDetectionFeedbackSummary feedback={feedback} />
+      ) : null}
     </div>
   );
 
@@ -141,10 +136,10 @@ export function DrawingDetectionControl({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Detección automática</CardTitle>
+        <CardTitle>Detectar metadatos</CardTitle>
         <CardDescription>
-          Analiza el nombre del archivo y el texto embebido del PDF para
-          proponer metadatos. Solo rellena campos vacíos.
+          Busca número de plano, línea y revisión usando el nombre del archivo
+          y el texto embebido del PDF.
         </CardDescription>
       </CardHeader>
       <CardContent>{content}</CardContent>
