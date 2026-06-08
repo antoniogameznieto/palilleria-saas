@@ -91,7 +91,16 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         <DrawingsTable
           companyId={companyId}
           jobId={jobId}
-          drawings={drawings}
+          drawings={drawings.map((drawing) => ({
+            id: drawing.id,
+            fileName: drawing.fileName,
+            originalFileName: drawing.originalFileName,
+            drawingNumber: drawing.drawingNumber,
+            lineNumber: drawing.lineNumber,
+            revision: drawing.revision,
+            status: drawing.status,
+            createdAt: drawing.createdAt.toISOString(),
+          }))}
           canDelete={canDelete}
         />
       </section>
