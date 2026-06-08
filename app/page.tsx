@@ -1,8 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { getCurrentUser, getPostLoginRedirect } from "@/lib/auth";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect(await getPostLoginRedirect(user.id));
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 text-center">
       <div className="space-y-2">
@@ -15,9 +23,14 @@ export default function HomePage() {
         </p>
       </div>
 
-      <Link href="/dashboard">
-        <Button>Ir al dashboard</Button>
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link href="/login">
+          <Button>Iniciar sesión</Button>
+        </Link>
+        <Link href="/register">
+          <Button variant="outline">Crear cuenta</Button>
+        </Link>
+      </div>
     </div>
   );
 }

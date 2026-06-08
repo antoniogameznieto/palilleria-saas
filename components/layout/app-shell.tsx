@@ -1,14 +1,30 @@
 import { Wrench } from "lucide-react";
 
+import { LogoutButton } from "@/components/auth/logout-button";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 type AppShellProps = {
   children: React.ReactNode;
+  user: {
+    name: string | null;
+    email: string;
+  };
+  activeCompany: {
+    id: string;
+    name: string;
+    taxName: string | null;
+  };
+  membershipRole: string;
 };
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({
+  children,
+  user,
+  activeCompany,
+  membershipRole,
+}: AppShellProps) {
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
@@ -32,10 +48,15 @@ export function AppShell({ children }: AppShellProps) {
               Empresa activa
             </p>
             <p className="mt-1 truncate text-sm font-medium">
-              Sin empresa seleccionada
+              {activeCompany.name}
             </p>
-            <Badge variant="secondary" className="mt-2">
-              Sprint 1
+            {activeCompany.taxName ? (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {activeCompany.taxName}
+              </p>
+            ) : null}
+            <Badge variant="secondary" className="mt-2 capitalize">
+              {membershipRole}
             </Badge>
           </div>
         </div>
@@ -44,12 +65,15 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b px-6">
           <div>
-            <p className="text-sm text-muted-foreground">Área de trabajo</p>
+            <p className="text-sm text-muted-foreground">Sesión activa</p>
             <h1 className="text-lg font-semibold tracking-tight">
-              Panel principal
+              {user.name ?? user.email}
             </h1>
           </div>
-          <Badge variant="outline">MVP en construcción</Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline">{user.email}</Badge>
+            <LogoutButton />
+          </div>
         </header>
 
         <Separator />

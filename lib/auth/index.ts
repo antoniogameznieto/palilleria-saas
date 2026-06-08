@@ -1,6 +1,8 @@
-/**
- * Auth.js / NextAuth helpers.
- * Se implementará en la Fase 3 (registro, login, sesión).
- */
-
-export {};
+export { auth, handlers, signIn, signOut } from "@/lib/auth/auth";
+export {
+  getCurrentUser,
+  getPostLoginRedirect,
+  getUserCompanies,
+  requireAuth,
+} from "@/lib/auth/session";
+export { comparePassword, hashPassword } from "@/lib/auth/password";
