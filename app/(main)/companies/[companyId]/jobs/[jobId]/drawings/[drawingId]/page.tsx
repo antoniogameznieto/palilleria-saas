@@ -5,6 +5,7 @@ import { DrawingTakeoffSection } from "@/components/drawings/takeoff/drawing-tak
 import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
+import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
@@ -19,6 +20,7 @@ import {
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
+  canExtractDrawingPdfText,
   canManageTakeoffItems,
   canStartDrawingDetection,
   requireDrawingAccess,
@@ -48,6 +50,7 @@ export default async function DrawingDetailPage({
   const canEditMetadata = canEditDrawingMetadata(membership.role);
   const canEditStatus = canEditDrawingStatus(membership.role);
   const canStartDetection = canStartDrawingDetection(membership.role);
+  const canExtractPdfText = canExtractDrawingPdfText(membership.role);
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
   const canEditTakeoff = canManageTakeoffItems(membership.role);
@@ -135,6 +138,14 @@ export default async function DrawingDetailPage({
       <DrawingActivityCard activities={activities} />
 
       <PdfViewer drawingId={drawing.id} fileName={drawing.originalFileName} />
+
+      {canExtractPdfText ? (
+        <DrawingPdfTextExtraction
+          companyId={companyId}
+          jobId={jobId}
+          drawingId={drawing.id}
+        />
+      ) : null}
 
       <DrawingTakeoffSection
         companyId={companyId}

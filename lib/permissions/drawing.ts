@@ -9,6 +9,11 @@ const UPLOAD_DRAWING_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const EDIT_DRAWING_METADATA_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const EDIT_DRAWING_STATUS_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const START_DRAWING_DETECTION_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
+const EXTRACT_DRAWING_PDF_TEXT_ROLES: CompanyRole[] = [
+  "owner",
+  "admin",
+  "engineer",
+];
 const CONFIRM_DETECTED_DRAWING_METADATA_ROLES: CompanyRole[] = [
   "owner",
   "admin",
@@ -31,6 +36,10 @@ export function canEditDrawingStatus(role: CompanyRole): boolean {
 
 export function canStartDrawingDetection(role: CompanyRole): boolean {
   return START_DRAWING_DETECTION_ROLES.includes(role);
+}
+
+export function canExtractDrawingPdfText(role: CompanyRole): boolean {
+  return EXTRACT_DRAWING_PDF_TEXT_ROLES.includes(role);
 }
 
 export function canConfirmDetectedDrawingMetadata(role: CompanyRole): boolean {

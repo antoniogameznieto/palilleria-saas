@@ -1,0 +1,1 @@
+export const PDF_TEXT_PREVIEW_MAX_CHARS = 1000;

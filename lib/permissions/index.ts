@@ -26,6 +26,7 @@ export {
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
+  canExtractDrawingPdfText,
   canManageTakeoffItems,
   canStartDrawingDetection,
   canUploadDrawings,
