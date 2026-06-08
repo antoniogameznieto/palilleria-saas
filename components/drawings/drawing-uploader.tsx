@@ -6,6 +6,7 @@ import { useActionState, useCallback, useRef, useState } from "react";
 import type { AuthActionState } from "@/lib/actions/auth";
 import { uploadDrawingsAction } from "@/lib/actions/drawing";
 import { formatFileSize } from "@/lib/drawings/format";
+import { isPdfFile } from "@/lib/drawings/pdf-validation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,13 +17,6 @@ type DrawingUploaderProps = {
 };
 
 const initialState: AuthActionState = {};
-
-function isPdfFile(file: File): boolean {
-  return (
-    file.type === "application/pdf" ||
-    file.name.toLowerCase().endsWith(".pdf")
-  );
-}
 
 function setInputFiles(input: HTMLInputElement, files: File[]) {
   const dataTransfer = new DataTransfer();
@@ -60,13 +54,20 @@ export function DrawingUploader({
 
       for (const file of Array.from(incoming)) {
         if (!isPdfFile(file)) {
-          errors.push(`"${file.name}" no es un PDF.`);
+          errors.push(
+            `"${file.name}" no es un PDF válido. Solo se aceptan archivos .pdf.`,
+          );
+          continue;
+        }
+
+        if (file.size === 0) {
+          errors.push(`"${file.name}" está vacío.`);
           continue;
         }
 
         if (file.size > maxUploadSizeBytes) {
           errors.push(
-            `"${file.name}" supera el máximo de ${maxUploadSizeMb} MB.`,
+            `"${file.name}" supera el tamaño máximo permitido de ${maxUploadSizeMb} MB.`,
           );
           continue;
         }

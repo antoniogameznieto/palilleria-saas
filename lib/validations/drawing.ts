@@ -1,7 +1,10 @@
 import { z } from "zod";
 
+import { isPdfFile } from "@/lib/drawings/pdf-validation";
 import { MANUAL_DRAWING_STATUS_VALUES } from "@/lib/drawings/labels";
-import { getMaxUploadSizeBytes, PDF_MIME_TYPE } from "@/lib/storage";
+import { getMaxUploadSizeBytes } from "@/lib/storage";
+
+export { isPdfFile } from "@/lib/drawings/pdf-validation";
 
 const optionalMetadataField = z
   .string()
@@ -28,25 +31,18 @@ export const updateDrawingStatusSchema = z.object({
 
 export type UpdateDrawingStatusInput = z.infer<typeof updateDrawingStatusSchema>;
 
-export function isPdfFile(file: File): boolean {
-  const type = file.type.toLowerCase();
-  const name = file.name.toLowerCase();
-
-  return type === PDF_MIME_TYPE || name.endsWith(".pdf");
-}
-
 export function validatePdfFile(file: File): string | null {
   if (!isPdfFile(file)) {
-    return `"${file.name}" no es un PDF válido.`;
-  }
-
-  if (file.size > getMaxUploadSizeBytes()) {
-    const maxMb = Math.round(getMaxUploadSizeBytes() / (1024 * 1024));
-    return `"${file.name}" supera el tamaño máximo de ${maxMb} MB.`;
+    return `"${file.name}" no es un PDF válido. Solo se aceptan archivos .pdf.`;
   }
 
   if (file.size === 0) {
     return `"${file.name}" está vacío.`;
+  }
+
+  if (file.size > getMaxUploadSizeBytes()) {
+    const maxMb = Math.round(getMaxUploadSizeBytes() / (1024 * 1024));
+    return `"${file.name}" supera el tamaño máximo permitido de ${maxMb} MB.`;
   }
 
   return null;

@@ -19,6 +19,7 @@ import {
   recordDrawingActivity,
 } from "@/lib/drawings/activity";
 import { detectDrawingMetadataPlaceholder } from "@/lib/drawings/detection";
+import { drawingMetadataEquals } from "@/lib/drawings/metadata";
 import { prisma } from "@/lib/db";
 import {
   buildDrawingStoragePath,
@@ -95,7 +96,7 @@ export async function uploadDrawingsAction(
 
   const files = formData
     .getAll("files")
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    .filter((entry): entry is File => entry instanceof File);
 
   const validationError = validatePdfFiles(files);
 
@@ -106,52 +107,74 @@ export async function uploadDrawingsAction(
   for (const file of files) {
     const originalFileName = file.name;
     const safeFileName = sanitizeFileName(originalFileName);
+    let drawingId: string | null = null;
+    let storagePath: string | null = null;
 
-    const drawing = await prisma.drawing.create({
-      data: {
+    try {
+      const drawing = await prisma.drawing.create({
+        data: {
+          companyId,
+          jobId,
+          fileName: safeFileName,
+          originalFileName,
+          storagePath: "",
+          mimeType: PDF_MIME_TYPE,
+          status: "uploaded",
+          createdById: user.id,
+        },
+      });
+
+      drawingId = drawing.id;
+      storagePath = buildDrawingStoragePath(
         companyId,
         jobId,
-        fileName: safeFileName,
+        drawing.id,
         originalFileName,
-        storagePath: "",
-        mimeType: PDF_MIME_TYPE,
-        status: "uploaded",
-        createdById: user.id,
-      },
-    });
+      );
 
-    const storagePath = buildDrawingStoragePath(
-      companyId,
-      jobId,
-      drawing.id,
-      originalFileName,
-    );
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+      await uploadFile({ storagePath, buffer });
 
-    await uploadFile({ storagePath, buffer });
+      await prisma.drawing.update({
+        where: { id: drawing.id },
+        data: {
+          storagePath,
+          fileSize: BigInt(file.size),
+          fileName: sanitizeFileName(originalFileName),
+        },
+      });
 
-    await prisma.drawing.update({
-      where: { id: drawing.id },
-      data: {
-        storagePath,
-        fileSize: BigInt(file.size),
-        fileName: sanitizeFileName(originalFileName),
-      },
-    });
+      await recordDrawingActivity({
+        drawingId: drawing.id,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        type: "drawing_uploaded",
+        message: buildDrawingUploadedActivityMessage(originalFileName),
+        metadata: {
+          fileName: originalFileName,
+        },
+      });
+    } catch {
+      if (storagePath) {
+        await deleteFile({ storagePath }).catch(() => undefined);
+      }
 
-    await recordDrawingActivity({
-      drawingId: drawing.id,
-      companyId,
-      jobId,
-      actorUserId: user.id,
-      type: "drawing_uploaded",
-      message: buildDrawingUploadedActivityMessage(originalFileName),
-      metadata: {
-        fileName: originalFileName,
-        fileSize: file.size,
-      },
-    });
+      if (drawingId) {
+        await prisma.drawing.deleteMany({
+          where: {
+            id: drawingId,
+            companyId,
+            jobId,
+          },
+        });
+      }
+
+      return {
+        error: `No se pudo subir "${originalFileName}". Inténtalo de nuevo.`,
+      };
+    }
   }
 
   redirect(`/companies/${companyId}/jobs/${jobId}`);
@@ -184,17 +207,23 @@ export async function deleteDrawingAction(formData: FormData) {
     redirect(`/companies/${companyId}/jobs/${jobId}`);
   }
 
-  if (drawing.storagePath) {
-    await deleteFile({ storagePath: drawing.storagePath });
-  }
-
-  await prisma.drawing.deleteMany({
+  const deleted = await prisma.drawing.deleteMany({
     where: {
       id: drawingId,
       companyId,
       jobId,
     },
   });
+
+  if (deleted.count === 0) {
+    redirect(`/companies/${companyId}/jobs/${jobId}`);
+  }
+
+  if (drawing.storagePath) {
+    await deleteFile({ storagePath: drawing.storagePath }).catch(() => undefined);
+  }
+
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
 
   redirect(`/companies/${companyId}/jobs/${jobId}`);
 }
@@ -244,7 +273,11 @@ export async function updateDrawingMetadataAction(
     };
   }
 
-  await prisma.drawing.updateMany({
+  if (drawingMetadataEquals(drawing, parsed.data)) {
+    return { success: "Los metadatos no han cambiado." };
+  }
+
+  const updated = await prisma.drawing.updateMany({
     where: {
       id: drawingId,
       companyId,
@@ -256,6 +289,10 @@ export async function updateDrawingMetadataAction(
       revision: parsed.data.revision,
     },
   });
+
+  if (updated.count === 0) {
+    return { error: "No se pudo actualizar el plano." };
+  }
 
   await recordDrawingActivity({
     drawingId,
@@ -328,34 +365,44 @@ export async function updateDrawingStatusAction(
 
   const previousStatus = drawing.status;
 
-  await prisma.drawing.updateMany({
+  if (previousStatus === parsed.data.status) {
+    return { success: "El estado no ha cambiado." };
+  }
+
+  const updated = await prisma.drawing.updateMany({
     where: {
       id: drawingId,
       companyId,
       jobId,
+      status: previousStatus,
     },
     data: {
       status: parsed.data.status,
     },
   });
 
-  if (previousStatus !== parsed.data.status) {
-    await recordDrawingActivity({
-      drawingId,
-      companyId,
-      jobId,
-      actorUserId: user.id,
-      type: "status_updated",
-      message: buildStatusUpdatedActivityMessage(
-        previousStatus,
-        parsed.data.status,
-      ),
-      metadata: {
-        previousStatus,
-        nextStatus: parsed.data.status,
-      },
-    });
+  if (updated.count === 0) {
+    return {
+      error:
+        "No se pudo actualizar el estado. El plano puede haber cambiado mientras editabas.",
+    };
   }
+
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "status_updated",
+    message: buildStatusUpdatedActivityMessage(
+      previousStatus,
+      parsed.data.status,
+    ),
+    metadata: {
+      previousStatus,
+      nextStatus: parsed.data.status,
+    },
+  });
 
   revalidateDrawingPages(companyId, jobId, drawingId);
 
@@ -391,16 +438,21 @@ export async function startDrawingDetectionAction(
 
   const previousStatus = drawing.status;
 
-  await prisma.drawing.updateMany({
+  const updated = await prisma.drawing.updateMany({
     where: {
       id: drawingId,
       companyId,
       jobId,
+      status: { not: "processing" },
     },
     data: {
       status: "processing",
     },
   });
+
+  if (updated.count === 0) {
+    return { error: "La detección ya está en curso para este plano." };
+  }
 
   const fileName = resolveDrawingFileNameForDetection(drawing);
 
@@ -502,12 +554,16 @@ export async function completeSimulatedDrawingDetectionAction(
       id: drawingId,
       companyId,
       jobId,
+      status: "processing",
     },
     data: detectionResult.updateData,
   });
 
   if (updated.count === 0) {
-    return { error: "No se pudo actualizar el plano." };
+    return {
+      error:
+        "Solo se puede completar la detección simulada cuando el plano está en procesamiento.",
+    };
   }
 
   const drawingAfterUpdate = await prisma.drawing.findFirst({
@@ -542,10 +598,9 @@ export async function completeSimulatedDrawingDetectionAction(
       detectionResult.appliedFields,
     ),
     metadata: {
-      fileName: detectionResult.fileName,
-      detected: detectionResult.detected,
       appliedFields: detectionResult.appliedFields,
-      appliedMetadata: detectionResult.metadataUpdate,
+      previousStatus: "processing",
+      nextStatus: "detected",
     },
   });
 
@@ -577,6 +632,13 @@ export async function confirmDetectedDrawingMetadataAction(
     redirect(
       `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
     );
+  }
+
+  if (drawing.status !== "detected") {
+    return {
+      error:
+        "Solo se pueden confirmar metadatos cuando el plano está en estado Detectado.",
+    };
   }
 
   const updated = await prisma.drawing.updateMany({

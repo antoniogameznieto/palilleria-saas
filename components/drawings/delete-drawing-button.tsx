@@ -1,3 +1,7 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+
 import { deleteDrawingAction } from "@/lib/actions/drawing";
 import { Button } from "@/components/ui/button";
 
@@ -6,6 +10,16 @@ type DeleteDrawingButtonProps = {
   jobId: string;
   drawingId: string;
 };
+
+function DeleteSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="outline" size="sm" disabled={pending}>
+      {pending ? "Eliminando..." : "Eliminar"}
+    </Button>
+  );
+}
 
 export function DeleteDrawingButton({
   companyId,
@@ -17,9 +31,7 @@ export function DeleteDrawingButton({
       <input type="hidden" name="companyId" value={companyId} />
       <input type="hidden" name="jobId" value={jobId} />
       <input type="hidden" name="drawingId" value={drawingId} />
-      <Button type="submit" variant="outline" size="sm">
-        Eliminar
-      </Button>
+      <DeleteSubmitButton />
     </form>
   );
 }
