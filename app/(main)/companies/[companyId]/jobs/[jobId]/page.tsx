@@ -1,10 +1,11 @@
 import { JobDetailCompactHeader } from "@/components/jobs/job-detail-compact-header";
 import { JobDetailKpis } from "@/components/jobs/job-detail-kpis";
 import { JobDrawingsSection } from "@/components/jobs/job-drawings-section";
+import { JobTakeoffConsolidatedSection } from "@/components/jobs/job-takeoff-consolidated-section";
 import { JobSettingsCollapsible } from "@/components/jobs/job-settings-collapsible";
-import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
+import { getDrawingProgress, buildJobDrawingProgressSummary } from "@/lib/drawings/drawing-progress";
 import { buildJobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summary";
-import { buildJobDrawingProgressSummary } from "@/lib/drawings/drawing-progress";
+import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { buildJobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import { buildJobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
@@ -67,6 +68,19 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     takeoffLineCount: drawing._count.takeoffItems,
     takeoffReviewedAt: drawing.takeoffReviewedAt?.toISOString() ?? null,
   }));
+  const drawingProgressByDrawingId = Object.fromEntries(
+    drawings.map((drawing) => [
+      drawing.id,
+      getDrawingProgress({
+        status: drawing.status,
+        drawingNumber: drawing.drawingNumber,
+        lineNumber: drawing.lineNumber,
+        revision: drawing.revision,
+        takeoffLineCount: drawing._count.takeoffItems,
+        takeoffReviewedAt: drawing.takeoffReviewedAt,
+      }),
+    ]),
+  );
 
   return (
     <div className="space-y-6">
@@ -91,6 +105,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         takeoffSummary={jobTakeoffSummary}
         takeoffReviewSummary={takeoffReviewSummary}
         drawingProgressSummary={drawingProgressSummary}
+      />
+
+      <JobTakeoffConsolidatedSection
+        companyId={companyId}
+        jobId={jobId}
+        items={jobTakeoffItems}
+        drawingProgressByDrawingId={drawingProgressByDrawingId}
       />
 
       <JobDrawingsSection
