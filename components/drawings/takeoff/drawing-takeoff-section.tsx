@@ -79,6 +79,7 @@ export function DrawingTakeoffSection({
   const [sortField, setSortField] = useState<TakeoffSortField>("createdAt");
   const [sortDirection, setSortDirection] =
     useState<TakeoffSortDirection>("asc");
+  const [createFormKey, setCreateFormKey] = useState(0);
   const [createState, createAction, isCreating] = useActionState(
     createTakeoffItemAction,
     initialState,
@@ -95,6 +96,10 @@ export function DrawingTakeoffSection({
 
     if (createState.success || updateChanged) {
       router.refresh();
+    }
+
+    if (createState.success) {
+      setCreateFormKey((current) => current + 1);
     }
   }, [createState.success, router, updateState.success]);
 
@@ -167,6 +172,7 @@ export function DrawingTakeoffSection({
 
         {canEdit && showCreateForm ? (
           <DrawingTakeoffItemForm
+            key={`create-${createFormKey}`}
             companyId={companyId}
             jobId={jobId}
             drawingId={drawingId}
@@ -181,7 +187,7 @@ export function DrawingTakeoffSection({
 
         {editingItem ? (
           <DrawingTakeoffItemForm
-            key={editingItem.id}
+            key={`${editingItem.id}-${editingItem.updatedAt}`}
             companyId={companyId}
             jobId={jobId}
             drawingId={drawingId}

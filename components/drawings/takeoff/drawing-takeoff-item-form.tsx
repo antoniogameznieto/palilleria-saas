@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { useRef, type ComponentProps } from "react";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,23 @@ const emptyValues = {
   notes: "",
 };
 
+function resolveFormValues(initialValues?: SerializedTakeoffItem) {
+  if (!initialValues) {
+    return emptyValues;
+  }
+
+  return {
+    reference: initialValues.reference ?? "",
+    description: initialValues.description,
+    quantity: initialValues.quantity,
+    unit: initialValues.unit ?? "",
+    length: initialValues.length ?? "",
+    width: initialValues.width ?? "",
+    height: initialValues.height ?? "",
+    notes: initialValues.notes ?? "",
+  };
+}
+
 export function DrawingTakeoffItemForm({
   companyId,
   jobId,
@@ -46,18 +63,8 @@ export function DrawingTakeoffItemForm({
   state,
   onCancel,
 }: DrawingTakeoffItemFormProps) {
-  const values = initialValues
-    ? {
-        reference: initialValues.reference ?? "",
-        description: initialValues.description,
-        quantity: initialValues.quantity,
-        unit: initialValues.unit ?? "",
-        length: initialValues.length ?? "",
-        width: initialValues.width ?? "",
-        height: initialValues.height ?? "",
-        notes: initialValues.notes ?? "",
-      }
-    : emptyValues;
+  const valuesRef = useRef(resolveFormValues(initialValues));
+  const values = valuesRef.current;
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
