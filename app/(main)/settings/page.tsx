@@ -1,10 +1,9 @@
-export default function SettingsPage() {
-  return (
-    <div className="space-y-2">
-      <h2 className="text-2xl font-semibold tracking-tight">Settings</h2>
-      <p className="text-sm text-muted-foreground">
-        La configuración de empresa y palillería se implementará más adelante.
-      </p>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+import { requireActiveCompany } from "@/lib/company";
+
+export default async function SettingsRedirectPage() {
+  const { companyId } = await requireActiveCompany();
+
+  redirect(`/companies/${companyId}/settings`);
 }

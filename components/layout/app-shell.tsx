@@ -1,6 +1,7 @@
 import { Wrench } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { CompanySwitcher } from "@/components/company/company-switcher";
 import { AppSidebarNav } from "@/components/layout/app-sidebar-nav";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +18,11 @@ type AppShellProps = {
     taxName: string | null;
   };
   membershipRole: string;
+  activeCompanyId: string;
+  companies: {
+    id: string;
+    name: string;
+  }[];
 };
 
 export function AppShell({
@@ -24,6 +30,8 @@ export function AppShell({
   user,
   activeCompany,
   membershipRole,
+  activeCompanyId,
+  companies,
 }: AppShellProps) {
   return (
     <div className="flex min-h-screen bg-background">
@@ -40,24 +48,25 @@ export function AppShell({
           </div>
         </div>
 
-        <AppSidebarNav />
+        <AppSidebarNav activeCompanyId={activeCompanyId} />
 
         <div className="border-t border-sidebar-border p-4">
           <div className="rounded-md border border-sidebar-border bg-background/60 p-3">
             <p className="text-xs font-medium text-muted-foreground">
               Empresa activa
             </p>
-            <p className="mt-1 truncate text-sm font-medium">
-              {activeCompany.name}
-            </p>
+            <div className="mt-2">
+              <CompanySwitcher
+                companies={companies}
+                activeCompanyId={activeCompanyId}
+                membershipRole={membershipRole}
+              />
+            </div>
             {activeCompany.taxName ? (
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              <p className="mt-2 truncate text-xs text-muted-foreground">
                 {activeCompany.taxName}
               </p>
             ) : null}
-            <Badge variant="secondary" className="mt-2 capitalize">
-              {membershipRole}
-            </Badge>
           </div>
         </div>
       </aside>

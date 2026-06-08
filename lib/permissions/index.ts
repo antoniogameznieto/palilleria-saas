@@ -1,6 +1,11 @@
-/**
- * Helpers de autorización multiempresa.
- * Se implementará en la Fase 4 (membresía, roles, acceso por companyId).
- */
-
-export {};
+export {
+  assertCanManageCompany,
+  canManageCompany,
+  getCompanyForUser,
+  getCompanyMemberCount,
+  getCompanyMembers,
+  getUserCompaniesWithRoles,
+  getUserCompanyMembership,
+  requireCompanyMember,
+  requireCompanyRole,
+} from "@/lib/permissions/company";

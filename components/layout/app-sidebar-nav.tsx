@@ -11,38 +11,44 @@ import {
 
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Trabajos",
-    href: "/jobs",
-    icon: Briefcase,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    label: "Usuarios",
-    href: "/users",
-    icon: Users,
-  },
-] as const;
+type AppSidebarNavProps = {
+  activeCompanyId: string;
+};
 
-export function AppSidebarNav() {
+export function AppSidebarNav({ activeCompanyId }: AppSidebarNavProps) {
   const pathname = usePathname();
+
+  const navItems = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Trabajos",
+      href: "/jobs",
+      icon: Briefcase,
+    },
+    {
+      label: "Settings",
+      href: `/companies/${activeCompanyId}/settings`,
+      icon: Settings,
+    },
+    {
+      label: "Usuarios",
+      href: "/users",
+      icon: Users,
+    },
+  ] as const;
 
   return (
     <nav className="flex flex-1 flex-col gap-1 p-4">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
+          item.label === "Settings"
+            ? pathname.includes("/companies/") && pathname.endsWith("/settings")
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <Link
