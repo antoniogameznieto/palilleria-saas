@@ -9,6 +9,15 @@ import {
   logDrawingDetectionDebug,
   resolveDrawingFileNameForDetection,
 } from "@/lib/drawings/detection-apply";
+import {
+  buildDetectionCompletedActivityMessage,
+  buildDetectionStartedActivityMessage,
+  buildDrawingUploadedActivityMessage,
+  buildMetadataConfirmedActivityMessage,
+  buildMetadataUpdatedActivityMessage,
+  buildStatusUpdatedActivityMessage,
+  recordDrawingActivity,
+} from "@/lib/drawings/activity";
 import { detectDrawingMetadataPlaceholder } from "@/lib/drawings/detection";
 import { prisma } from "@/lib/db";
 import {
@@ -130,6 +139,19 @@ export async function uploadDrawingsAction(
         fileName: sanitizeFileName(originalFileName),
       },
     });
+
+    await recordDrawingActivity({
+      drawingId: drawing.id,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      type: "drawing_uploaded",
+      message: buildDrawingUploadedActivityMessage(originalFileName),
+      metadata: {
+        fileName: originalFileName,
+        fileSize: file.size,
+      },
+    });
   }
 
   redirect(`/companies/${companyId}/jobs/${jobId}`);
@@ -197,7 +219,11 @@ export async function updateDrawingMetadataAction(
     return { error: "Plano no válido." };
   }
 
-  const { membership } = await requireDrawingAccess(companyId, jobId, drawingId);
+  const { user, membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
 
   if (!canEditDrawingMetadata(membership.role)) {
     redirect(
@@ -231,6 +257,27 @@ export async function updateDrawingMetadataAction(
     },
   });
 
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "metadata_updated",
+    message: buildMetadataUpdatedActivityMessage(),
+    metadata: {
+      previous: {
+        drawingNumber: drawing.drawingNumber,
+        lineNumber: drawing.lineNumber,
+        revision: drawing.revision,
+      },
+      next: {
+        drawingNumber: parsed.data.drawingNumber,
+        lineNumber: parsed.data.lineNumber,
+        revision: parsed.data.revision,
+      },
+    },
+  });
+
   revalidateDrawingPages(companyId, jobId, drawingId);
 
   return { success: "Metadatos guardados correctamente." };
@@ -256,7 +303,11 @@ export async function updateDrawingStatusAction(
     return { error: "Plano no válido." };
   }
 
-  const { membership } = await requireDrawingAccess(companyId, jobId, drawingId);
+  const { user, membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
 
   if (!canEditDrawingStatus(membership.role)) {
     redirect(
@@ -275,6 +326,8 @@ export async function updateDrawingStatusAction(
     };
   }
 
+  const previousStatus = drawing.status;
+
   await prisma.drawing.updateMany({
     where: {
       id: drawingId,
@@ -285,6 +338,24 @@ export async function updateDrawingStatusAction(
       status: parsed.data.status,
     },
   });
+
+  if (previousStatus !== parsed.data.status) {
+    await recordDrawingActivity({
+      drawingId,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      type: "status_updated",
+      message: buildStatusUpdatedActivityMessage(
+        previousStatus,
+        parsed.data.status,
+      ),
+      metadata: {
+        previousStatus,
+        nextStatus: parsed.data.status,
+      },
+    });
+  }
 
   revalidateDrawingPages(companyId, jobId, drawingId);
 
@@ -302,7 +373,7 @@ export async function startDrawingDetectionAction(
   }
 
   const { companyId, jobId, drawingId } = scope;
-  const { membership, drawing } = await requireDrawingAccess(
+  const { user, membership, drawing } = await requireDrawingAccess(
     companyId,
     jobId,
     drawingId,
@@ -317,6 +388,8 @@ export async function startDrawingDetectionAction(
   if (drawing.status === "processing") {
     return { error: "La detección ya está en curso para este plano." };
   }
+
+  const previousStatus = drawing.status;
 
   await prisma.drawing.updateMany({
     where: {
@@ -343,6 +416,20 @@ export async function startDrawingDetectionAction(
     fileName,
   );
 
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "detection_started",
+    message: buildDetectionStartedActivityMessage(fileName),
+    metadata: {
+      fileName,
+      previousStatus,
+      nextStatus: "processing",
+    },
+  });
+
   revalidateDrawingPages(companyId, jobId, drawingId);
 
   return {
@@ -361,7 +448,7 @@ export async function completeSimulatedDrawingDetectionAction(
   }
 
   const { companyId, jobId, drawingId } = scope;
-  const { membership } = await requireDrawingAccess(
+  const { user, membership } = await requireDrawingAccess(
     companyId,
     jobId,
     drawingId,
@@ -445,6 +532,23 @@ export async function completeSimulatedDrawingDetectionAction(
     dbStatus: drawingAfterUpdate?.status ?? null,
   });
 
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "detection_completed",
+    message: buildDetectionCompletedActivityMessage(
+      detectionResult.appliedFields,
+    ),
+    metadata: {
+      fileName: detectionResult.fileName,
+      detected: detectionResult.detected,
+      appliedFields: detectionResult.appliedFields,
+      appliedMetadata: detectionResult.metadataUpdate,
+    },
+  });
+
   revalidateDrawingPages(companyId, jobId, drawingId);
 
   return {
@@ -463,7 +567,7 @@ export async function confirmDetectedDrawingMetadataAction(
   }
 
   const { companyId, jobId, drawingId } = scope;
-  const { membership } = await requireDrawingAccess(
+  const { user, membership, drawing } = await requireDrawingAccess(
     companyId,
     jobId,
     drawingId,
@@ -493,6 +597,22 @@ export async function confirmDetectedDrawingMetadataAction(
         "Solo se pueden confirmar metadatos cuando el plano está en estado Detectado.",
     };
   }
+
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "metadata_confirmed",
+    message: buildMetadataConfirmedActivityMessage(),
+    metadata: {
+      previousStatus: "detected",
+      nextStatus: "reviewed",
+      drawingNumber: drawing.drawingNumber,
+      lineNumber: drawing.lineNumber,
+      revision: drawing.revision,
+    },
+  });
 
   revalidateDrawingPages(companyId, jobId, drawingId);
 

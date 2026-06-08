@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
 import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
@@ -10,6 +11,7 @@ import { DrawingStatusControl } from "@/components/drawings/drawing-status-contr
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { getDrawingRecentActivity } from "@/lib/drawings/activity";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
@@ -32,9 +34,10 @@ export default async function DrawingDetailPage({
   params,
 }: DrawingDetailPageProps) {
   const { companyId, jobId, drawingId } = await params;
-  const [{ membership, drawing }, { job }] = await Promise.all([
+  const [{ membership, drawing }, { job }, activities] = await Promise.all([
     requireDrawingAccess(companyId, jobId, drawingId),
     requireJobAccess(companyId, jobId),
+    getDrawingRecentActivity(companyId, jobId, drawingId),
   ]);
 
   const canEditMetadata = canEditDrawingMetadata(membership.role);
@@ -122,6 +125,8 @@ export default async function DrawingDetailPage({
       ) : (
         <DrawingMetadataReadonly {...metadataProps} />
       )}
+
+      <DrawingActivityCard activities={activities} />
 
       <PdfViewer drawingId={drawing.id} fileName={drawing.originalFileName} />
     </div>

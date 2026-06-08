@@ -82,6 +82,15 @@ enum ExportStatus {
   error
 }
 
+enum DrawingActivityType {
+  drawing_uploaded
+  metadata_updated
+  status_updated
+  detection_started
+  detection_completed
+  metadata_confirmed
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String?
@@ -96,6 +105,7 @@ model User {
   createdSegments    PipeSegment[]   @relation("PipeSegmentCreatedBy")
   createdAnnotations Annotation[]    @relation("AnnotationCreatedBy")
   createdExports     Export[]        @relation("ExportCreatedBy")
+  drawingActivities  DrawingActivity[] @relation("DrawingActivityActor")
 }
 
 model Company {
@@ -174,10 +184,29 @@ model Drawing {
   createdBy    User          @relation("DrawingCreatedBy", fields: [createdById], references: [id])
   pipeSegments PipeSegment[]
   annotations  Annotation[]
+  activities   DrawingActivity[]
 
   @@index([companyId])
   @@index([jobId])
   @@index([createdById])
+}
+
+model DrawingActivity {
+  id          String              @id @default(cuid())
+  drawingId   String
+  companyId   String
+  jobId       String
+  actorUserId String?
+  type        DrawingActivityType
+  message     String
+  metadata    Json?
+  createdAt   DateTime            @default(now())
+
+  drawing Drawing @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  actor   User?   @relation("DrawingActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, jobId, drawingId])
+  @@index([drawingId, createdAt(sort: Desc)])
 }
 
 model JobSettings {
