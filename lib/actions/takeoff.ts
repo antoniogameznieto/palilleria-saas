@@ -16,6 +16,7 @@ import {
   parseCsvContent,
   TAKEOFF_CSV_IMPORT_MAX_FILE_SIZE_BYTES,
 } from "@/lib/drawings/takeoff-csv-import";
+import { invalidateDrawingTakeoffReviewInTransaction } from "@/lib/drawings/takeoff-review";
 import { takeoffItemsEqual } from "@/lib/drawings/takeoff";
 import { prisma } from "@/lib/db";
 import { canManageTakeoffItems, requireDrawingAccess } from "@/lib/permissions";
@@ -86,6 +87,7 @@ function revalidateDrawingPage(
   drawingId: string,
 ) {
   revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
 }
 
 function parseTakeoffItemFormData(formData: FormData) {
@@ -168,6 +170,14 @@ export async function createTakeoffItemAction(
           reference: created.reference,
         },
       },
+    });
+
+    await invalidateDrawingTakeoffReviewInTransaction(tx, {
+      drawingId,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      reason: "takeoff_changed",
     });
   });
 
@@ -275,6 +285,14 @@ export async function updateTakeoffItemAction(
       },
     });
 
+    await invalidateDrawingTakeoffReviewInTransaction(tx, {
+      drawingId,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      reason: "takeoff_changed",
+    });
+
     return result;
   });
 
@@ -344,6 +362,14 @@ export async function deleteTakeoffItemAction(
             reference: existing.reference,
           },
         },
+      });
+
+      await invalidateDrawingTakeoffReviewInTransaction(tx, {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        reason: "takeoff_changed",
       });
     }
   });
@@ -417,6 +443,14 @@ export async function duplicateTakeoffItemAction(
           duplicatedItemId: duplicated.id,
         },
       },
+    });
+
+    await invalidateDrawingTakeoffReviewInTransaction(tx, {
+      drawingId,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      reason: "takeoff_changed",
     });
   });
 
@@ -509,6 +543,14 @@ export async function importTakeoffItemsAction(
           importedCount: items.length,
         },
       },
+    });
+
+    await invalidateDrawingTakeoffReviewInTransaction(tx, {
+      drawingId,
+      companyId,
+      jobId,
+      actorUserId: user.id,
+      reason: "takeoff_changed",
     });
   });
 

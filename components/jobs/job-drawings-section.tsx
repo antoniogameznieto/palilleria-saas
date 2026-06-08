@@ -22,6 +22,8 @@ type JobDrawingRow = {
   revision: string | null;
   status: DrawingStatus;
   createdAt: string;
+  takeoffLineCount: number;
+  takeoffReviewedAt: string | null;
 };
 
 type JobDrawingsSectionProps = {

@@ -167,3 +167,17 @@ export function buildTakeoffItemsImportedActivityMessage(
 ): string {
   return `Se importaron ${importedCount} líneas de palillería desde CSV`;
 }
+
+export function buildTakeoffReviewedActivityMessage(): string {
+  return "Palillería marcada como revisada.";
+}
+
+export function buildTakeoffReviewResetActivityMessage(
+  reason: "manual" | "modified",
+): string {
+  if (reason === "manual") {
+    return "Revisión de palillería desmarcada manualmente.";
+  }
+
+  return "Revisión de palillería invalidada por cambios en las líneas.";
+}

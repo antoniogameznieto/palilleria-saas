@@ -13,6 +13,7 @@ import { DuplicateTakeoffItemButton } from "@/components/drawings/takeoff/duplic
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
 import { ImportTakeoffCsvButton } from "@/components/drawings/takeoff/import-takeoff-csv-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
+import { DrawingTakeoffReviewStatus } from "@/components/drawings/takeoff/drawing-takeoff-review-status";
 import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,8 @@ type DrawingTakeoffSectionProps = {
   drawingNumber: string | null;
   items: SerializedTakeoffItem[];
   canEdit: boolean;
+  takeoffReviewedAt: string | null;
+  takeoffReviewedByLabel: string | null;
 };
 
 const initialState: AuthActionState = {};
@@ -65,6 +68,8 @@ export function DrawingTakeoffSection({
   drawingNumber,
   items,
   canEdit,
+  takeoffReviewedAt,
+  takeoffReviewedByLabel,
 }: DrawingTakeoffSectionProps) {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -148,6 +153,16 @@ export function DrawingTakeoffSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <DrawingTakeoffReviewStatus
+          companyId={companyId}
+          jobId={jobId}
+          drawingId={drawingId}
+          takeoffLineCount={items.length}
+          takeoffReviewedAt={takeoffReviewedAt}
+          takeoffReviewedByLabel={takeoffReviewedByLabel}
+          canManage={canEdit}
+        />
+
         <DrawingTakeoffSummary summary={summary} compact />
 
         {canEdit && showCreateForm ? (

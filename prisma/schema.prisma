@@ -94,6 +94,8 @@ enum DrawingActivityType {
   takeoff_item_deleted
   takeoff_item_duplicated
   takeoff_items_imported
+  takeoff_reviewed
+  takeoff_review_reset
 }
 
 model User {
@@ -110,8 +112,9 @@ model User {
   createdSegments    PipeSegment[]   @relation("PipeSegmentCreatedBy")
   createdAnnotations Annotation[]    @relation("AnnotationCreatedBy")
   createdExports     Export[]        @relation("ExportCreatedBy")
-  drawingActivities  DrawingActivity[] @relation("DrawingActivityActor")
-  takeoffItems       DrawingTakeoffItem[] @relation("TakeoffItemCreatedBy")
+  drawingActivities      DrawingActivity[] @relation("DrawingActivityActor")
+  takeoffItems           DrawingTakeoffItem[] @relation("TakeoffItemCreatedBy")
+  takeoffReviewedDrawings Drawing[] @relation("DrawingTakeoffReviewedBy")
 }
 
 model Company {
@@ -182,14 +185,17 @@ model Drawing {
   status           DrawingStatus @default(uploaded)
   drawingNumber    String?
   lineNumber       String?
-  revision         String?
-  createdById      String
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  revision            String?
+  takeoffReviewedAt   DateTime?
+  takeoffReviewedById String?
+  createdById         String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
-  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  createdBy    User          @relation("DrawingCreatedBy", fields: [createdById], references: [id])
+  company           Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job               Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdBy         User          @relation("DrawingCreatedBy", fields: [createdById], references: [id])
+  takeoffReviewedBy User?         @relation("DrawingTakeoffReviewedBy", fields: [takeoffReviewedById], references: [id], onDelete: SetNull)
   pipeSegments PipeSegment[]
   annotations  Annotation[]
   activities   DrawingActivity[]
@@ -198,6 +204,7 @@ model Drawing {
   @@index([companyId])
   @@index([jobId])
   @@index([createdById])
+  @@index([takeoffReviewedById])
 }
 
 model DrawingTakeoffItem {

@@ -1,9 +1,11 @@
 import type { JobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summary";
+import type { JobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import type { JobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 
 type JobDetailKpisProps = {
   drawingSummary: JobDrawingStatusSummary;
   takeoffSummary: JobTakeoffSummary;
+  takeoffReviewSummary: JobTakeoffReviewSummary;
 };
 
 type KpiItemProps = {
@@ -37,6 +39,7 @@ function formatUnitBreakdown(summary: JobTakeoffSummary): string {
 export function JobDetailKpis({
   drawingSummary,
   takeoffSummary,
+  takeoffReviewSummary,
 }: JobDetailKpisProps) {
   const drawingStatusHint = [
     drawingSummary.reviewedCount > 0
@@ -51,6 +54,20 @@ export function JobDetailKpis({
   ]
     .filter((part): part is string => part !== null)
     .join(" · ");
+
+  const takeoffReviewHint =
+    takeoffReviewSummary.drawingsWithTakeoff === 0
+      ? undefined
+      : [
+          takeoffReviewSummary.reviewedCount > 0
+            ? `${takeoffReviewSummary.reviewedCount} revisada${takeoffReviewSummary.reviewedCount === 1 ? "" : "s"}`
+            : null,
+          takeoffReviewSummary.pendingCount > 0
+            ? `${takeoffReviewSummary.pendingCount} pendiente${takeoffReviewSummary.pendingCount === 1 ? "" : "s"}`
+            : null,
+        ]
+          .filter((part): part is string => part !== null)
+          .join(" · ");
 
   return (
     <section className="space-y-3">
@@ -90,7 +107,11 @@ export function JobDetailKpis({
         <KpiItem
           label="Planos con palillería"
           value={takeoffSummary.drawingCountWithTakeoff}
-          hint={formatUnitBreakdown(takeoffSummary)}
+          hint={
+            takeoffReviewHint
+              ? `${takeoffReviewHint} · ${formatUnitBreakdown(takeoffSummary)}`
+              : formatUnitBreakdown(takeoffSummary)
+          }
         />
       </div>
     </section>

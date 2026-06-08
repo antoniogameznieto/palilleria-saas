@@ -75,6 +75,13 @@ export async function getDrawingForUser(
           email: true,
         },
       },
+      takeoffReviewedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
@@ -108,5 +115,12 @@ export async function getJobDrawings(companyId: string, jobId: string) {
       jobId,
     },
     orderBy: { createdAt: "desc" },
+    include: {
+      _count: {
+        select: {
+          takeoffItems: true,
+        },
+      },
+    },
   });
 }

@@ -9,6 +9,7 @@ import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
+import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
   canConfirmDetectedDrawingMetadata,
@@ -52,6 +53,9 @@ export default async function DrawingDetailPage({
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
   const takeoffSummary = buildTakeoffSummary(takeoffItems);
+  const takeoffReviewedByLabel = formatTakeoffReviewedByLabel(
+    drawing.takeoffReviewedBy,
+  );
   const lastDetectionFeedback =
     getLatestDetectionFeedbackFromActivities(activities);
 
@@ -149,6 +153,8 @@ export default async function DrawingDetailPage({
         drawingNumber={drawing.drawingNumber}
         items={takeoffItems}
         canEdit={canEditTakeoff}
+        takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
+        takeoffReviewedByLabel={takeoffReviewedByLabel}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import type { DrawingStatus } from "@prisma/client";
 
 import { DeleteDrawingButton } from "@/components/drawings/delete-drawing-button";
 import { DrawingStatusBadge } from "@/components/drawings/drawing-status-badge";
+import { TakeoffReviewBadge } from "@/components/drawings/takeoff/takeoff-review-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,8 @@ type DrawingRow = {
   revision: string | null;
   status: DrawingStatus;
   createdAt: string;
+  takeoffLineCount: number;
+  takeoffReviewedAt: string | null;
 };
 
 type DrawingsTableProps = {
@@ -113,7 +116,7 @@ export function DrawingsTable({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[56rem] text-sm">
+          <table className="w-full min-w-[60rem] text-sm">
             <thead className="border-b bg-muted/40 text-left">
               <tr>
                 <th className="px-4 py-3 font-medium">Archivo / plano</th>
@@ -121,6 +124,7 @@ export function DrawingsTable({
                 <th className="px-4 py-3 font-medium">Nº línea</th>
                 <th className="px-4 py-3 font-medium">Revisión</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Palillería</th>
                 <th className="px-4 py-3 font-medium">Subido</th>
                 <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
@@ -150,6 +154,12 @@ export function DrawingsTable({
                     </td>
                     <td className="px-4 py-3">
                       <DrawingStatusBadge status={drawing.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <TakeoffReviewBadge
+                        takeoffLineCount={drawing.takeoffLineCount}
+                        takeoffReviewedAt={drawing.takeoffReviewedAt}
+                      />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatUploadedAt(drawing.createdAt)}
