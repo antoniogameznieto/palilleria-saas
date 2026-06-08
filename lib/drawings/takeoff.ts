@@ -13,6 +13,7 @@ export type SerializedTakeoffItem = {
   height: string | null;
   notes: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 function serializeDecimal(value: Decimal | null): string | null {
@@ -34,6 +35,7 @@ export function serializeTakeoffItem(item: {
   height: Decimal | null;
   notes: string | null;
   createdAt: Date;
+  updatedAt: Date;
 }): SerializedTakeoffItem {
   return {
     id: item.id,
@@ -46,6 +48,7 @@ export function serializeTakeoffItem(item: {
     height: serializeDecimal(item.height),
     notes: item.notes,
     createdAt: item.createdAt.toISOString(),
+    updatedAt: item.updatedAt.toISOString(),
   };
 }
 

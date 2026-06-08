@@ -140,6 +140,7 @@ export default async function DrawingDetailPage({
         companyId={companyId}
         jobId={jobId}
         drawingId={drawing.id}
+        drawingNumber={drawing.drawingNumber}
         items={takeoffItems}
         canEdit={canEditTakeoff}
       />

@@ -9,6 +9,7 @@ import {
   updateTakeoffItemAction,
 } from "@/lib/actions/takeoff";
 import { DeleteTakeoffItemButton } from "@/components/drawings/takeoff/delete-takeoff-item-button";
+import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
 import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ type DrawingTakeoffSectionProps = {
   companyId: string;
   jobId: string;
   drawingId: string;
+  drawingNumber: string | null;
   items: SerializedTakeoffItem[];
   canEdit: boolean;
 };
@@ -58,6 +60,7 @@ export function DrawingTakeoffSection({
   companyId,
   jobId,
   drawingId,
+  drawingNumber,
   items,
   canEdit,
 }: DrawingTakeoffSectionProps) {
@@ -111,18 +114,25 @@ export function DrawingTakeoffSection({
             ahora, sin extracción automática.
           </CardDescription>
         </div>
-        {canEdit ? (
-          <Button
-            type="button"
-            variant={showCreateForm ? "outline" : "default"}
-            onClick={() => {
-              setShowCreateForm((current) => !current);
-              setEditingItemId(null);
-            }}
-          >
-            {showCreateForm ? "Ocultar formulario" : "Añadir línea"}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <ExportTakeoffCsvButton
+            items={items}
+            drawingNumber={drawingNumber}
+            drawingId={drawingId}
+          />
+          {canEdit ? (
+            <Button
+              type="button"
+              variant={showCreateForm ? "outline" : "default"}
+              onClick={() => {
+                setShowCreateForm((current) => !current);
+                setEditingItemId(null);
+              }}
+            >
+              {showCreateForm ? "Ocultar formulario" : "Añadir línea"}
+            </Button>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <DrawingTakeoffSummary summary={summary} />
