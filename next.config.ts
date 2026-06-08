@@ -5,7 +5,12 @@ const maxUploadBodySize =
   `${maxUploadSizeMb}mb` as `${number}${"mb" | "kb" | "gb"}`;
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "exceljs"],
+  serverExternalPackages: [
+    "pdf-parse",
+    "pdfjs-dist",
+    "exceljs",
+    "@napi-rs/canvas",
+  ],
   experimental: {
     serverActions: {
       bodySizeLimit: maxUploadBodySize,

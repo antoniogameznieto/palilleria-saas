@@ -1,5 +1,6 @@
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
+import { DrawingExperimentalTitleBlockOcr } from "@/components/drawings/drawing-experimental-title-block-ocr";
 import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import type { DetectionFeedbackSummary } from "@/lib/drawings/detection-merge";
 import type { DrawingStatus } from "@prisma/client";
@@ -18,6 +19,7 @@ type DrawingAutomationPanelProps = {
   canStartDetection: boolean;
   canExtractPdfText: boolean;
   canConfirmDetected: boolean;
+  showExperimentalTitleBlockOcr: boolean;
   lastDetectionFeedback: DetectionFeedbackSummary | null;
 };
 
@@ -54,10 +56,12 @@ export function DrawingAutomationPanel({
   canStartDetection,
   canExtractPdfText,
   canConfirmDetected,
+  showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
 }: DrawingAutomationPanelProps) {
   const isDetected = status === "detected";
-  const hasAutomationAccess = canStartDetection || canExtractPdfText;
+  const hasAutomationAccess =
+    canStartDetection || canExtractPdfText || showExperimentalTitleBlockOcr;
 
   if (!hasAutomationAccess && !isDetected) {
     return (
@@ -118,6 +122,20 @@ export function DrawingAutomationPanel({
             jobId={jobId}
             drawingId={drawingId}
             plain
+          />
+        </AutomationBlock>
+      ) : null}
+
+      {showExperimentalTitleBlockOcr ? (
+        <AutomationBlock
+          title="OCR experimental del cajetín"
+          description="Renderiza la primera página, recorta la zona inferior derecha del cajetín y ejecuta OCR local si Tesseract está disponible. Solo sugerencias; no aplica metadatos."
+          className="border-t border-border/60 pt-6"
+        >
+          <DrawingExperimentalTitleBlockOcr
+            companyId={companyId}
+            jobId={jobId}
+            drawingId={drawingId}
           />
         </AutomationBlock>
       ) : null}

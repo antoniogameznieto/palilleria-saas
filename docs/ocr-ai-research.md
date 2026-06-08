@@ -275,6 +275,8 @@ Reutilizar patrón de **metadatos detectados**:
 | `lib/drawings/detection-apply.ts` | Pipeline detección |
 | `lib/drawings/detection-merge.ts` | Merge fuentes |
 | `scripts/inspect-pdf-pages.ts` | Inspección experimental 10A |
+| `lib/drawings/experimental-title-block-ocr.ts` | OCR experimental cajetín 10B |
+| `scripts/verify-title-block-crop.ts` | Check recorte cajetín |
 | `docs/takeoff-hardening-checklist.md` | Hardening palillería (9F) |
 
 ---
@@ -284,3 +286,72 @@ Reutilizar patrón de **metadatos detectados**:
 **Enfoque recomendado:** híbrido por fases, con **texto embebido como baseline**, **OCR por zona de cajetín** como primer salto de valor en PDFs escaneados, e **IA multimodal opcional** solo para asistir revisión humana — no para palillería automática.
 
 **Entregable 10A:** este documento + script `inspect-pdf-pages` para caracterizar PDFs reales antes de elegir motor OCR en 10B.
+
+---
+
+## Fase 10B — OCR experimental del cajetín (implementado)
+
+> **Estado:** experimental, detrás de feature flag. No integrado en detección productiva.
+
+### Qué se implementó
+
+| Pieza | Descripción |
+|-------|-------------|
+| `lib/drawings/experimental-title-block-ocr-config.ts` | Feature flag + gate owner/admin/engineer |
+| `lib/drawings/experimental-title-block-ocr.ts` | Render pág. 1, recorte cajetín, OCR Tesseract CLI opcional, parse candidatos |
+| `lib/actions/experimental-title-block-ocr.ts` | Server action experimental (no persiste) |
+| `components/drawings/drawing-experimental-title-block-ocr.tsx` | UI en tab Automatización |
+| `scripts/verify-title-block-crop.ts` | Check puro del recorte heurístico |
+
+**Pipeline 10B:**
+
+1. Leer PDF desde storage (mismo mecanismo que extracción embebida).
+2. Render primera página (`pdf-parse getScreenshot`, 1400 px ancho).
+3. Recorte bottom-right **35 % × 25 %** (`@napi-rs/canvas`, en memoria).
+4. Si **Tesseract CLI** está en PATH → OCR (`spa+eng`, `--psm 6`) sobre PNG temporal en `os.tmpdir()` → borrado inmediato.
+5. `parseDrawingMetadataFromPdfText` → candidatos sugeridos.
+6. Respuesta a UI: preview texto, candidatos, warnings. **Sin escribir en BD.**
+
+### Cómo activar
+
+1. Añadir en `.env` (dev/staging):
+
+   ```bash
+   EXPERIMENTAL_TITLE_BLOCK_OCR=true
+   ```
+
+2. Reiniciar el servidor de desarrollo.
+
+3. Entrar a un plano como **owner**, **admin** o **engineer** → tab **Automatización** → bloque «OCR experimental del cajetín».
+
+4. (Opcional) Instalar Tesseract para OCR real:
+
+   ```bash
+   brew install tesseract tesseract-lang
+   ```
+
+### Limitaciones actuales
+
+- **Sin Tesseract:** se ejecuta render + recorte; OCR se omite con aviso (no rompe build/deploy).
+- Recorte fijo bottom-right; no adapta orientación ni plantillas por cliente.
+- Solo primera página.
+- OCR síncrono en server action (aceptable en experimental; mover a cola en integración productiva).
+- No hay preview de imagen del recorte en UI (solo texto/candidatos).
+- No hay botón «Aplicar» — candidatos no se guardan.
+- Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
+
+### Próximos pasos (10C+)
+
+1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
+2. Preview visual del recorte cajetín (base64 efímera, sin persistir).
+3. Ajuste de ROI por tipo de plano o detección de rectángulo del cajetín.
+4. Cola background + timeout para PDFs grandes.
+5. Evaluar cloud OCR / multimodal solo tras baseline local validada.
+6. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
+
+### Verificación local
+
+```bash
+npm run verify:title-block-crop
+```
+

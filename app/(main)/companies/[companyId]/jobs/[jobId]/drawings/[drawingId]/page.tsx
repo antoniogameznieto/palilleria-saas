@@ -14,6 +14,7 @@ import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
+import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-title-block-ocr-config";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
@@ -60,6 +61,9 @@ export default async function DrawingDetailPage({
   const canExtractPdfText = canExtractDrawingPdfText(membership.role);
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
+  const showExperimentalTitleBlockOcr = canAccessExperimentalTitleBlockOcr(
+    membership.role,
+  );
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobSuggestionItems = toTakeoffSuggestionSourceItems(
     jobTakeoffItems.map((item) => ({
@@ -160,6 +164,7 @@ export default async function DrawingDetailPage({
             canStartDetection={canStartDetection}
             canExtractPdfText={canExtractPdfText}
             canConfirmDetected={canConfirmDetected}
+            showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
             lastDetectionFeedback={lastDetectionFeedback}
           />
         }
