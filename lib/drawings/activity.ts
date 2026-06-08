@@ -1,6 +1,10 @@
 import type { DrawingActivityType, DrawingStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import {
+  parseDetectionFeedbackFromActivity,
+  type DetectionFeedbackSummary,
+} from "@/lib/drawings/detection-merge";
 import { DRAWING_STATUS_LABELS } from "@/lib/drawings/labels";
 
 export const DRAWING_ACTIVITY_LIMIT = 20;
@@ -88,17 +92,48 @@ export function buildDetectionStartedActivityMessage(fileName: string): string {
 }
 
 export function buildDetectionCompletedActivityMessage(
-  appliedFields: string[],
-  sourcesUsed: string[] = [],
+  feedback: DetectionFeedbackSummary,
 ): string {
-  if (appliedFields.length === 0) {
-    return "Detección completada sin metadatos nuevos aplicables.";
+  if (feedback.detectedFields.length === 0) {
+    return "Detección completada sin metadatos detectados.";
+  }
+
+  const parts: string[] = [];
+
+  if (feedback.appliedFields.length > 0) {
+    parts.push(`aplicados: ${feedback.appliedFields.join(", ")}`);
+  }
+
+  if (feedback.skippedFields.length > 0) {
+    parts.push(
+      `omitidos: ${feedback.skippedFields.map((item) => item.label).join(", ")}`,
+    );
+  }
+
+  if (parts.length === 0) {
+    return "Detección completada sin cambios aplicables.";
   }
 
   const sourceSuffix =
-    sourcesUsed.length > 0 ? ` Origen: ${sourcesUsed.join(", ")}.` : "";
+    feedback.sourcesUsed.length > 0
+      ? ` Origen: ${feedback.sourcesUsed.join(", ")}.`
+      : ".";
 
-  return `Detección completada. Campos aplicados: ${appliedFields.join(", ")}.${sourceSuffix}`;
+  return `Detección completada. ${parts.join(" · ")}${sourceSuffix}`;
+}
+
+export function getLatestDetectionFeedbackFromActivities(
+  activities: Array<{ type: DrawingActivityType; metadata: unknown }>,
+): DetectionFeedbackSummary | null {
+  const latestDetection = activities.find(
+    (activity) => activity.type === "detection_completed",
+  );
+
+  if (!latestDetection) {
+    return null;
+  }
+
+  return parseDetectionFeedbackFromActivity(latestDetection.metadata);
 }
 
 export function buildMetadataConfirmedActivityMessage(): string {

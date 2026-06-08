@@ -9,7 +9,7 @@ import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
 import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
-import { getDrawingRecentActivity } from "@/lib/drawings/activity";
+import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
@@ -55,6 +55,8 @@ export default async function DrawingDetailPage({
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
   const takeoffSummary = buildTakeoffSummary(takeoffItems);
+  const lastDetectionFeedback =
+    getLatestDetectionFeedbackFromActivities(activities);
 
   const metadataProps = {
     companyId,
@@ -146,6 +148,7 @@ export default async function DrawingDetailPage({
                   jobId={jobId}
                   drawingId={drawing.id}
                   status={drawing.status}
+                  lastDetectionFeedback={lastDetectionFeedback}
                   plain
                 />
               </section>

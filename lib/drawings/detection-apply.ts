@@ -3,7 +3,7 @@ import type { DrawingStatus } from "@prisma/client";
 import {
   buildDetectionCompletionMessage,
   mergeDetectionFromSources,
-  type DetectionSource,
+  type DetectionFeedbackSummary,
 } from "@/lib/drawings/detection-merge";
 import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
 import {
@@ -38,8 +38,7 @@ export type DrawingDetectionUpdate = {
     lineNumber?: string;
     revision?: string;
   };
-  appliedFields: string[];
-  sourcesUsed: DetectionSource[];
+  feedback: DetectionFeedbackSummary;
   pdfTextAttempted: boolean;
   hasEmbeddedText: boolean;
   message: string;
@@ -87,12 +86,7 @@ export async function buildDrawingDetectionUpdate(
     }
   }
 
-  const {
-    merged,
-    metadataUpdate,
-    appliedFields,
-    sourcesUsed,
-  } = mergeDetectionFromSources(
+  const { merged, metadataUpdate, feedback } = mergeDetectionFromSources(
     {
       drawingNumber: drawing.drawingNumber,
       lineNumber: drawing.lineNumber,
@@ -125,15 +119,10 @@ export async function buildDrawingDetectionUpdate(
     detected: merged,
     metadataUpdate,
     updateData,
-    appliedFields,
-    sourcesUsed,
+    feedback,
     pdfTextAttempted,
     hasEmbeddedText,
-    message: buildDetectionCompletionMessage(
-      appliedFields,
-      sourcesUsed,
-      pdfTextAttempted,
-    ),
+    message: buildDetectionCompletionMessage(feedback, pdfTextAttempted),
   };
 }
 

@@ -4,11 +4,14 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { DrawingStatus } from "@prisma/client";
 
-import type { AuthActionState } from "@/lib/actions/auth";
+import { DrawingDetectionFeedbackSummary } from "@/components/drawings/drawing-detection-feedback-summary";
+import type { DrawingDetectionActionState } from "@/lib/actions/drawing";
 import {
   completeSimulatedDrawingDetectionAction,
   startDrawingDetectionAction,
 } from "@/lib/actions/drawing";
+import type { AuthActionState } from "@/lib/actions/auth";
+import type { DetectionFeedbackSummary } from "@/lib/drawings/detection-merge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,10 +26,11 @@ type DrawingDetectionControlProps = {
   jobId: string;
   drawingId: string;
   status: DrawingStatus;
+  lastDetectionFeedback?: DetectionFeedbackSummary | null;
   plain?: boolean;
 };
 
-const initialState: AuthActionState = {};
+const initialState: DrawingDetectionActionState = {};
 
 function FeedbackMessage({ state }: { state: AuthActionState }) {
   if (state.error) {
@@ -53,6 +57,7 @@ export function DrawingDetectionControl({
   jobId,
   drawingId,
   status,
+  lastDetectionFeedback = null,
   plain = false,
 }: DrawingDetectionControlProps) {
   const [startState, startAction, isStarting] = useActionState(
@@ -72,13 +77,24 @@ export function DrawingDetectionControl({
   }, [completeState.success, router, startState.success]);
 
   const isProcessing = status === "processing";
-  const feedback = startState.error || startState.success
+  const feedback =
+    completeState.detectionFeedback ?? lastDetectionFeedback ?? null;
+  const showFeedbackSummary =
+    feedback != null &&
+    (status === "detected" ||
+      status === "reviewed" ||
+      completeState.detectionFeedback != null);
+  const actionFeedback = startState.error || startState.success
     ? startState
     : completeState;
 
   const content = (
     <div className="space-y-4">
-      <FeedbackMessage state={feedback} />
+      <FeedbackMessage state={actionFeedback} />
+
+      {showFeedbackSummary ? (
+        <DrawingDetectionFeedbackSummary feedback={feedback} />
+      ) : null}
 
       {isProcessing ? (
         <p className="text-sm text-muted-foreground">

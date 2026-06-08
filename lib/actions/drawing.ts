@@ -10,6 +10,10 @@ import {
   resolveDrawingFileNameForDetection,
 } from "@/lib/drawings/detection-apply";
 import {
+  serializeDetectionFeedbackForActivity,
+  type DetectionFeedbackSummary,
+} from "@/lib/drawings/detection-merge";
+import {
   buildDetectionCompletedActivityMessage,
   buildDetectionStartedActivityMessage,
   buildDrawingUploadedActivityMessage,
@@ -43,6 +47,10 @@ import {
   updateDrawingStatusSchema,
   validatePdfFiles,
 } from "@/lib/validations/drawing";
+
+export type DrawingDetectionActionState = AuthActionState & {
+  detectionFeedback?: DetectionFeedbackSummary | null;
+};
 
 function parseDrawingScopeFormData(formData: FormData) {
   const companyId = formData.get("companyId");
@@ -490,9 +498,9 @@ export async function startDrawingDetectionAction(
 }
 
 export async function completeSimulatedDrawingDetectionAction(
-  _prevState: AuthActionState,
+  _prevState: DrawingDetectionActionState,
   formData: FormData,
-): Promise<AuthActionState> {
+): Promise<DrawingDetectionActionState> {
   const scope = parseDrawingScopeFormData(formData);
 
   if ("error" in scope) {
@@ -548,7 +556,8 @@ export async function completeSimulatedDrawingDetectionAction(
     filenameDetected: detectionResult.filenameDetected,
     pdfTextDetected: detectionResult.pdfTextDetected,
     detected: detectionResult.detected,
-    sourcesUsed: detectionResult.sourcesUsed,
+    feedback: detectionResult.feedback,
+    sourcesUsed: detectionResult.feedback.sourcesUsed,
     pdfTextAttempted: detectionResult.pdfTextAttempted,
     hasEmbeddedText: detectionResult.hasEmbeddedText,
     currentRevision: drawing.revision,
@@ -601,23 +610,19 @@ export async function completeSimulatedDrawingDetectionAction(
     jobId,
     actorUserId: user.id,
     type: "detection_completed",
-    message: buildDetectionCompletedActivityMessage(
-      detectionResult.appliedFields,
-      detectionResult.sourcesUsed,
-    ),
-    metadata: {
-      appliedFields: detectionResult.appliedFields,
-      sourcesUsed: detectionResult.sourcesUsed,
+    message: buildDetectionCompletedActivityMessage(detectionResult.feedback),
+    metadata: serializeDetectionFeedbackForActivity(detectionResult.feedback, {
       previousStatus: "processing",
       nextStatus: "detected",
       hasEmbeddedText: detectionResult.hasEmbeddedText,
-    },
+    }),
   });
 
   revalidateDrawingPages(companyId, jobId, drawingId);
 
   return {
     success: detectionResult.message,
+    detectionFeedback: detectionResult.feedback,
   };
 }
 
