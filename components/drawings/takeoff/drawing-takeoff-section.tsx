@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
@@ -10,6 +10,7 @@ import {
 } from "@/lib/actions/takeoff";
 import { DeleteTakeoffItemButton } from "@/components/drawings/takeoff/delete-takeoff-item-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
+import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
+import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 
 type DrawingTakeoffSectionProps = {
   companyId: string;
@@ -64,6 +66,7 @@ export function DrawingTakeoffSection({
   }, [createState.success, router, updateState.success]);
 
   const editingItem = items.find((item) => item.id === editingItemId) ?? null;
+  const summary = useMemo(() => buildTakeoffSummary(items), [items]);
 
   return (
     <Card>
@@ -89,6 +92,8 @@ export function DrawingTakeoffSection({
         ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
+        <DrawingTakeoffSummary summary={summary} />
+
         {canEdit && showCreateForm ? (
           <DrawingTakeoffItemForm
             companyId={companyId}
