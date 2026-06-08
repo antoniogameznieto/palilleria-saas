@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { MANUAL_DRAWING_STATUS_VALUES } from "@/lib/drawings/labels";
 import { getMaxUploadSizeBytes, PDF_MIME_TYPE } from "@/lib/storage";
 
 const optionalMetadataField = z
@@ -18,6 +19,14 @@ export const updateDrawingMetadataSchema = z.object({
 export type UpdateDrawingMetadataInput = z.infer<
   typeof updateDrawingMetadataSchema
 >;
+
+export const updateDrawingStatusSchema = z.object({
+  status: z.enum(MANUAL_DRAWING_STATUS_VALUES, {
+    message: "Estado no válido.",
+  }),
+});
+
+export type UpdateDrawingStatusInput = z.infer<typeof updateDrawingStatusSchema>;
 
 export function isPdfFile(file: File): boolean {
   const type = file.type.toLowerCase();

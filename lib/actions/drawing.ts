@@ -15,12 +15,14 @@ import {
 import {
   canDeleteDrawings,
   canEditDrawingMetadata,
+  canEditDrawingStatus,
   canUploadDrawings,
   requireDrawingAccess,
   requireJobAccess,
 } from "@/lib/permissions";
 import {
   updateDrawingMetadataSchema,
+  updateDrawingStatusSchema,
   validatePdfFiles,
 } from "@/lib/validations/drawing";
 
@@ -196,4 +198,60 @@ export async function updateDrawingMetadataAction(
   revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
 
   return { success: "Metadatos guardados correctamente." };
+}
+
+export async function updateDrawingStatusAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const companyId = formData.get("companyId");
+  const jobId = formData.get("jobId");
+  const drawingId = formData.get("drawingId");
+
+  if (typeof companyId !== "string" || companyId.length === 0) {
+    return { error: "Empresa no válida." };
+  }
+
+  if (typeof jobId !== "string" || jobId.length === 0) {
+    return { error: "Trabajo no válido." };
+  }
+
+  if (typeof drawingId !== "string" || drawingId.length === 0) {
+    return { error: "Plano no válido." };
+  }
+
+  const { membership } = await requireDrawingAccess(companyId, jobId, drawingId);
+
+  if (!canEditDrawingStatus(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  const parsed = updateDrawingStatusSchema.safeParse({
+    status: formData.get("status"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "Estado no válido.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+    },
+    data: {
+      status: parsed.data.status,
+    },
+  });
+
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+
+  return { success: "Estado actualizado correctamente." };
 }

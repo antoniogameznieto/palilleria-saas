@@ -4,12 +4,14 @@ import { ArrowLeft } from "lucide-react";
 import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
+import { DrawingStatusControl } from "@/components/drawings/drawing-status-control";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
   canDeleteDrawings,
   canEditDrawingMetadata,
+  canEditDrawingStatus,
   requireDrawingAccess,
   requireJobAccess,
 } from "@/lib/permissions";
@@ -31,7 +33,8 @@ export default async function DrawingDetailPage({
     requireJobAccess(companyId, jobId),
   ]);
 
-  const canEdit = canEditDrawingMetadata(membership.role);
+  const canEditMetadata = canEditDrawingMetadata(membership.role);
+  const canEditStatus = canEditDrawingStatus(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
@@ -75,7 +78,15 @@ export default async function DrawingDetailPage({
         canDelete={canDelete}
       />
 
-      {canEdit ? (
+      <DrawingStatusControl
+        companyId={companyId}
+        jobId={jobId}
+        drawingId={drawing.id}
+        status={drawing.status}
+        canEdit={canEditStatus}
+      />
+
+      {canEditMetadata ? (
         <DrawingMetadataForm {...metadataProps} />
       ) : (
         <DrawingMetadataReadonly {...metadataProps} />
