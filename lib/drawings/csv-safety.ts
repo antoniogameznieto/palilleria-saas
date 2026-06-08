@@ -15,6 +15,9 @@ export function protectCsvExportCell(value: string): string {
   return value;
 }
 
+/** Same formula-injection rules as CSV exports (Excel text cells). */
+export const protectSpreadsheetExportText = protectCsvExportCell;
+
 export function normalizeCsvImportTextField(value: string): string {
   const trimmed = value.trim();
 

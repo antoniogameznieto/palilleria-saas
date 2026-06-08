@@ -146,13 +146,24 @@ export function JobTakeoffConsolidatedSection({
     [scopedItems],
   );
 
+  const unitFilterOptions = useMemo(
+    () => buildJobTakeoffConsolidatedUnitFilterOptions(consolidatedRows),
+    [consolidatedRows],
+  );
+
+  const activeUnitFilter =
+    unitFilter !== TAKEOFF_UNIT_FILTER_ALL &&
+    !unitFilterOptions.some((option) => option.value === unitFilter)
+      ? TAKEOFF_UNIT_FILTER_ALL
+      : unitFilter;
+
   const filteredRows = useMemo(
     () =>
       filterJobTakeoffConsolidatedRows(consolidatedRows, {
         searchQuery,
-        unitFilter,
+        unitFilter: activeUnitFilter,
       }),
-    [consolidatedRows, searchQuery, unitFilter],
+    [activeUnitFilter, consolidatedRows, searchQuery],
   );
 
   const summary = useMemo(
@@ -162,11 +173,6 @@ export function JobTakeoffConsolidatedSection({
         drawingProgressByDrawingId,
       ),
     [drawingProgressByDrawingId, scopedItems],
-  );
-
-  const unitFilterOptions = useMemo(
-    () => buildJobTakeoffConsolidatedUnitFilterOptions(consolidatedRows),
-    [consolidatedRows],
   );
 
   const jobWidePendingDrawings = useMemo(() => {
@@ -240,7 +246,7 @@ export function JobTakeoffConsolidatedSection({
             <Label htmlFor="job-takeoff-consolidated-unit">Unidad</Label>
             <select
               id="job-takeoff-consolidated-unit"
-              value={unitFilter}
+              value={activeUnitFilter}
               onChange={(event) => setUnitFilter(event.target.value)}
               className={selectClassName}
             >

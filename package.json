@@ -8,6 +8,7 @@
     "db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/palilleria?schema=public} prisma generate",
     "start": "next start",
     "lint": "eslint",
+    "verify:takeoff": "tsx scripts/verify-takeoff-pure.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed"

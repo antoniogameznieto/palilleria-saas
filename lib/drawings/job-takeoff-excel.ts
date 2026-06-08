@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 
+import { protectSpreadsheetExportText } from "@/lib/drawings/csv-safety";
 import {
   DRAWING_PROGRESS_LABELS,
   type DrawingProgressState,
@@ -23,6 +24,10 @@ export type JobTakeoffExcelExportContext = {
 
 const DATE_TIME_NUM_FMT = "dd/mm/yyyy hh:mm";
 const QUANTITY_NUM_FMT = "#,##0.###";
+
+function safeExcelText(value: string | null | undefined): string {
+  return protectSpreadsheetExportText(value ?? "");
+}
 
 function parseQuantity(value: string): number {
   const parsed = Number(value);
@@ -82,9 +87,9 @@ function addSummarySheet(
   sheet.columns = [{ width: 28 }, { width: 48 }];
 
   const rows: Array<[string, string | number]> = [
-    ["Empresa", context.companyName],
-    ["Trabajo", context.jobName],
-    ["Fecha de exportación", formatDisplayDateTime(context.exportedAt)],
+    ["Empresa", safeExcelText(context.companyName)],
+    ["Trabajo", safeExcelText(context.jobName)],
+    ["Fecha de exportación", safeExcelText(formatDisplayDateTime(context.exportedAt))],
     ["Total líneas", summary.lineCount],
     ["Cantidad total", parseQuantity(summary.totalQuantity)],
     ["Referencias únicas", summary.uniqueReferenceCount],
@@ -145,13 +150,15 @@ function addConsolidatedSheet(
 
   for (const row of rows) {
     const excelRow = sheet.addRow({
-      reference: row.reference ?? "",
-      description: row.description,
-      unit: row.unit,
+      reference: safeExcelText(row.reference),
+      description: safeExcelText(row.description),
+      unit: safeExcelText(row.unit),
       totalQuantity: parseQuantity(row.totalQuantity),
       lineCount: row.lineCount,
       drawingCount: row.drawingCount,
-      sourceDrawings: row.sourceDrawings.map((drawing) => drawing.label).join(", "),
+      sourceDrawings: safeExcelText(
+        row.sourceDrawings.map((drawing) => drawing.label).join(", "),
+      ),
     });
 
     excelRow.getCell("totalQuantity").numFmt = QUANTITY_NUM_FMT;
@@ -208,19 +215,19 @@ function addDetailSheet(
       ];
 
     const row = sheet.addRow({
-      drawingFileName: item.drawingFileName,
-      drawingNumber: item.drawingNumber ?? "",
-      lineNumber: item.lineNumber ?? "",
-      revision: item.revision ?? "",
-      progress,
-      reference: item.reference ?? "",
-      description: item.description,
+      drawingFileName: safeExcelText(item.drawingFileName),
+      drawingNumber: safeExcelText(item.drawingNumber),
+      lineNumber: safeExcelText(item.lineNumber),
+      revision: safeExcelText(item.revision),
+      progress: safeExcelText(progress),
+      reference: safeExcelText(item.reference),
+      description: safeExcelText(item.description),
       quantity: parseQuantity(item.quantity),
-      unit: item.unit ?? "",
+      unit: safeExcelText(item.unit),
       length: parseOptionalQuantity(item.length),
       width: parseOptionalQuantity(item.width),
       height: parseOptionalQuantity(item.height),
-      notes: item.notes ?? "",
+      notes: safeExcelText(item.notes),
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
     });
