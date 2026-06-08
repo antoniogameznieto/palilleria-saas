@@ -22,6 +22,7 @@ export {
 } from "@/lib/permissions/job";
 
 export {
+  canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,

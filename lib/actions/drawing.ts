@@ -19,6 +19,7 @@ import {
   uploadFile,
 } from "@/lib/storage";
 import {
+  canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
@@ -448,5 +449,55 @@ export async function completeSimulatedDrawingDetectionAction(
 
   return {
     success: detectionResult.message,
+  };
+}
+
+export async function confirmDetectedDrawingMetadataAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { membership } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canConfirmDetectedDrawingMetadata(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  const updated = await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+      status: "detected",
+    },
+    data: {
+      status: "reviewed",
+    },
+  });
+
+  if (updated.count === 0) {
+    return {
+      error:
+        "Solo se pueden confirmar metadatos cuando el plano está en estado Detectado.",
+    };
+  }
+
+  revalidateDrawingPages(companyId, jobId, drawingId);
+
+  return {
+    success:
+      "Metadatos confirmados. El plano ha pasado a estado Revisado.",
   };
 }

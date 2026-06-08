@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
 import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
@@ -10,6 +11,7 @@ import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
+  canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
   canEditDrawingMetadata,
   canEditDrawingStatus,
@@ -38,7 +40,9 @@ export default async function DrawingDetailPage({
   const canEditMetadata = canEditDrawingMetadata(membership.role);
   const canEditStatus = canEditDrawingStatus(membership.role);
   const canStartDetection = canStartDrawingDetection(membership.role);
+  const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
+  const isDetected = drawing.status === "detected";
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
 
@@ -95,6 +99,18 @@ export default async function DrawingDetailPage({
           jobId={jobId}
           drawingId={drawing.id}
           status={drawing.status}
+        />
+      ) : null}
+
+      {isDetected ? (
+        <DrawingDetectedMetadataReview
+          companyId={companyId}
+          jobId={jobId}
+          drawingId={drawing.id}
+          drawingNumber={drawing.drawingNumber}
+          lineNumber={drawing.lineNumber}
+          revision={drawing.revision}
+          canConfirm={canConfirmDetected}
         />
       ) : null}
 
