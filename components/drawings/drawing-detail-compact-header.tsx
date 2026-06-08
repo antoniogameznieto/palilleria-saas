@@ -3,12 +3,14 @@ import { ArrowLeft } from "lucide-react";
 import type { DrawingStatus } from "@prisma/client";
 
 import { DeleteDrawingButton } from "@/components/drawings/delete-drawing-button";
+import { DrawingProgressBadge } from "@/components/drawings/drawing-progress-badge";
 import { DrawingStatusBadge } from "@/components/drawings/drawing-status-badge";
 import { FileSize } from "@/components/drawings/file-size";
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { formatDrawingMetadataLine } from "@/lib/drawings/format-metadata-line";
+import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
 type DrawingDetailCompactHeaderProps = {
@@ -19,6 +21,7 @@ type DrawingDetailCompactHeaderProps = {
   drawingId: string;
   fileName: string;
   status: DrawingStatus;
+  progress: DrawingProgressState;
   drawingNumber: string | null;
   lineNumber: string | null;
   revision: string | null;
@@ -37,6 +40,7 @@ export function DrawingDetailCompactHeader({
   drawingId,
   fileName,
   status,
+  progress,
   drawingNumber,
   lineNumber,
   revision,
@@ -73,6 +77,7 @@ export function DrawingDetailCompactHeader({
               </Button>
             </Link>
             <DrawingStatusBadge status={status} />
+            <DrawingProgressBadge progress={progress} />
           </div>
 
           <h1 className="text-xl font-semibold tracking-tight break-all sm:text-2xl">

@@ -1,3 +1,7 @@
+import {
+  formatJobDrawingProgressHint,
+  type JobDrawingProgressSummary,
+} from "@/lib/drawings/drawing-progress";
 import type { JobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summary";
 import type { JobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import type { JobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
@@ -6,6 +10,7 @@ type JobDetailKpisProps = {
   drawingSummary: JobDrawingStatusSummary;
   takeoffSummary: JobTakeoffSummary;
   takeoffReviewSummary: JobTakeoffReviewSummary;
+  drawingProgressSummary: JobDrawingProgressSummary;
 };
 
 type KpiItemProps = {
@@ -40,7 +45,9 @@ export function JobDetailKpis({
   drawingSummary,
   takeoffSummary,
   takeoffReviewSummary,
+  drawingProgressSummary,
 }: JobDetailKpisProps) {
+  const drawingProgressHint = formatJobDrawingProgressHint(drawingProgressSummary);
   const drawingStatusHint = [
     drawingSummary.reviewedCount > 0
       ? `${drawingSummary.reviewedCount} revisados`
@@ -78,11 +85,23 @@ export function JobDetailKpis({
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         <KpiItem
           label="Total planos"
           value={drawingSummary.total}
-          hint={drawingStatusHint || undefined}
+          hint={
+            drawingProgressHint ??
+            (drawingStatusHint || undefined)
+          }
+        />
+        <KpiItem
+          label="Planos listos"
+          value={drawingProgressSummary.readyCount}
+          hint={
+            drawingProgressSummary.pendingCount > 0
+              ? `${drawingProgressSummary.pendingCount} pendientes`
+              : undefined
+          }
         />
         <KpiItem
           label="Revisados"

@@ -8,6 +8,7 @@ import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
+import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
@@ -58,6 +59,14 @@ export default async function DrawingDetailPage({
   );
   const lastDetectionFeedback =
     getLatestDetectionFeedbackFromActivities(activities);
+  const drawingProgress = getDrawingProgress({
+    status: drawing.status,
+    drawingNumber: drawing.drawingNumber,
+    lineNumber: drawing.lineNumber,
+    revision: drawing.revision,
+    takeoffLineCount: takeoffItems.length,
+    takeoffReviewedAt: drawing.takeoffReviewedAt,
+  });
 
   const metadataProps = {
     companyId,
@@ -80,6 +89,7 @@ export default async function DrawingDetailPage({
         drawingId={drawing.id}
         fileName={drawing.originalFileName}
         status={drawing.status}
+        progress={drawingProgress}
         drawingNumber={drawing.drawingNumber}
         lineNumber={drawing.lineNumber}
         revision={drawing.revision}

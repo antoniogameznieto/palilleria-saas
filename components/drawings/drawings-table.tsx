@@ -5,11 +5,12 @@ import { useMemo, useState } from "react";
 import type { DrawingStatus } from "@prisma/client";
 
 import { DeleteDrawingButton } from "@/components/drawings/delete-drawing-button";
+import { DrawingProgressBadge } from "@/components/drawings/drawing-progress-badge";
 import { DrawingStatusBadge } from "@/components/drawings/drawing-status-badge";
-import { TakeoffReviewBadge } from "@/components/drawings/takeoff/takeoff-review-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
 import {
   DRAWING_LIST_STATUS_FILTER_OPTIONS,
   filterDrawings,
@@ -124,7 +125,7 @@ export function DrawingsTable({
                 <th className="px-4 py-3 font-medium">Nº línea</th>
                 <th className="px-4 py-3 font-medium">Revisión</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
-                <th className="px-4 py-3 font-medium">Palillería</th>
+                <th className="px-4 py-3 font-medium">Avance</th>
                 <th className="px-4 py-3 font-medium">Subido</th>
                 <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
@@ -132,6 +133,14 @@ export function DrawingsTable({
             <tbody>
               {filteredDrawings.map((drawing) => {
                 const detailHref = `/companies/${companyId}/jobs/${jobId}/drawings/${drawing.id}`;
+                const progress = getDrawingProgress({
+                  status: drawing.status,
+                  drawingNumber: drawing.drawingNumber,
+                  lineNumber: drawing.lineNumber,
+                  revision: drawing.revision,
+                  takeoffLineCount: drawing.takeoffLineCount,
+                  takeoffReviewedAt: drawing.takeoffReviewedAt,
+                });
 
                 return (
                   <tr key={drawing.id} className="border-b last:border-b-0">
@@ -156,10 +165,7 @@ export function DrawingsTable({
                       <DrawingStatusBadge status={drawing.status} />
                     </td>
                     <td className="px-4 py-3">
-                      <TakeoffReviewBadge
-                        takeoffLineCount={drawing.takeoffLineCount}
-                        takeoffReviewedAt={drawing.takeoffReviewedAt}
-                      />
+                      <DrawingProgressBadge progress={progress} />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatUploadedAt(drawing.createdAt)}

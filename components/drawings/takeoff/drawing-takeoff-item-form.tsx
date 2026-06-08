@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -63,8 +63,7 @@ export function DrawingTakeoffItemForm({
   state,
   onCancel,
 }: DrawingTakeoffItemFormProps) {
-  const valuesRef = useRef(resolveFormValues(initialValues));
-  const values = valuesRef.current;
+  const [values] = useState(() => resolveFormValues(initialValues));
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
