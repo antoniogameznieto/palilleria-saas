@@ -10,6 +10,8 @@ import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
+import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
+import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
@@ -36,12 +38,20 @@ export default async function DrawingDetailPage({
   params,
 }: DrawingDetailPageProps) {
   const { companyId, jobId, drawingId } = await params;
-  const [{ membership, drawing }, { job }, activities, takeoffItems] =
+  const { membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+  const canEditTakeoff = canManageTakeoffItems(membership.role);
+  const [{ job }, activities, takeoffItems, jobTakeoffItems] =
     await Promise.all([
-      requireDrawingAccess(companyId, jobId, drawingId),
       requireJobAccess(companyId, jobId),
       getDrawingRecentActivity(companyId, jobId, drawingId),
       getDrawingTakeoffItems(companyId, jobId, drawingId),
+      canEditTakeoff
+        ? getJobTakeoffExportItems(companyId, jobId)
+        : Promise.resolve([]),
     ]);
 
   const canEditMetadata = canEditDrawingMetadata(membership.role);
@@ -50,8 +60,14 @@ export default async function DrawingDetailPage({
   const canExtractPdfText = canExtractDrawingPdfText(membership.role);
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
-  const canEditTakeoff = canManageTakeoffItems(membership.role);
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
+  const jobSuggestionItems = toTakeoffSuggestionSourceItems(
+    jobTakeoffItems.map((item) => ({
+      reference: item.reference,
+      description: item.description,
+      unit: item.unit,
+    })),
+  );
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
   const takeoffSummary = buildTakeoffSummary(takeoffItems);
   const takeoffReviewedByLabel = formatTakeoffReviewedByLabel(
@@ -162,6 +178,7 @@ export default async function DrawingDetailPage({
         drawingId={drawing.id}
         drawingNumber={drawing.drawingNumber}
         items={takeoffItems}
+        jobSuggestionItems={jobSuggestionItems}
         canEdit={canEditTakeoff}
         takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
         takeoffReviewedByLabel={takeoffReviewedByLabel}

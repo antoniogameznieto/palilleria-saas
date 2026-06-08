@@ -35,6 +35,11 @@ import {
   type TakeoffSortField,
 } from "@/lib/drawings/filter-takeoff-items";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
+import {
+  buildTakeoffFormSuggestions,
+  toTakeoffSuggestionSourceItems,
+  type TakeoffSuggestionSourceItem,
+} from "@/lib/drawings/takeoff-suggestions";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 
 type DrawingTakeoffSectionProps = {
@@ -43,6 +48,7 @@ type DrawingTakeoffSectionProps = {
   drawingId: string;
   drawingNumber: string | null;
   items: SerializedTakeoffItem[];
+  jobSuggestionItems: TakeoffSuggestionSourceItem[];
   canEdit: boolean;
   takeoffReviewedAt: string | null;
   takeoffReviewedByLabel: string | null;
@@ -67,6 +73,7 @@ export function DrawingTakeoffSection({
   drawingId,
   drawingNumber,
   items,
+  jobSuggestionItems,
   canEdit,
   takeoffReviewedAt,
   takeoffReviewedByLabel,
@@ -100,6 +107,14 @@ export function DrawingTakeoffSection({
 
   const editingItem = items.find((item) => item.id === editingItemId) ?? null;
   const summary = useMemo(() => buildTakeoffSummary(items), [items]);
+  const formSuggestions = useMemo(
+    () =>
+      buildTakeoffFormSuggestions(
+        toTakeoffSuggestionSourceItems(items),
+        jobSuggestionItems,
+      ),
+    [items, jobSuggestionItems],
+  );
   const unitFilterOptions = useMemo(
     () => buildTakeoffUnitFilterOptions(items),
     [items],
@@ -171,6 +186,7 @@ export function DrawingTakeoffSection({
             companyId={companyId}
             jobId={jobId}
             drawingId={drawingId}
+            suggestions={formSuggestions}
             formAction={createAction}
             submitLabel="Añadir línea"
             pendingLabel="Añadiendo..."
@@ -188,6 +204,7 @@ export function DrawingTakeoffSection({
             drawingId={drawingId}
             takeoffItemId={editingItem.id}
             initialValues={editingItem}
+            suggestions={formSuggestions}
             formAction={updateAction}
             submitLabel="Guardar cambios"
             pendingLabel="Guardando..."

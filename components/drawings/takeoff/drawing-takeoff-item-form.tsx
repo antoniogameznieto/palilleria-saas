@@ -3,10 +3,15 @@
 import { useState, type ComponentProps } from "react";
 
 import type { AuthActionState } from "@/lib/actions/auth";
+import { TakeoffDatalistInput } from "@/components/drawings/takeoff/takeoff-datalist-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
+import {
+  getReferenceAutofill,
+  type TakeoffFormSuggestions,
+} from "@/lib/drawings/takeoff-suggestions";
 
 type DrawingTakeoffItemFormProps = {
   companyId: string;
@@ -14,6 +19,7 @@ type DrawingTakeoffItemFormProps = {
   drawingId: string;
   takeoffItemId?: string;
   initialValues?: SerializedTakeoffItem;
+  suggestions: TakeoffFormSuggestions;
   formAction: NonNullable<ComponentProps<"form">["action"]>;
   submitLabel: string;
   pendingLabel: string;
@@ -56,6 +62,7 @@ export function DrawingTakeoffItemForm({
   drawingId,
   takeoffItemId,
   initialValues,
+  suggestions,
   formAction,
   submitLabel,
   pendingLabel,
@@ -64,6 +71,40 @@ export function DrawingTakeoffItemForm({
   onCancel,
 }: DrawingTakeoffItemFormProps) {
   const [values] = useState(() => resolveFormValues(initialValues));
+  const [reference, setReference] = useState(values.reference);
+  const [description, setDescription] = useState(values.description);
+  const [unit, setUnit] = useState(values.unit);
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
+  const [unitTouched, setUnitTouched] = useState(false);
+
+  const formKey = takeoffItemId ?? "new";
+
+  const applyReferenceAutofill = (nextReference: string) => {
+    const profile = getReferenceAutofill(
+      suggestions.referenceProfiles,
+      nextReference,
+    );
+
+    if (!profile) {
+      return;
+    }
+
+    if (!descriptionTouched && description.trim().length === 0) {
+      setDescription(profile.description);
+    }
+
+    if (!unitTouched && unit.trim().length === 0) {
+      setUnit(profile.unit ?? "");
+    }
+  };
+
+  const handleReferenceChange = (nextReference: string) => {
+    setReference(nextReference);
+  };
+
+  const handleReferenceBlur = () => {
+    applyReferenceAutofill(reference);
+  };
 
   return (
     <form action={formAction} className="space-y-4 rounded-lg border bg-muted/20 p-4">
@@ -88,14 +129,23 @@ export function DrawingTakeoffItemForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`reference-${takeoffItemId ?? "new"}`}>Referencia</Label>
-          <Input
-            id={`reference-${takeoffItemId ?? "new"}`}
+          <Label htmlFor={`reference-${formKey}`}>Referencia</Label>
+          <TakeoffDatalistInput
+            id={`reference-${formKey}`}
+            listId={`takeoff-reference-options-${formKey}`}
             name="reference"
-            defaultValue={values.reference}
+            value={reference}
+            onChange={(event) => handleReferenceChange(event.target.value)}
+            onBlur={handleReferenceBlur}
             maxLength={100}
             placeholder="Ej. P-001"
+            options={suggestions.referenceOptions}
           />
+          {suggestions.referenceOptions.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Sugerencias del plano y del trabajo.
+            </p>
+          ) : null}
           {state.fieldErrors?.reference ? (
             <p className="text-sm text-destructive">
               {state.fieldErrors.reference[0]}
@@ -104,17 +154,26 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor={`description-${takeoffItemId ?? "new"}`}>
-            Descripción
-          </Label>
-          <Input
-            id={`description-${takeoffItemId ?? "new"}`}
+          <Label htmlFor={`description-${formKey}`}>Descripción</Label>
+          <TakeoffDatalistInput
+            id={`description-${formKey}`}
+            listId={`takeoff-description-options-${formKey}`}
             name="description"
-            defaultValue={values.description}
+            value={description}
+            onChange={(event) => {
+              setDescriptionTouched(true);
+              setDescription(event.target.value);
+            }}
             maxLength={500}
             placeholder="Descripción de la partida"
             required
+            options={suggestions.descriptionOptions}
           />
+          {suggestions.descriptionOptions.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Descripciones usadas en este trabajo.
+            </p>
+          ) : null}
           {state.fieldErrors?.description ? (
             <p className="text-sm text-destructive">
               {state.fieldErrors.description[0]}
@@ -123,9 +182,9 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`quantity-${takeoffItemId ?? "new"}`}>Cantidad</Label>
+          <Label htmlFor={`quantity-${formKey}`}>Cantidad</Label>
           <Input
-            id={`quantity-${takeoffItemId ?? "new"}`}
+            id={`quantity-${formKey}`}
             name="quantity"
             defaultValue={values.quantity}
             inputMode="decimal"
@@ -140,14 +199,23 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`unit-${takeoffItemId ?? "new"}`}>Unidad</Label>
-          <Input
-            id={`unit-${takeoffItemId ?? "new"}`}
+          <Label htmlFor={`unit-${formKey}`}>Unidad</Label>
+          <TakeoffDatalistInput
+            id={`unit-${formKey}`}
+            listId={`takeoff-unit-options-${formKey}`}
             name="unit"
-            defaultValue={values.unit}
+            value={unit}
+            onChange={(event) => {
+              setUnitTouched(true);
+              setUnit(event.target.value);
+            }}
             maxLength={50}
-            placeholder="Ej. ud, m, m2"
+            placeholder="Ej. ud, m, m²"
+            options={suggestions.unitOptions}
           />
+          <p className="text-xs text-muted-foreground">
+            Elige una unidad frecuente o escribe otra.
+          </p>
           {state.fieldErrors?.unit ? (
             <p className="text-sm text-destructive">
               {state.fieldErrors.unit[0]}
@@ -156,9 +224,9 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`length-${takeoffItemId ?? "new"}`}>Largo</Label>
+          <Label htmlFor={`length-${formKey}`}>Largo</Label>
           <Input
-            id={`length-${takeoffItemId ?? "new"}`}
+            id={`length-${formKey}`}
             name="length"
             defaultValue={values.length}
             inputMode="decimal"
@@ -172,9 +240,9 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`width-${takeoffItemId ?? "new"}`}>Ancho</Label>
+          <Label htmlFor={`width-${formKey}`}>Ancho</Label>
           <Input
-            id={`width-${takeoffItemId ?? "new"}`}
+            id={`width-${formKey}`}
             name="width"
             defaultValue={values.width}
             inputMode="decimal"
@@ -188,9 +256,9 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`height-${takeoffItemId ?? "new"}`}>Alto</Label>
+          <Label htmlFor={`height-${formKey}`}>Alto</Label>
           <Input
-            id={`height-${takeoffItemId ?? "new"}`}
+            id={`height-${formKey}`}
             name="height"
             defaultValue={values.height}
             inputMode="decimal"
@@ -204,9 +272,9 @@ export function DrawingTakeoffItemForm({
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor={`notes-${takeoffItemId ?? "new"}`}>Notas</Label>
+          <Label htmlFor={`notes-${formKey}`}>Notas</Label>
           <Input
-            id={`notes-${takeoffItemId ?? "new"}`}
+            id={`notes-${formKey}`}
             name="notes"
             defaultValue={values.notes}
             maxLength={1000}
