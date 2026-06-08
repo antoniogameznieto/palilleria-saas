@@ -12,12 +12,14 @@ type ExportTakeoffCsvButtonProps = {
   items: SerializedTakeoffItem[];
   drawingNumber: string | null;
   drawingId: string;
+  size?: "default" | "sm";
 };
 
 export function ExportTakeoffCsvButton({
   items,
   drawingNumber,
   drawingId,
+  size = "default",
 }: ExportTakeoffCsvButtonProps) {
   const hasItems = items.length > 0;
 
@@ -35,6 +37,7 @@ export function ExportTakeoffCsvButton({
     <Button
       type="button"
       variant="outline"
+      size={size}
       disabled={!hasItems}
       onClick={handleExport}
       title={

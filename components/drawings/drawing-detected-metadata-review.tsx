@@ -22,6 +22,7 @@ type DrawingDetectedMetadataReviewProps = {
   lineNumber: string | null;
   revision: string | null;
   canConfirm: boolean;
+  plain?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -42,6 +43,7 @@ export function DrawingDetectedMetadataReview({
   lineNumber,
   revision,
   canConfirm,
+  plain = false,
 }: DrawingDetectedMetadataReviewProps) {
   const [state, formAction, isPending] = useActionState(
     confirmDetectedDrawingMetadataAction,
@@ -55,16 +57,8 @@ export function DrawingDetectedMetadataReview({
     }
   }, [router, state.success]);
 
-  return (
-    <Card className="border-amber-500/40 bg-amber-500/5">
-      <CardHeader>
-        <CardTitle>Metadatos detectados pendientes de revisión</CardTitle>
-        <CardDescription>
-          Revisa los metadatos propuestos desde el nombre del archivo antes de
-          marcar el plano como revisado.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+  const content = (
+    <div className="space-y-4">
         <dl className="grid gap-4 text-sm md:grid-cols-3">
           <div>
             <dt className="text-muted-foreground">Número de plano</dt>
@@ -108,7 +102,33 @@ export function DrawingDetectedMetadataReview({
             Pendiente de confirmación por un ingeniero o administrador.
           </p>
         )}
-      </CardContent>
+    </div>
+  );
+
+  if (plain) {
+    return (
+      <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
+        <h4 className="text-sm font-medium">
+          Metadatos detectados pendientes de revisión
+        </h4>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Revisa los metadatos propuestos desde el nombre del archivo.
+        </p>
+        <div className="mt-4">{content}</div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="border-amber-500/40 bg-amber-500/5">
+      <CardHeader>
+        <CardTitle>Metadatos detectados pendientes de revisión</CardTitle>
+        <CardDescription>
+          Revisa los metadatos propuestos desde el nombre del archivo antes de
+          marcar el plano como revisado.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

@@ -1,20 +1,17 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
 import { DrawingTakeoffSection } from "@/components/drawings/takeoff/drawing-takeoff-section";
 import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
-import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
-import { DrawingDetailHeader } from "@/components/drawings/drawing-detail-header";
+import { DrawingDetailCompactHeader } from "@/components/drawings/drawing-detail-compact-header";
+import { DrawingDetailSummaryTab } from "@/components/drawings/drawing-detail-summary-tab";
+import { DrawingDetailWorkspace } from "@/components/drawings/drawing-detail-workspace";
 import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
 import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
-import { DrawingStatusControl } from "@/components/drawings/drawing-status-control";
+import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
-import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
-import { Button } from "@/components/ui/button";
 import { getDrawingRecentActivity } from "@/lib/drawings/activity";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
+import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
@@ -57,6 +54,7 @@ export default async function DrawingDetailPage({
   const isDetected = drawing.status === "detected";
   const createdByLabel = drawing.createdBy.name ?? drawing.createdBy.email;
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
+  const takeoffSummary = buildTakeoffSummary(takeoffItems);
 
   const metadataProps = {
     companyId,
@@ -71,81 +69,117 @@ export default async function DrawingDetailPage({
 
   return (
     <div className="space-y-6">
-      <AppBreadcrumbs
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Trabajos", href: `/companies/${companyId}/jobs` },
-          { label: job.name, href: jobHref },
-          { label: drawing.originalFileName },
-        ]}
-      />
-
-      <Link href={jobHref}>
-        <Button variant="outline" type="button">
-          <ArrowLeft className="size-4" />
-          Volver al trabajo
-        </Button>
-      </Link>
-
-      <DrawingDetailHeader
+      <DrawingDetailCompactHeader
         companyId={companyId}
         jobId={jobId}
+        jobName={job.name}
+        jobHref={jobHref}
         drawingId={drawing.id}
         fileName={drawing.originalFileName}
         status={drawing.status}
+        drawingNumber={drawing.drawingNumber}
+        lineNumber={drawing.lineNumber}
+        revision={drawing.revision}
         createdAt={drawing.createdAt}
+        fileSize={drawing.fileSize}
+        createdByLabel={createdByLabel}
         canDelete={canDelete}
+        takeoffItems={takeoffItems}
       />
 
-      <DrawingStatusControl
-        companyId={companyId}
-        jobId={jobId}
-        drawingId={drawing.id}
-        status={drawing.status}
-        canEdit={canEditStatus}
+      <DrawingDetailWorkspace
+        pdf={
+          <PdfViewer
+            drawingId={drawing.id}
+            fileName={drawing.originalFileName}
+            variant="hero"
+          />
+        }
+        resumen={
+          <DrawingDetailSummaryTab
+            companyId={companyId}
+            jobId={jobId}
+            drawingId={drawing.id}
+            status={drawing.status}
+            drawingNumber={drawing.drawingNumber}
+            lineNumber={drawing.lineNumber}
+            revision={drawing.revision}
+            canEditStatus={canEditStatus}
+            takeoffSummary={takeoffSummary}
+          />
+        }
+        metadatos={
+          canEditMetadata ? (
+            <DrawingMetadataForm
+              key={`${drawing.id}:${drawing.drawingNumber ?? ""}:${drawing.lineNumber ?? ""}:${drawing.revision ?? ""}`}
+              {...metadataProps}
+              plain
+            />
+          ) : (
+            <DrawingMetadataReadonly {...metadataProps} plain />
+          )
+        }
+        automatizacion={
+          <div className="space-y-6">
+            {isDetected ? (
+              <DrawingDetectedMetadataReview
+                companyId={companyId}
+                jobId={jobId}
+                drawingId={drawing.id}
+                drawingNumber={drawing.drawingNumber}
+                lineNumber={drawing.lineNumber}
+                revision={drawing.revision}
+                canConfirm={canConfirmDetected}
+                plain
+              />
+            ) : null}
+
+            {canStartDetection ? (
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium">Detección automática</h3>
+                <p className="text-xs text-muted-foreground">
+                  Analiza el nombre del archivo para proponer metadatos.
+                </p>
+                <DrawingDetectionControl
+                  companyId={companyId}
+                  jobId={jobId}
+                  drawingId={drawing.id}
+                  status={drawing.status}
+                  plain
+                />
+              </section>
+            ) : null}
+
+            {canExtractPdfText ? (
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium">Extracción de texto</h3>
+                <p className="text-xs text-muted-foreground">
+                  Experimental. Lee texto embebido del PDF sin OCR ni IA.
+                </p>
+                <DrawingPdfTextExtraction
+                  companyId={companyId}
+                  jobId={jobId}
+                  drawingId={drawing.id}
+                  plain
+                />
+              </section>
+            ) : null}
+
+            {!isDetected && !canStartDetection && !canExtractPdfText ? (
+              <p className="text-sm text-muted-foreground">
+                No tienes permisos para ejecutar automatizaciones en este plano.
+              </p>
+            ) : null}
+          </div>
+        }
+        actividad={
+          <DrawingActivityCard
+            activities={activities}
+            initialVisibleCount={5}
+            plain
+          />
+        }
       />
-
-      {canStartDetection ? (
-        <DrawingDetectionControl
-          companyId={companyId}
-          jobId={jobId}
-          drawingId={drawing.id}
-          status={drawing.status}
-        />
-      ) : null}
-
-      {isDetected ? (
-        <DrawingDetectedMetadataReview
-          companyId={companyId}
-          jobId={jobId}
-          drawingId={drawing.id}
-          drawingNumber={drawing.drawingNumber}
-          lineNumber={drawing.lineNumber}
-          revision={drawing.revision}
-          canConfirm={canConfirmDetected}
-        />
-      ) : null}
-
-      {canEditMetadata ? (
-        <DrawingMetadataForm
-          key={`${drawing.id}:${drawing.drawingNumber ?? ""}:${drawing.lineNumber ?? ""}:${drawing.revision ?? ""}`}
-          {...metadataProps}
-        />
-      ) : (
-        <DrawingMetadataReadonly {...metadataProps} />
-      )}
-
-      <DrawingActivityCard activities={activities} />
-
-      <PdfViewer drawingId={drawing.id} fileName={drawing.originalFileName} />
-
-      {canExtractPdfText ? (
-        <DrawingPdfTextExtraction
-          companyId={companyId}
-          jobId={jobId}
-          drawingId={drawing.id}
-        />
-      ) : null}
 
       <DrawingTakeoffSection
         companyId={companyId}

@@ -18,6 +18,7 @@ type DrawingPdfTextExtractionProps = {
   companyId: string;
   jobId: string;
   drawingId: string;
+  plain?: boolean;
 };
 
 const initialState: DrawingPdfTextExtractionActionState = {};
@@ -26,22 +27,15 @@ export function DrawingPdfTextExtraction({
   companyId,
   jobId,
   drawingId,
+  plain = false,
 }: DrawingPdfTextExtractionProps) {
   const [state, formAction, isPending] = useActionState(
     extractDrawingPdfTextAction,
     initialState,
   );
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Extracción de texto del PDF</CardTitle>
-        <CardDescription>
-          Experimental. Intenta leer texto embebido del PDF sin OCR, sin IA y sin
-          modificar metadatos ni palillería.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+  const content = (
+    <div className="space-y-4">
         {state.error ? (
           <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.error}
@@ -74,7 +68,23 @@ export function DrawingPdfTextExtraction({
             {isPending ? "Extrayendo..." : "Extraer texto del PDF"}
           </Button>
         </form>
-      </CardContent>
+    </div>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Extracción de texto del PDF</CardTitle>
+        <CardDescription>
+          Experimental. Intenta leer texto embebido del PDF sin OCR, sin IA y sin
+          modificar metadatos ni palillería.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

@@ -2,9 +2,32 @@ import type { TakeoffSummary } from "@/lib/drawings/takeoff-summary";
 
 type DrawingTakeoffSummaryProps = {
   summary: TakeoffSummary;
+  compact?: boolean;
 };
 
-export function DrawingTakeoffSummary({ summary }: DrawingTakeoffSummaryProps) {
+export function DrawingTakeoffSummary({
+  summary,
+  compact = false,
+}: DrawingTakeoffSummaryProps) {
+  if (compact) {
+    return (
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border bg-muted/20 px-4 py-3 text-sm">
+        <div>
+          <span className="text-muted-foreground">Líneas </span>
+          <span className="font-semibold">{summary.lineCount}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Cantidad </span>
+          <span className="font-semibold">{summary.totalQuantity}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Referencias </span>
+          <span className="font-semibold">{summary.uniqueReferenceCount}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg border bg-muted/20 p-4">
       <h3 className="text-sm font-medium">Resumen</h3>

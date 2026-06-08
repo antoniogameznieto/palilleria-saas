@@ -14,6 +14,7 @@ type DrawingMetadataReadonlyProps = {
   lineNumber: string | null;
   revision: string | null;
   createdByLabel: string;
+  plain?: boolean;
 };
 
 export function DrawingMetadataReadonly({
@@ -22,14 +23,10 @@ export function DrawingMetadataReadonly({
   lineNumber,
   revision,
   createdByLabel,
+  plain = false,
 }: DrawingMetadataReadonlyProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Metadatos del plano</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <dl className="grid gap-4 text-sm md:grid-cols-2">
+  const content = (
+    <dl className="grid gap-4 text-sm md:grid-cols-2">
           <MetadataItem
             label="Tamaño"
             value={<FileSize bytes={fileSize} />}
@@ -38,8 +35,19 @@ export function DrawingMetadataReadonly({
           <MetadataItem label="Número de plano" value={drawingNumber} />
           <MetadataItem label="Número de línea" value={lineNumber} />
           <MetadataItem label="Revisión" value={revision} />
-        </dl>
-      </CardContent>
+    </dl>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Metadatos del plano</CardTitle>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

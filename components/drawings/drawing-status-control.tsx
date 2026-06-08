@@ -27,6 +27,7 @@ type DrawingStatusControlProps = {
   drawingId: string;
   status: DrawingStatus;
   canEdit: boolean;
+  plain?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -40,6 +41,7 @@ export function DrawingStatusControl({
   drawingId,
   status,
   canEdit,
+  plain = false,
 }: DrawingStatusControlProps) {
   const [state, formAction, isPending] = useActionState(
     updateDrawingStatusAction,
@@ -50,18 +52,16 @@ export function DrawingStatusControl({
     isManualDrawingStatus(status) ? status : MANUAL_DRAWING_STATUS_OPTIONS[0].value,
   );
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Estado del plano</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+  const content = (
+    <div className="space-y-4">
+      {plain ? null : (
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted-foreground">Estado actual:</span>
           <DrawingStatusBadge status={status} />
         </div>
+      )}
 
-        {canEdit ? (
+      {canEdit ? (
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="companyId" value={companyId} />
             <input type="hidden" name="jobId" value={jobId} />
@@ -115,7 +115,19 @@ export function DrawingStatusControl({
             </Button>
           </form>
         ) : null}
-      </CardContent>
+    </div>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Estado del plano</CardTitle>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

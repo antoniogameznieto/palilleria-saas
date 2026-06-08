@@ -111,7 +111,7 @@ export function DrawingTakeoffSection({
   );
 
   return (
-    <Card>
+    <Card id="palilleria">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
         <div>
           <CardTitle>Palillería</CardTitle>
@@ -148,7 +148,7 @@ export function DrawingTakeoffSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <DrawingTakeoffSummary summary={summary} />
+        <DrawingTakeoffSummary summary={summary} compact />
 
         {canEdit && showCreateForm ? (
           <DrawingTakeoffItemForm

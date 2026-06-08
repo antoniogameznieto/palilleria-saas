@@ -23,6 +23,7 @@ type DrawingDetectionControlProps = {
   jobId: string;
   drawingId: string;
   status: DrawingStatus;
+  plain?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -52,6 +53,7 @@ export function DrawingDetectionControl({
   jobId,
   drawingId,
   status,
+  plain = false,
 }: DrawingDetectionControlProps) {
   const [startState, startAction, isStarting] = useActionState(
     startDrawingDetectionAction,
@@ -74,16 +76,8 @@ export function DrawingDetectionControl({
     ? startState
     : completeState;
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Detección automática</CardTitle>
-        <CardDescription>
-          Inicia el flujo de detección de metadatos del plano. Por ahora se
-          analiza el nombre del archivo, sin leer el contenido del PDF.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+  const content = (
+    <div className="space-y-4">
         <FeedbackMessage state={feedback} />
 
         {isProcessing ? (
@@ -118,7 +112,23 @@ export function DrawingDetectionControl({
             </form>
           ) : null}
         </div>
-      </CardContent>
+    </div>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Detección automática</CardTitle>
+        <CardDescription>
+          Inicia el flujo de detección de metadatos del plano. Por ahora se
+          analiza el nombre del archivo, sin leer el contenido del PDF.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

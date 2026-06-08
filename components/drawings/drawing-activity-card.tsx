@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,25 +24,31 @@ type DrawingActivityItem = {
 
 type DrawingActivityCardProps = {
   activities: DrawingActivityItem[];
+  initialVisibleCount?: number;
+  plain?: boolean;
 };
 
-export function DrawingActivityCard({ activities }: DrawingActivityCardProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Actividad reciente</CardTitle>
-        <CardDescription>
-          Historial de subida, detección, metadatos y cambios de estado.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Todavía no hay actividad registrada para este plano.
-          </p>
-        ) : (
+export function DrawingActivityCard({
+  activities,
+  initialVisibleCount = 20,
+  plain = false,
+}: DrawingActivityCardProps) {
+  const [showAll, setShowAll] = useState(false);
+  const visibleActivities = showAll
+    ? activities
+    : activities.slice(0, initialVisibleCount);
+  const hasHiddenActivities = activities.length > initialVisibleCount;
+
+  const content = (
+    <>
+      {activities.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Todavía no hay actividad registrada para este plano.
+        </p>
+      ) : (
+        <div className="space-y-4">
           <ul className="space-y-4">
-            {activities.map((activity) => (
+            {visibleActivities.map((activity) => (
               <li
                 key={activity.id}
                 className="border-b border-border pb-4 last:border-b-0 last:pb-0"
@@ -50,8 +61,37 @@ export function DrawingActivityCard({ activities }: DrawingActivityCardProps) {
               </li>
             ))}
           </ul>
-        )}
-      </CardContent>
+
+          {hasHiddenActivities ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAll((current) => !current)}
+            >
+              {showAll
+                ? "Ver menos actividad"
+                : `Ver actividad completa (${activities.length})`}
+            </Button>
+          ) : null}
+        </div>
+      )}
+    </>
+  );
+
+  if (plain) {
+    return <div className="space-y-3">{content}</div>;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Actividad reciente</CardTitle>
+        <CardDescription>
+          Historial de subida, detección, metadatos y cambios de estado.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

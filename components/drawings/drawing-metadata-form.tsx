@@ -24,6 +24,7 @@ type DrawingMetadataFormProps = {
   lineNumber: string | null;
   revision: string | null;
   createdByLabel: string;
+  plain?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -37,6 +38,7 @@ export function DrawingMetadataForm({
   lineNumber,
   revision,
   createdByLabel,
+  plain = false,
 }: DrawingMetadataFormProps) {
   const [state, formAction, isPending] = useActionState(
     updateDrawingMetadataAction,
@@ -49,12 +51,8 @@ export function DrawingMetadataForm({
     revision: revision ?? "",
   });
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Metadatos del plano</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+  const content = (
+    <div className="space-y-6">
         <dl className="grid gap-4 text-sm md:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">Tamaño</dt>
@@ -157,7 +155,19 @@ export function DrawingMetadataForm({
             {isPending ? "Guardando..." : "Guardar"}
           </Button>
         </form>
-      </CardContent>
+    </div>
+  );
+
+  if (plain) {
+    return content;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Metadatos del plano</CardTitle>
+      </CardHeader>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }
