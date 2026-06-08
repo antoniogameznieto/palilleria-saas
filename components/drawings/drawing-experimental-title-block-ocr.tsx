@@ -12,6 +12,7 @@ import {
   type TitleBlockCropPercents,
 } from "@/lib/drawings/experimental-title-block-crop-params";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
+import { TESSERACT_SETUP_DOC } from "@/lib/drawings/tesseract-cli-constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +83,15 @@ export function DrawingExperimentalTitleBlockOcr({
         ajustar el recorte manualmente para probar distintos formatos. No aplica
         metadatos automáticamente ni persiste resultados ni configuración del
         recorte.
+      </p>
+
+      <p className="text-xs text-muted-foreground">
+        OCR real requiere Tesseract CLI en el servidor donde corre Next.js. Guía
+        de instalación:{" "}
+        <code className="rounded bg-muted px-1 py-0.5">{TESSERACT_SETUP_DOC}</code>
+        . En local:{" "}
+        <code className="rounded bg-muted px-1 py-0.5">npm run check:tesseract</code>
+        .
       </p>
 
       <div className="space-y-3 rounded-lg border bg-muted/10 p-4">

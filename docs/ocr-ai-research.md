@@ -325,15 +325,16 @@ Reutilizar patrón de **metadatos detectados**:
 
 3. Entrar a un plano como **owner**, **admin** o **engineer** → tab **Automatización** → bloque «OCR experimental del cajetín».
 
-4. (Opcional) Instalar Tesseract para OCR real:
+4. (Opcional) Instalar Tesseract para OCR real — ver guía dedicada:
 
-   ```bash
-   brew install tesseract tesseract-lang
-   ```
+   - [docs/tesseract-ocr-setup.md](./tesseract-ocr-setup.md) (macOS, Linux, Docker)
+   - Diagnóstico: `npm run check:tesseract`
+   - Comandos manuales: `tesseract --version`, `tesseract --list-langs`
+   - Idiomas recomendados: `eng`, `spa`
 
 ### Limitaciones actuales
 
-- **Sin Tesseract:** se ejecuta render + recorte; OCR se omite con aviso (no rompe build/deploy).
+- **Sin Tesseract:** se ejecuta render + recorte; OCR se omite con aviso que enlaza [tesseract-ocr-setup.md](./tesseract-ocr-setup.md) (no rompe build/deploy).
 - Recorte fijo bottom-right; no adapta orientación ni plantillas por cliente.
 - Solo primera página.
 - OCR síncrono en server action (aceptable en experimental; mover a cola en integración productiva).
@@ -341,7 +342,7 @@ Reutilizar patrón de **metadatos detectados**:
 - No hay botón «Aplicar» — candidatos no se guardan.
 - Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
 
-### Próximos pasos (10E+)
+### Próximos pasos (10F+)
 
 1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
 2. Templates de ROI por cliente/proyecto (persistidos) tras validar con 10D.
@@ -442,6 +443,37 @@ Comparar formatos de cajetín entre planos/clientes antes de diseñar templates 
 
 ```bash
 npm run verify:title-block-crop   # incluye validación de % y presets
+npm run check:tesseract           # diagnóstico Tesseract CLI (exit 0 siempre)
+npm run lint
+npm run build
+```
+
+---
+
+## Fase 10E — Documentación y diagnóstico Tesseract (implementado)
+
+> **Estado:** experimental, misma feature flag `EXPERIMENTAL_TITLE_BLOCK_OCR`.  
+> **No integra OCR productivo** — solo preparación, documentación y comprobación del CLI del sistema.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| [docs/tesseract-ocr-setup.md](./tesseract-ocr-setup.md) | Instalación macOS, Linux, Docker; comandos `tesseract --version` / `--list-langs` |
+| `lib/drawings/tesseract-cli-constants.ts` | Constantes y mensajes de aviso (sin Node) |
+| `lib/drawings/tesseract-cli-diagnostic.ts` | Diagnóstico compartido (PATH, versión, idiomas) |
+| `scripts/check-tesseract.ts` | `npm run check:tesseract` — sale con código 0 aunque falte Tesseract |
+| UI / pipeline OCR | Avisos mejorados con enlace a la guía y al script de diagnóstico |
+
+### Idiomas recomendados
+
+`eng` y `spa` — el pipeline intenta `spa+eng`, luego `eng`, luego `spa`.
+
+### Verificación local
+
+```bash
+npm run check:tesseract
+npm run verify:title-block-crop
 npm run lint
 npm run build
 ```

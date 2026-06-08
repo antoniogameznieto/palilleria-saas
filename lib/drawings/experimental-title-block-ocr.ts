@@ -20,6 +20,12 @@ import { encodeTitleBlockCropPreview } from "@/lib/drawings/experimental-title-b
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
 import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
 import type { ParsedDrawingMetadata } from "@/lib/drawings/parse-filename";
+import {
+  buildTesseractMissingLanguageWarning,
+  buildTesseractMissingWarnings,
+  getMissingRecommendedTesseractLanguages,
+} from "@/lib/drawings/tesseract-cli-constants";
+import { diagnoseTesseractCli } from "@/lib/drawings/tesseract-cli-diagnostic";
 import { PDF_MIME_TYPE, getFile } from "@/lib/storage";
 
 const execFileAsync = promisify(execFile);
@@ -119,17 +125,6 @@ async function cropTitleBlockFromPagePng(
     buffer: canvas.toBuffer("image/png"),
     crop,
   };
-}
-
-async function isTesseractCliAvailable(): Promise<boolean> {
-  try {
-    await execFileAsync("tesseract", ["--version"], {
-      timeout: 5_000,
-    });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function runTesseractOnPng(pngBuffer: Buffer): Promise<string | null> {
@@ -233,16 +228,19 @@ export async function analyzeTitleBlockFromPdfBuffer(
 
   let extractedText: string | null = null;
 
-  const tesseractAvailable = await isTesseractCliAvailable();
+  const tesseractDiagnostic = await diagnoseTesseractCli();
 
-  if (!tesseractAvailable) {
-    warnings.push(
-      "Tesseract no está instalado o no está en PATH. Se completó render + recorte del cajetín, pero no se ejecutó OCR.",
-    );
-    warnings.push(
-      "Instala Tesseract localmente (p. ej. brew install tesseract tesseract-lang) para habilitar OCR real.",
-    );
+  if (!tesseractDiagnostic.available) {
+    warnings.push(...buildTesseractMissingWarnings());
   } else {
+    const missingLanguages = getMissingRecommendedTesseractLanguages(
+      tesseractDiagnostic.languages,
+    );
+
+    if (missingLanguages.length > 0 && tesseractDiagnostic.languages.length > 0) {
+      warnings.push(buildTesseractMissingLanguageWarning(missingLanguages));
+    }
+
     extractedText = await runTesseractOnPng(titleBlockPng);
 
     if (!extractedText) {
