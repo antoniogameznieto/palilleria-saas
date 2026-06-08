@@ -118,3 +118,7 @@ export function buildTakeoffItemDeletedActivityMessage(
 ): string {
   return `Línea de palillería eliminada: ${description}`;
 }
+
+export function buildTakeoffItemDuplicatedActivityMessage(): string {
+  return "Se duplicó una línea de palillería";
+}

@@ -7,6 +7,7 @@ import type { AuthActionState } from "@/lib/actions/auth";
 import {
   buildTakeoffItemCreatedActivityMessage,
   buildTakeoffItemDeletedActivityMessage,
+  buildTakeoffItemDuplicatedActivityMessage,
   buildTakeoffItemUpdatedActivityMessage,
   recordDrawingActivity,
 } from "@/lib/drawings/activity";
@@ -320,6 +321,76 @@ export async function deleteTakeoffItemAction(
       },
     });
   }
+
+  revalidateDrawingPage(companyId, jobId, drawingId);
+
+  redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+}
+
+export async function duplicateTakeoffItemAction(
+  formData: FormData,
+): Promise<void> {
+  const scope = parseTakeoffItemScopeFormData(formData);
+
+  if ("error" in scope) {
+    redirect("/dashboard");
+  }
+
+  const { companyId, jobId, drawingId, takeoffItemId } = scope;
+  const { user, membership } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canManageTakeoffItems(membership.role)) {
+    redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  }
+
+  const existing = await prisma.drawingTakeoffItem.findFirst({
+    where: {
+      id: takeoffItemId,
+      companyId,
+      jobId,
+      drawingId,
+    },
+  });
+
+  if (!existing) {
+    redirect(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  }
+
+  const duplicated = await prisma.drawingTakeoffItem.create({
+    data: {
+      companyId,
+      jobId,
+      drawingId,
+      createdById: user.id,
+      reference: existing.reference,
+      description: existing.description,
+      quantity: existing.quantity,
+      unit: existing.unit,
+      length: existing.length,
+      width: existing.width,
+      height: existing.height,
+      notes: existing.notes,
+    },
+  });
+
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: "takeoff_item_duplicated",
+    message: buildTakeoffItemDuplicatedActivityMessage(),
+    metadata: {
+      originalItemId: takeoffItemId,
+      duplicatedItemId: duplicated.id,
+      reference: existing.reference,
+      description: existing.description,
+    },
+  });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
 

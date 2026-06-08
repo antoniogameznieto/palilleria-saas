@@ -9,6 +9,7 @@ import {
   updateTakeoffItemAction,
 } from "@/lib/actions/takeoff";
 import { DeleteTakeoffItemButton } from "@/components/drawings/takeoff/delete-takeoff-item-button";
+import { DuplicateTakeoffItemButton } from "@/components/drawings/takeoff/duplicate-takeoff-item-button";
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
 import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
@@ -300,6 +301,12 @@ export function DrawingTakeoffSection({
                           >
                             Editar
                           </Button>
+                          <DuplicateTakeoffItemButton
+                            companyId={companyId}
+                            jobId={jobId}
+                            drawingId={drawingId}
+                            takeoffItemId={item.id}
+                          />
                           <DeleteTakeoffItemButton
                             companyId={companyId}
                             jobId={jobId}
