@@ -11,6 +11,7 @@ import {
   TITLE_BLOCK_SCREENSHOT_WIDTH_PX,
   computeTitleBlockCropRect,
 } from "@/lib/drawings/experimental-title-block-crop";
+import { encodeTitleBlockCropPreview } from "@/lib/drawings/experimental-title-block-crop-preview";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
 import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
 import type { ParsedDrawingMetadata } from "@/lib/drawings/parse-filename";
@@ -22,6 +23,7 @@ const TESSERACT_TIMEOUT_MS = 45_000;
 
 export type ExperimentalTitleBlockOcrResult = {
   hasPreview: boolean;
+  cropImageDataUrl: string | null;
   extractedText: string | null;
   textPreview: string | null;
   metadataCandidates: ParsedDrawingMetadata;
@@ -79,7 +81,7 @@ async function cropTitleBlockFromPagePng(
   pagePng: Uint8Array,
   pageWidth: number,
   pageHeight: number,
-): Promise<Buffer> {
+): Promise<{ buffer: Buffer; crop: ReturnType<typeof computeTitleBlockCropRect> }> {
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   const image = await loadImage(Buffer.from(pagePng));
   const crop = computeTitleBlockCropRect(pageWidth, pageHeight);
@@ -98,7 +100,10 @@ async function cropTitleBlockFromPagePng(
     crop.height,
   );
 
-  return canvas.toBuffer("image/png");
+  return {
+    buffer: canvas.toBuffer("image/png"),
+    crop,
+  };
 }
 
 async function isTesseractCliAvailable(): Promise<boolean> {
@@ -171,13 +176,18 @@ export async function analyzeTitleBlockFromPdfBuffer(
   }
 
   let titleBlockPng: Buffer;
+  let cropWidth = 0;
+  let cropHeight = 0;
 
   try {
-    titleBlockPng = await cropTitleBlockFromPagePng(
+    const cropped = await cropTitleBlockFromPagePng(
       pageScreenshot.data,
       pageScreenshot.width,
       pageScreenshot.height,
     );
+    titleBlockPng = cropped.buffer;
+    cropWidth = cropped.crop.width;
+    cropHeight = cropped.crop.height;
   } catch (error) {
     throw new Error(
       error instanceof Error
@@ -187,6 +197,23 @@ export async function analyzeTitleBlockFromPdfBuffer(
   }
 
   const hasPreview = titleBlockPng.length > 0;
+  let cropImageDataUrl: string | null = null;
+
+  if (hasPreview) {
+    const encoded = await encodeTitleBlockCropPreview(
+      titleBlockPng,
+      cropWidth,
+      cropHeight,
+    );
+    cropImageDataUrl = encoded.cropImageDataUrl;
+
+    if (encoded.previewWarning) {
+      warnings.push(encoded.previewWarning);
+    }
+  } else {
+    warnings.push("No se pudo generar el recorte del cajetín para preview.");
+  }
+
   let extractedText: string | null = null;
 
   const tesseractAvailable = await isTesseractCliAvailable();
@@ -233,6 +260,7 @@ export async function analyzeTitleBlockFromPdfBuffer(
 
   return {
     hasPreview,
+    cropImageDataUrl,
     extractedText,
     textPreview: buildTextPreview(extractedText),
     metadataCandidates,

@@ -34,6 +34,7 @@ export type ExperimentalTitleBlockOcrActionState = {
   error?: string;
   success?: string;
   hasPreview?: boolean;
+  cropImageDataUrl?: string | null;
   textPreview?: string | null;
   metadataCandidates?: ExperimentalTitleBlockOcrResult["metadataCandidates"];
   warnings?: string[];
@@ -90,6 +91,7 @@ export async function analyzeExperimentalTitleBlockOcrAction(
     return {
       success,
       hasPreview: result.hasPreview,
+      cropImageDataUrl: result.cropImageDataUrl,
       textPreview: result.textPreview,
       metadataCandidates: result.metadataCandidates,
       warnings: result.warnings,

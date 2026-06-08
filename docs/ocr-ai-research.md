@@ -276,6 +276,7 @@ Reutilizar patrón de **metadatos detectados**:
 | `lib/drawings/detection-merge.ts` | Merge fuentes |
 | `scripts/inspect-pdf-pages.ts` | Inspección experimental 10A |
 | `lib/drawings/experimental-title-block-ocr.ts` | OCR experimental cajetín 10B |
+| `lib/drawings/experimental-title-block-crop-preview.ts` | Preview JPEG del recorte 10C |
 | `scripts/verify-title-block-crop.ts` | Check recorte cajetín |
 | `docs/takeoff-hardening-checklist.md` | Hardening palillería (9F) |
 
@@ -336,22 +337,57 @@ Reutilizar patrón de **metadatos detectados**:
 - Recorte fijo bottom-right; no adapta orientación ni plantillas por cliente.
 - Solo primera página.
 - OCR síncrono en server action (aceptable en experimental; mover a cola en integración productiva).
-- No hay preview de imagen del recorte en UI (solo texto/candidatos).
+- Preview visual limitada a 640 px ancho / 400 KB JPEG (ver Fase 10C).
 - No hay botón «Aplicar» — candidatos no se guardan.
 - Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
 
-### Próximos pasos (10C+)
+### Próximos pasos (10D+)
 
 1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
-2. Preview visual del recorte cajetín (base64 efímera, sin persistir).
-3. Ajuste de ROI por tipo de plano o detección de rectángulo del cajetín.
-4. Cola background + timeout para PDFs grandes.
-5. Evaluar cloud OCR / multimodal solo tras baseline local validada.
-6. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
+2. Ajuste de ROI por tipo de plano o detección de rectángulo del cajetín.
+3. Cola background + timeout para PDFs grandes.
+4. Evaluar cloud OCR / multimodal solo tras baseline local validada.
+5. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
 
 ### Verificación local
 
 ```bash
 npm run verify:title-block-crop
 ```
+
+---
+
+## Fase 10C — Preview visual del recorte (implementado)
+
+> **Estado:** experimental, misma feature flag `EXPERIMENTAL_TITLE_BLOCK_OCR`.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| `lib/drawings/experimental-title-block-crop-preview.ts` | Encode JPEG + límites de tamaño para preview |
+| UI «Vista previa del cajetín analizado» | Muestra el recorte bottom-right usado para OCR |
+| Server action | Devuelve `cropImageDataUrl` efímero (no persiste) |
+
+### Cómo se devuelve la imagen
+
+1. Recorte del cajetín en memoria (PNG, misma zona 35 % × 25 %).
+2. Reescala si el ancho supera **640 px**.
+3. Comprime a **JPEG calidad 82**.
+4. Si el binario ≤ **400 KB** → `data:image/jpeg;base64,...` en la respuesta de la server action.
+5. Sin endpoint aparte, sin storage, sin BD.
+6. Si supera el límite o falla el encode → warning; OCR/texto/candidatos siguen igual.
+
+### Utilidad
+
+Validar visualmente si el recorte heurístico captura el cajetín antes de ajustar ROI o mejorar OCR.
+
+### Límites de preview
+
+| Parámetro | Valor |
+|-----------|-------|
+| Ancho máximo | 640 px |
+| Formato | JPEG (calidad 82) |
+| Tamaño máximo binario | 400 KB |
+| Persistencia | Ninguna (solo respuesta HTTP efímera) |
 
