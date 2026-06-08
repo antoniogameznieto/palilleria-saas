@@ -3,10 +3,12 @@ import Link from "next/link";
 import { DrawingsTable } from "@/components/drawings/drawings-table";
 import { ExportJobTakeoffCsvButton } from "@/components/jobs/export-job-takeoff-csv-button";
 import { ArchiveJobButton } from "@/components/jobs/archive-job-button";
+import { JobTakeoffSummaryCard } from "@/components/jobs/job-takeoff-summary";
 import { JobSettingsSummary } from "@/components/jobs/job-settings-summary";
 import { JobSummaryCard } from "@/components/jobs/job-summary-card";
 import { Button } from "@/components/ui/button";
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
+import { buildJobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import {
   canArchiveJob,
   canDeleteDrawings,
@@ -35,6 +37,14 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const canArchive = canArchiveJob(membership.role);
   const canUpload = canUploadDrawings(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
+  const jobTakeoffSummary = buildJobTakeoffSummary(
+    jobTakeoffItems.map((item) => ({
+      drawingId: item.drawingId,
+      reference: item.reference,
+      quantity: item.quantity,
+      unit: item.unit,
+    })),
+  );
 
   return (
     <div className="space-y-6">
@@ -82,6 +92,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       ) : null}
 
       <section className="space-y-3">
+        <JobTakeoffSummaryCard summary={jobTakeoffSummary} />
+
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-lg font-medium">Planos</h3>
           <div className="flex flex-wrap gap-2">

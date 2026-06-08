@@ -12,6 +12,17 @@ export type TakeoffSummary = {
   uniqueReferenceCount: number;
 };
 
+export type JobTakeoffSummaryItem = Pick<
+  SerializedTakeoffItem,
+  "reference" | "quantity" | "unit"
+> & {
+  drawingId: string;
+};
+
+export type JobTakeoffSummary = TakeoffSummary & {
+  drawingCountWithTakeoff: number;
+};
+
 const EMPTY_UNIT_LABEL = "Sin unidad";
 
 function parseQuantity(value: string): number {
@@ -104,5 +115,17 @@ export function buildTakeoffSummary(
     totalQuantity: formatTakeoffQuantity(totalQuantity),
     quantityByUnit,
     uniqueReferenceCount: uniqueReferences.size,
+  };
+}
+
+export function buildJobTakeoffSummary(
+  items: JobTakeoffSummaryItem[],
+): JobTakeoffSummary {
+  const summary = buildTakeoffSummary(items);
+  const drawingIds = new Set(items.map((item) => item.drawingId));
+
+  return {
+    ...summary,
+    drawingCountWithTakeoff: drawingIds.size,
   };
 }

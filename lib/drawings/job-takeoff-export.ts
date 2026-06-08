@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireCompanyMember } from "@/lib/permissions/company";
 
 export type SerializedJobTakeoffExportItem = {
+  drawingId: string;
   drawingNumber: string | null;
   lineNumber: string | null;
   revision: string | null;
@@ -39,6 +40,7 @@ function serializeJobTakeoffExportItem(item: {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+  drawingId: string;
   drawing: {
     drawingNumber: string | null;
     lineNumber: string | null;
@@ -47,6 +49,7 @@ function serializeJobTakeoffExportItem(item: {
   };
 }): SerializedJobTakeoffExportItem {
   return {
+    drawingId: item.drawingId,
     drawingNumber: item.drawing.drawingNumber,
     lineNumber: item.drawing.lineNumber,
     revision: item.drawing.revision,
