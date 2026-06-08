@@ -22,16 +22,29 @@ cp .env.example .env
 Edita `.env` con estos valores mínimos:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/palilleria?schema=public"
+# macOS/Homebrew: suele funcionar con tu usuario del sistema, sin contraseña
+DATABASE_URL="postgresql://TU_USUARIO@localhost:5432/palilleria?schema=public"
+AUTH_SECRET="tu-secreto-aleatorio"
 NEXTAUTH_SECRET="tu-secreto-aleatorio"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-Generar `NEXTAUTH_SECRET`:
+Crea la base de datos si no existe:
+
+```bash
+createdb palilleria
+# o: psql -d postgres -c "CREATE DATABASE palilleria"
+```
+
+Generar secreto de sesión:
 
 ```bash
 openssl rand -base64 32
 ```
+
+Auth.js usa `AUTH_SECRET` (preferido) o `NEXTAUTH_SECRET`. Sin `.env`, en desarrollo la app arranca con un secreto temporal y muestra un aviso en consola.
+
+Si arrancas en un puerto distinto de 3000 (p. ej. `npm run dev -- -p 3010`), actualiza `NEXTAUTH_URL` en `.env` o usa siempre el mismo puerto. El logout ya redirige con la URL relativa del servidor actual.
 
 ## Base de datos (Prisma)
 

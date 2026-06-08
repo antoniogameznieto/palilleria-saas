@@ -132,5 +132,8 @@ export async function registerAction(
 
 export async function logoutAction() {
   const { signOut } = await import("@/lib/auth/auth");
-  await signOut({ redirectTo: "/login" });
+  // redirect: false evita que Auth.js use NEXTAUTH_URL (p. ej. :3000)
+  // y redirija a otro puerto si dev corre en :3010 u otro.
+  await signOut({ redirect: false });
+  redirect("/login");
 }

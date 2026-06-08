@@ -26,7 +26,7 @@ export function AppSidebarNav({ activeCompanyId }: AppSidebarNavProps) {
     },
     {
       label: "Trabajos",
-      href: "/jobs",
+      href: `/companies/${activeCompanyId}/jobs`,
       icon: Briefcase,
     },
     {
@@ -47,8 +47,12 @@ export function AppSidebarNav({ activeCompanyId }: AppSidebarNavProps) {
         const Icon = item.icon;
         const isActive =
           item.label === "Settings"
-            ? pathname.includes("/companies/") && pathname.endsWith("/settings")
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            ? pathname.includes("/companies/") &&
+              pathname.endsWith("/settings") &&
+              !pathname.includes("/jobs/")
+            : item.label === "Trabajos"
+              ? pathname.includes("/companies/") && pathname.includes("/jobs")
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <Link

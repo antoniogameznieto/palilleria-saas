@@ -1,5 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
+import { getAuthSecret } from "@/lib/auth/env";
+
 export const authConfig = {
   pages: {
     signIn: "/login",
@@ -7,7 +9,7 @@ export const authConfig = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: getAuthSecret(),
   trustHost: true,
   providers: [],
   callbacks: {
