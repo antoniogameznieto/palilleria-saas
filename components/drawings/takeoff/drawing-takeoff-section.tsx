@@ -19,6 +19,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  buildTakeoffUnitFilterOptions,
+  filterAndSortTakeoffItems,
+  TAKEOFF_SORT_DIRECTION_OPTIONS,
+  TAKEOFF_SORT_FIELD_OPTIONS,
+  TAKEOFF_UNIT_FILTER_ALL,
+  type TakeoffSortDirection,
+  type TakeoffSortField,
+} from "@/lib/drawings/filter-takeoff-items";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 
@@ -31,6 +42,9 @@ type DrawingTakeoffSectionProps = {
 };
 
 const initialState: AuthActionState = {};
+
+const selectClassName =
+  "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function formatCell(value: string | null): string {
   if (value == null || value.trim() === "") {
@@ -50,6 +64,11 @@ export function DrawingTakeoffSection({
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [unitFilter, setUnitFilter] = useState(TAKEOFF_UNIT_FILTER_ALL);
+  const [sortField, setSortField] = useState<TakeoffSortField>("createdAt");
+  const [sortDirection, setSortDirection] =
+    useState<TakeoffSortDirection>("asc");
   const [createState, createAction, isCreating] = useActionState(
     createTakeoffItemAction,
     initialState,
@@ -67,6 +86,20 @@ export function DrawingTakeoffSection({
 
   const editingItem = items.find((item) => item.id === editingItemId) ?? null;
   const summary = useMemo(() => buildTakeoffSummary(items), [items]);
+  const unitFilterOptions = useMemo(
+    () => buildTakeoffUnitFilterOptions(items),
+    [items],
+  );
+  const filteredItems = useMemo(
+    () =>
+      filterAndSortTakeoffItems(items, {
+        searchQuery,
+        unitFilter,
+        sortField,
+        sortDirection,
+      }),
+    [items, searchQuery, sortDirection, sortField, unitFilter],
+  );
 
   return (
     <Card>
@@ -132,6 +165,77 @@ export function DrawingTakeoffSection({
               : "Este plano no tiene líneas de palillería registradas."}
           </div>
         ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="takeoff-search">Buscar</Label>
+                <Input
+                  id="takeoff-search"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Referencia, descripción, unidad o notas"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="takeoff-unit-filter">Unidad</Label>
+                <select
+                  id="takeoff-unit-filter"
+                  value={unitFilter}
+                  onChange={(event) => setUnitFilter(event.target.value)}
+                  className={selectClassName}
+                >
+                  {unitFilterOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="takeoff-sort-field">Ordenar por</Label>
+                <select
+                  id="takeoff-sort-field"
+                  value={sortField}
+                  onChange={(event) =>
+                    setSortField(event.target.value as TakeoffSortField)
+                  }
+                  className={selectClassName}
+                >
+                  {TAKEOFF_SORT_FIELD_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="takeoff-sort-direction">Dirección</Label>
+                <select
+                  id="takeoff-sort-direction"
+                  value={sortDirection}
+                  onChange={(event) =>
+                    setSortDirection(event.target.value as TakeoffSortDirection)
+                  }
+                  className={selectClassName}
+                >
+                  {TAKEOFF_SORT_DIRECTION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {filteredItems.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No hay líneas que coincidan con los filtros aplicados.
+              </div>
+            ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full min-w-[64rem] text-sm">
               <thead className="border-b bg-muted/40 text-left">
@@ -150,7 +254,7 @@ export function DrawingTakeoffSection({
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) => (
+                {filteredItems.map((item) => (
                   <tr key={item.id} className="border-b last:border-b-0">
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatCell(item.reference)}
@@ -199,6 +303,8 @@ export function DrawingTakeoffSection({
                 ))}
               </tbody>
             </table>
+          </div>
+            )}
           </div>
         )}
       </CardContent>
