@@ -1,3 +1,4 @@
+import type { SerializedJobTakeoffExportItem } from "@/lib/drawings/job-takeoff-export";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
 export const TAKEOFF_CSV_HEADERS = [
@@ -90,6 +91,64 @@ export function buildTakeoffCsvFileName(
     : drawingId;
 
   return `takeoff-${segment}.csv`;
+}
+
+export const JOB_TAKEOFF_CSV_HEADERS = [
+  "drawingNumber",
+  "lineNumber",
+  "revision",
+  "drawingFileName",
+  "reference",
+  "description",
+  "quantity",
+  "unit",
+  "length",
+  "width",
+  "height",
+  "notes",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+export function buildJobTakeoffCsvRow(
+  item: SerializedJobTakeoffExportItem,
+): string {
+  return [
+    escapeCsvCell(item.drawingNumber),
+    escapeCsvCell(item.lineNumber),
+    escapeCsvCell(item.revision),
+    escapeCsvCell(item.drawingFileName),
+    escapeCsvCell(item.reference),
+    escapeCsvCell(item.description),
+    escapeCsvCell(item.quantity),
+    escapeCsvCell(item.unit),
+    escapeCsvCell(item.length),
+    escapeCsvCell(item.width),
+    escapeCsvCell(item.height),
+    escapeCsvCell(item.notes),
+    escapeCsvCell(formatCsvDate(item.createdAt)),
+    escapeCsvCell(formatCsvDate(item.updatedAt)),
+  ].join(",");
+}
+
+export function buildJobTakeoffCsv(
+  items: SerializedJobTakeoffExportItem[],
+): string {
+  const header = JOB_TAKEOFF_CSV_HEADERS.join(",");
+  const rows = items.map((item) => buildJobTakeoffCsvRow(item));
+
+  return [header, ...rows].join("\r\n");
+}
+
+export function buildJobTakeoffCsvFileName(
+  jobName: string | null | undefined,
+  jobId: string,
+): string {
+  const segment = jobName?.trim()
+    ? sanitizeTakeoffCsvFileNameSegment(jobName)
+    : jobId;
+
+  return `takeoff-job-${segment}.csv`;
 }
 
 export function downloadTakeoffCsv(content: string, fileName: string): void {

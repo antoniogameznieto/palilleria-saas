@@ -1,10 +1,12 @@
 import Link from "next/link";
 
 import { DrawingsTable } from "@/components/drawings/drawings-table";
+import { ExportJobTakeoffCsvButton } from "@/components/jobs/export-job-takeoff-csv-button";
 import { ArchiveJobButton } from "@/components/jobs/archive-job-button";
 import { JobSettingsSummary } from "@/components/jobs/job-settings-summary";
 import { JobSummaryCard } from "@/components/jobs/job-summary-card";
 import { Button } from "@/components/ui/button";
+import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import {
   canArchiveJob,
   canDeleteDrawings,
@@ -24,7 +26,10 @@ type JobDetailPageProps = {
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { companyId, jobId } = await params;
   const { membership, job } = await requireJobAccess(companyId, jobId);
-  const drawings = await getJobDrawings(companyId, jobId);
+  const [drawings, jobTakeoffItems] = await Promise.all([
+    getJobDrawings(companyId, jobId),
+    getJobTakeoffExportItems(companyId, jobId),
+  ]);
 
   const canEdit = canEditJob(membership.role);
   const canArchive = canArchiveJob(membership.role);
@@ -79,13 +84,20 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-lg font-medium">Planos</h3>
-          {canUpload ? (
-            <Link
-              href={`/companies/${companyId}/jobs/${jobId}/drawings/upload`}
-            >
-              <Button>Subir planos</Button>
-            </Link>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <ExportJobTakeoffCsvButton
+              items={jobTakeoffItems}
+              jobName={job.name}
+              jobId={jobId}
+            />
+            {canUpload ? (
+              <Link
+                href={`/companies/${companyId}/jobs/${jobId}/drawings/upload`}
+              >
+                <Button>Subir planos</Button>
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <DrawingsTable
