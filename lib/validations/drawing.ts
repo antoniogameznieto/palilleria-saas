@@ -1,4 +1,23 @@
+import { z } from "zod";
+
 import { getMaxUploadSizeBytes, PDF_MIME_TYPE } from "@/lib/storage";
+
+const optionalMetadataField = z
+  .string()
+  .trim()
+  .max(200, "Máximo 200 caracteres")
+  .optional()
+  .transform((value) => (value && value.length > 0 ? value : null));
+
+export const updateDrawingMetadataSchema = z.object({
+  drawingNumber: optionalMetadataField,
+  lineNumber: optionalMetadataField,
+  revision: optionalMetadataField,
+});
+
+export type UpdateDrawingMetadataInput = z.infer<
+  typeof updateDrawingMetadataSchema
+>;
 
 export function isPdfFile(file: File): boolean {
   const type = file.type.toLowerCase();

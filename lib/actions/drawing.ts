@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
@@ -13,11 +14,15 @@ import {
 } from "@/lib/storage";
 import {
   canDeleteDrawings,
+  canEditDrawingMetadata,
   canUploadDrawings,
   requireDrawingAccess,
   requireJobAccess,
 } from "@/lib/permissions";
-import { validatePdfFiles } from "@/lib/validations/drawing";
+import {
+  updateDrawingMetadataSchema,
+  validatePdfFiles,
+} from "@/lib/validations/drawing";
 
 export async function uploadDrawingsAction(
   _prevState: AuthActionState,
@@ -131,4 +136,64 @@ export async function deleteDrawingAction(formData: FormData) {
   });
 
   redirect(`/companies/${companyId}/jobs/${jobId}`);
+}
+
+export async function updateDrawingMetadataAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const companyId = formData.get("companyId");
+  const jobId = formData.get("jobId");
+  const drawingId = formData.get("drawingId");
+
+  if (typeof companyId !== "string" || companyId.length === 0) {
+    return { error: "Empresa no válida." };
+  }
+
+  if (typeof jobId !== "string" || jobId.length === 0) {
+    return { error: "Trabajo no válido." };
+  }
+
+  if (typeof drawingId !== "string" || drawingId.length === 0) {
+    return { error: "Plano no válido." };
+  }
+
+  const { membership } = await requireDrawingAccess(companyId, jobId, drawingId);
+
+  if (!canEditDrawingMetadata(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  const parsed = updateDrawingMetadataSchema.safeParse({
+    drawingNumber: formData.get("drawingNumber") ?? undefined,
+    lineNumber: formData.get("lineNumber") ?? undefined,
+    revision: formData.get("revision") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "Revisa los campos del formulario.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+    },
+    data: {
+      drawingNumber: parsed.data.drawingNumber,
+      lineNumber: parsed.data.lineNumber,
+      revision: parsed.data.revision,
+    },
+  });
+
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+
+  return { success: "Metadatos guardados correctamente." };
 }

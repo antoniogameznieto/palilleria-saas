@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 type DrawingRow = {
   id: string;
   originalFileName: string;
+  drawingNumber: string | null;
+  lineNumber: string | null;
   status: DrawingStatus;
   createdAt: Date;
   fileSize: bigint | null;
@@ -48,15 +50,25 @@ export function DrawingsTable({
           </tr>
         </thead>
         <tbody>
-          {drawings.map((drawing) => (
+          {drawings.map((drawing) => {
+            const detailHref = `/companies/${companyId}/jobs/${jobId}/drawings/${drawing.id}`;
+
+            return (
             <tr key={drawing.id} className="border-b last:border-b-0">
               <td className="px-4 py-3">
                 <Link
-                  href={`/companies/${companyId}/jobs/${jobId}/drawings/${drawing.id}`}
-                  className="font-medium hover:underline"
+                  href={detailHref}
+                  className="inline-block cursor-pointer font-medium text-primary underline-offset-4 hover:underline"
                 >
                   {drawing.originalFileName}
                 </Link>
+                {drawing.drawingNumber || drawing.lineNumber ? (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {[drawing.drawingNumber, drawing.lineNumber]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
               </td>
               <td className="px-4 py-3">
                 <DrawingStatusBadge status={drawing.status} />
@@ -69,6 +81,11 @@ export function DrawingsTable({
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap gap-2">
+                  <Link href={detailHref}>
+                    <Button variant="outline" size="sm" type="button">
+                      Ver plano
+                    </Button>
+                  </Link>
                   <a
                     href={`/api/files/drawings/${drawing.id}`}
                     target="_blank"
@@ -88,7 +105,8 @@ export function DrawingsTable({
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -23,6 +23,7 @@ export {
 
 export {
   canDeleteDrawings,
+  canEditDrawingMetadata,
   canUploadDrawings,
   getDrawingForUser,
   getJobDrawings,

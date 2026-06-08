@@ -6,10 +6,15 @@ import { prisma } from "@/lib/db";
 import { requireCompanyMember } from "@/lib/permissions/company";
 
 const UPLOAD_DRAWING_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
+const EDIT_DRAWING_METADATA_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const DELETE_DRAWING_ROLES: CompanyRole[] = ["owner", "admin"];
 
 export function canUploadDrawings(role: CompanyRole): boolean {
   return UPLOAD_DRAWING_ROLES.includes(role);
+}
+
+export function canEditDrawingMetadata(role: CompanyRole): boolean {
+  return EDIT_DRAWING_METADATA_ROLES.includes(role);
 }
 
 export function canDeleteDrawings(role: CompanyRole): boolean {
