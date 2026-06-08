@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyRole {
+  owner
+  admin
+  engineer
+  viewer
+}
+
+enum JobStatus {
+  draft
+  in_progress
+  reviewed
+  approved
+  archived
+}
+
+enum DrawingStatus {
+  uploaded
+  processing
+  detected
+  reviewed
+  approved
+  error
+}
+
+enum LengthCriteria {
+  real_cut_length
+  center_to_center
+  face_to_face
+  drawing_dimension
+  drawing_dimension_with_review
+  manual
+  calculated_with_fitting_deductions
+}
+
+enum LengthUnit {
+  mm
+  cm
+  m
+}
+
+enum PipeSegmentStatus {
+  detected
+  reviewed
+  corrected
+  approved
+}
+
+enum LengthOrigin {
+  detected_from_drawing
+  manually_entered
+  corrected_manually
+  calculated
+  pending_review
+}
+
+enum AnnotationType {
+  line
+  circle
+  text
+  tramo_label
+  doubt_marker
+}
+
+enum ExportType {
+  palilleria_excel
+  palilleria_pdf
+  trameado_pdf
+}
+
+enum ExportStatus {
+  pending
+  generated
+  error
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companyMemberships CompanyMember[]
+  createdJobs        Job[]           @relation("JobCreatedBy")
+  createdDrawings    Drawing[]       @relation("DrawingCreatedBy")
+  createdSegments    PipeSegment[]   @relation("PipeSegmentCreatedBy")
+  createdAnnotations Annotation[]    @relation("AnnotationCreatedBy")
+  createdExports     Export[]        @relation("ExportCreatedBy")
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  taxName   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      CompanyMember[]
+  jobs         Job[]
+  drawings     Drawing[]
+  jobSettings  JobSettings[]
+  pipeSegments PipeSegment[]
+  annotations  Annotation[]
+  exports      Export[]
+}
+
+model CompanyMember {
+  id        String      @id @default(cuid())
+  companyId String
+  userId    String
+  role      CompanyRole
+  createdAt DateTime    @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+  @@index([userId])
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  companyId   String
+  name        String
+  clientName  String?
+  projectCode String?
+  description String?
+  status      JobStatus @default(draft)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy    User          @relation("JobCreatedBy", fields: [createdById], references: [id])
+  drawings     Drawing[]
+  settings     JobSettings?
+  pipeSegments PipeSegment[]
+  annotations  Annotation[]
+  exports      Export[]
+
+  @@index([companyId])
+  @@index([createdById])
+}
+
+model Drawing {
+  id               String        @id @default(cuid())
+  companyId        String
+  jobId            String
+  fileName         String
+  originalFileName String
+  storagePath      String
+  fileSize         BigInt?
+  mimeType         String?
+  status           DrawingStatus @default(uploaded)
+  drawingNumber    String?
+  lineNumber       String?
+  revision         String?
+  createdById      String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdBy    User          @relation("DrawingCreatedBy", fields: [createdById], references: [id])
+  pipeSegments PipeSegment[]
+  annotations  Annotation[]
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([createdById])
+}
+
+model JobSettings {
+  id                        String         @id @default(cuid())
+  companyId                 String
+  jobId                     String         @unique
+  lengthCriteria            LengthCriteria @default(drawing_dimension_with_review)
+  lengthUnit                LengthUnit     @default(mm)
+  roundingMm                Int?           @default(1)
+  maxPieceLengthMm          Int?
+  minPieceLengthMm          Int?
+  maxPieceWeightKg          Decimal?
+  separateByDiameter        Boolean        @default(true)
+  separateBySchedule        Boolean        @default(true)
+  separateByMaterial        Boolean        @default(true)
+  separateAtFlanges         Boolean        @default(true)
+  separateAtValves          Boolean        @default(true)
+  separateAtFittings        Boolean        @default(true)
+  requireReviewBeforeExport Boolean        @default(true)
+  notes                     String?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job     Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model PipeSegment {
+  id            String             @id @default(cuid())
+  companyId     String
+  jobId         String
+  drawingId     String
+  segmentNumber String?
+  spoolGroup    String?
+  sourceFile    String?
+  drawingNumber String?
+  lineNumber    String?
+  material      String?
+  diameter      String?
+  schedule      String?
+  lengthValue   Decimal?
+  lengthUnit    LengthUnit         @default(mm)
+  lengthOrigin  LengthOrigin?
+  observations  String?
+  status        PipeSegmentStatus  @default(detected)
+  createdById   String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  drawing     Drawing      @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation("PipeSegmentCreatedBy", fields: [createdById], references: [id])
+  annotations Annotation[]
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([drawingId])
+  @@index([createdById])
+}
+
+model Annotation {
+  id            String         @id @default(cuid())
+  companyId     String
+  jobId         String
+  drawingId     String
+  pipeSegmentId String?
+  type          AnnotationType
+  pageNumber    Int            @default(1)
+  data          Json
+  createdById   String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  drawing     Drawing      @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  pipeSegment PipeSegment? @relation(fields: [pipeSegmentId], references: [id], onDelete: SetNull)
+  createdBy   User         @relation("AnnotationCreatedBy", fields: [createdById], references: [id])
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([drawingId])
+  @@index([pipeSegmentId])
+  @@index([createdById])
+}
+
+model Export {
+  id          String       @id @default(cuid())
+  companyId   String
+  jobId       String
+  type        ExportType
+  storagePath String?
+  status      ExportStatus @default(pending)
+  createdById String
+  createdAt   DateTime     @default(now())
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job       Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("ExportCreatedBy", fields: [createdById], references: [id])
+
+  @@index([companyId])
+  @@index([jobId])
+  @@index([createdById])
+}
