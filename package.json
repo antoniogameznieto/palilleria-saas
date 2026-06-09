@@ -18,6 +18,7 @@
     "research:auto-takeoff": "tsx scripts/research-auto-takeoff-from-pdf.ts",
     "research:trameado-auto": "tsx scripts/research-trameado-auto.ts",
     "research:trameado-vector": "tsx scripts/research-trameado-vector.ts",
+    "validate:trameado-functional": "tsx scripts/validate-trameado-functional.ts",
     "research:out-of-bom": "tsx scripts/research-out-of-bom-items.ts",
     "benchmark:auto-takeoff": "tsx scripts/benchmark-auto-takeoff.ts",
     "validate:auto-takeoff-golden": "tsx scripts/validate-auto-takeoff-golden.ts",

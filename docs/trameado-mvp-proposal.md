@@ -229,22 +229,48 @@ Columnas:
 - Botón **Confirmar tramo** — **no** guarda automáticamente; el ingeniero revisa y confirma.
 - Deshabilitado sin hoja: «Crea o selecciona una hoja antes de usar cotas».
 
-### 18K-C — Prepropuesta experimental palillos (condicional)
+### 18K-C — Estabilidad E2E trameado (completado)
 
-- Solo tras validar reglas en golden set; prioritario para planos `-02`.
+- `scripts/reset-e2e-trameado.ts` + `beforeEach` en `trameado-manual.spec.ts`.
+- ISO únicos por escenario; seed no re-ejecuta `main()` al importar.
 
-### 18K-C — Geometría vectorial experimental (backlog)
+### 18K-D — Lint borrador asistido (completado)
 
-- Paths/lines del PDF; motor geométrico dedicado.
+- Estado derivado `activeAssistedSegmentDraft` (sin setState en effect).
 
-### 18L — Iso trameado y export PDF anotado (futuro)
+### 18L — Validación funcional PDFs reales (completado)
+
+- Documento: [trameado-functional-validation.md](./trameado-functional-validation.md).
+- Script: `npm run validate:trameado-functional`.
+- Casos: HL-1291-01/-02 (principal), HL-1289-01/-02 (secundario).
+- Golden: `Isos trameados.pdf` solo referencia visual.
+- **Conclusión:** flujo manual asistido **viable**; gaps principales en ranking cotas (-01) y ausencia de X/Y/suma automática.
+- **Siguiente recomendado:** 18M-A filtro/ranking cotas candidatas.
+
+### 18M-A — Filtro/ranking cotas candidatas (recomendado)
+
+- Reducir ruido en planos -01; priorizar cotas de zona dibujo; mejorar match -02.
+
+### 18M-B — Export/plantilla cliente (backlog)
+
+- Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
+
+### 18M-C — Anotaciones manuales sobre PDF (backlog)
+
+- Generar iso trameado / marcas sobre PDF original.
+
+### 18M-D — Motor vectorial / posición (backlog)
+
+- Paths/lines del PDF; coordenadas X/Y; ver [trameado-vector-research.md](./trameado-vector-research.md).
+
+### 18N — Iso trameado y export PDF anotado (futuro)
 
 ## 10. Criterios de éxito (MVP)
 
-- [ ] Ingeniero puede reproducir digitalmente un bloque tipo `HL-1291-A012AA-N-01` con 5 tramos.
-- [ ] Export genera columnas ISO, Nº, Ø, SCH., PALILLO reconocibles por taller.
-- [ ] Viewer solo lectura; engineer edita.
-- [ ] Beta BOM sigue funcionando sin regresión.
+- [ ] Ingeniero puede reproducir digitalmente un bloque tipo `HL-1291-A012AA-N-01` con 5 tramos — **parcial (18L): manual asistido, no automático**.
+- [x] Export genera columnas ISO, Nº, Ø, SCH., PALILLO reconocibles por taller.
+- [x] Viewer solo lectura; engineer edita.
+- [x] Beta BOM sigue funcionando sin regresión (fuera alcance 18L).
 - [ ] Cliente valida export con un iso real del paquete `Ejemplos/Ejemplo 1`.
 
 ## 11. Referencias
@@ -254,6 +280,7 @@ Columnas:
 - Beta BOM: [auto-takeoff-research.md](./auto-takeoff-research.md)
 - Research automático (escaneos): [trameado-auto-research.md](./trameado-auto-research.md)
 - Research vectorial (input real): [trameado-vector-research.md](./trameado-vector-research.md)
+- Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
 
 ---
 
