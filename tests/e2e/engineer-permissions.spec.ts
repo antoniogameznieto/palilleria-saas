@@ -14,8 +14,9 @@ test.describe("permisos engineer", () => {
     await expect(page.getByTestId("job-upload-drawings")).toBeVisible();
 
     await page.goto(drawingPath());
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await page.getByRole("button", { name: "Metadatos", exact: true }).click();
     await expect(page.getByTestId("detect-metadata")).toBeVisible();
+    await page.getByRole("button", { name: "Palillería", exact: true }).click();
     await expect(page.getByTestId("takeoff-add-line")).toBeVisible();
     await expect(page.getByTestId("takeoff-import-csv")).toBeVisible();
     await expect(page.getByTestId("confirm-takeoff-review")).toBeVisible();

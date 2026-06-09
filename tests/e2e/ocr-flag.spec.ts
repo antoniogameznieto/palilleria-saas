@@ -8,7 +8,7 @@ test.describe("OCR experimental (flag off)", () => {
   }) => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingPath());
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await page.getByRole("button", { name: "Metadatos", exact: true }).click();
 
     await expect(page.getByTestId("ocr-experimental-section")).toHaveCount(0);
     await expect(page.getByText("Herramientas experimentales")).toHaveCount(0);

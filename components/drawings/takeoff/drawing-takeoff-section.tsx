@@ -16,6 +16,7 @@ import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-ta
 import { DrawingTakeoffReviewStatus } from "@/components/drawings/takeoff/drawing-takeoff-review-status";
 import { DrawingTakeoffSummary } from "@/components/drawings/takeoff/drawing-takeoff-summary";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -52,6 +53,7 @@ type DrawingTakeoffSectionProps = {
   canEdit: boolean;
   takeoffReviewedAt: string | null;
   takeoffReviewedByLabel: string | null;
+  variant?: "page" | "workspace";
 };
 
 const initialState: AuthActionState = {};
@@ -67,6 +69,16 @@ function formatCell(value: string | null): string {
   return value;
 }
 
+function truncateText(value: string | null, maxLength = 56): string {
+  const formatted = formatCell(value);
+
+  if (formatted === "—" || formatted.length <= maxLength) {
+    return formatted;
+  }
+
+  return `${formatted.slice(0, maxLength - 1)}…`;
+}
+
 export function DrawingTakeoffSection({
   companyId,
   jobId,
@@ -77,7 +89,9 @@ export function DrawingTakeoffSection({
   canEdit,
   takeoffReviewedAt,
   takeoffReviewedByLabel,
+  variant = "page",
 }: DrawingTakeoffSectionProps) {
+  const isWorkspace = variant === "workspace";
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -131,21 +145,37 @@ export function DrawingTakeoffSection({
   );
 
   return (
-    <Card id="palilleria">
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+    <Card
+      id="palilleria"
+      className={cn(
+        "scroll-mt-4",
+        isWorkspace && "border-0 bg-transparent shadow-none",
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "flex flex-row flex-wrap items-start justify-between gap-3",
+          !isWorkspace && "border-b pb-4",
+          isWorkspace && "px-0 pt-0",
+        )}
+      >
         <div>
-          <CardTitle>Palillería</CardTitle>
+          <CardTitle className={isWorkspace ? "text-base" : "text-lg"}>
+            Palillería
+          </CardTitle>
           <CardDescription>
-            Líneas de palillería asociadas a este plano. Registro manual por
-            ahora, sin extracción automática.
+            Líneas del plano. Revisa antes de marcar como revisada; la propuesta
+            beta solo importa lo que confirmes.
           </CardDescription>
         </div>
         <div className="flex flex-wrap items-start gap-2">
-          <ExportTakeoffCsvButton
-            items={items}
-            drawingNumber={drawingNumber}
-            drawingId={drawingId}
-          />
+          {!isWorkspace ? (
+            <ExportTakeoffCsvButton
+              items={items}
+              drawingNumber={drawingNumber}
+              drawingId={drawingId}
+            />
+          ) : null}
           {canEdit ? (
             <ImportTakeoffCsvButton
               companyId={companyId}
@@ -168,7 +198,7 @@ export function DrawingTakeoffSection({
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={cn("space-y-4", isWorkspace && "px-0 pb-0")}>
         <DrawingTakeoffReviewStatus
           companyId={companyId}
           jobId={jobId}
@@ -222,21 +252,26 @@ export function DrawingTakeoffSection({
               : "Este plano no tiene líneas de palillería registradas."}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="takeoff-search">Buscar</Label>
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2 rounded-lg border bg-muted/15 p-3 sm:flex-row sm:flex-wrap sm:items-end">
+              <div className="min-w-[12rem] flex-1 space-y-1">
+                <Label htmlFor="takeoff-search" className="text-xs">
+                  Buscar
+                </Label>
                 <Input
                   id="takeoff-search"
                   type="search"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Referencia, descripción, unidad o notas"
+                  placeholder="Referencia, descripción o notas"
+                  className="h-8"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="takeoff-unit-filter">Unidad</Label>
+              <div className="w-full space-y-1 sm:w-36">
+                <Label htmlFor="takeoff-unit-filter" className="text-xs">
+                  Unidad
+                </Label>
                 <select
                   id="takeoff-unit-filter"
                   value={unitFilter}
@@ -251,8 +286,10 @@ export function DrawingTakeoffSection({
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="takeoff-sort-field">Ordenar por</Label>
+              <div className="w-full space-y-1 sm:w-40">
+                <Label htmlFor="takeoff-sort-field" className="text-xs">
+                  Ordenar
+                </Label>
                 <select
                   id="takeoff-sort-field"
                   value={sortField}
@@ -269,8 +306,10 @@ export function DrawingTakeoffSection({
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="takeoff-sort-direction">Dirección</Label>
+              <div className="w-full space-y-1 sm:w-32">
+                <Label htmlFor="takeoff-sort-direction" className="text-xs">
+                  Dirección
+                </Label>
                 <select
                   id="takeoff-sort-direction"
                   value={sortDirection}
@@ -293,53 +332,58 @@ export function DrawingTakeoffSection({
                 No hay líneas que coincidan con los filtros aplicados.
               </div>
             ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[64rem] text-sm">
-              <thead className="border-b bg-muted/40 text-left">
+          <div
+            className={cn(
+              "overflow-x-auto rounded-lg border",
+              isWorkspace && "max-h-[min(58vh,540px)] overflow-y-auto",
+            )}
+          >
+            <table className="w-full min-w-[44rem] text-sm">
+              <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Referencia</th>
-                  <th className="px-4 py-3 font-medium">Descripción</th>
-                  <th className="px-4 py-3 font-medium">Cantidad</th>
-                  <th className="px-4 py-3 font-medium">Unidad</th>
-                  <th className="px-4 py-3 font-medium">Largo</th>
-                  <th className="px-4 py-3 font-medium">Ancho</th>
-                  <th className="px-4 py-3 font-medium">Alto</th>
-                  <th className="px-4 py-3 font-medium">Notas</th>
+                  <th className="px-3 py-2 font-medium">Referencia</th>
+                  <th className="px-3 py-2 font-medium">Descripción</th>
+                  <th className="px-3 py-2 font-medium">Cant.</th>
+                  <th className="px-3 py-2 font-medium">Ud.</th>
+                  <th className="px-3 py-2 font-medium">Origen / notas</th>
                   {canEdit ? (
-                    <th className="px-4 py-3 font-medium">Acciones</th>
+                    <th className="px-3 py-2 font-medium">Acciones</th>
                   ) : null}
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className="border-b last:border-b-0">
-                    <td className="px-4 py-3 text-muted-foreground">
+                  <tr
+                    key={item.id}
+                    className="border-b last:border-b-0 hover:bg-muted/20"
+                  >
+                    <td className="px-3 py-2 align-top text-muted-foreground whitespace-nowrap">
                       {formatCell(item.reference)}
                     </td>
-                    <td className="px-4 py-3 font-medium">{item.description}</td>
-                    <td className="px-4 py-3">{item.quantity}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="max-w-[16rem] px-3 py-2 align-top font-medium">
+                      <span className="line-clamp-2" title={item.description}>
+                        {item.description}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
+                      {item.quantity}
+                    </td>
+                    <td className="px-3 py-2 align-top text-muted-foreground whitespace-nowrap">
                       {formatCell(item.unit)}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatCell(item.length)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatCell(item.width)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatCell(item.height)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {formatCell(item.notes)}
+                    <td className="max-w-[12rem] px-3 py-2 align-top text-muted-foreground">
+                      <span title={formatCell(item.notes)}>
+                        {truncateText(item.notes)}
+                      </span>
                     </td>
                     {canEdit ? (
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
+                      <td className="px-3 py-2 align-top">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
+                            className="h-7 px-2 text-xs"
                             onClick={() => {
                               setEditingItemId(item.id);
                               setShowCreateForm(false);

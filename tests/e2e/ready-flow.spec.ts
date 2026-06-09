@@ -6,11 +6,16 @@ test.describe("flujo Listo", () => {
   test("marcar palillería revisada y comprobar progreso", async ({ page }) => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingPath());
+    await page.getByRole("button", { name: "Palillería", exact: true }).click();
 
-    await expect(page.getByText("Revisar palillería")).toBeVisible();
+    await expect(
+      page.locator("#palilleria").getByTestId("confirm-takeoff-review"),
+    ).toBeVisible();
     await page.getByTestId("confirm-takeoff-review").click();
     await expect(page.getByText("Palillería revisada")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Listo", { exact: true })).toBeVisible();
+    await expect(
+      page.locator("header").getByText("Listo", { exact: true }),
+    ).toBeVisible();
 
     await page.goto(jobPath());
     const readyKpi = page

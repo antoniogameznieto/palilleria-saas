@@ -1,6 +1,5 @@
 import { DrawingDetectedMetadataReview } from "@/components/drawings/drawing-detected-metadata-review";
 import { DrawingDetectionControl } from "@/components/drawings/drawing-detection-control";
-import { DrawingExperimentalAutoTakeoff } from "@/components/drawings/drawing-experimental-auto-takeoff";
 import { DrawingExperimentalTitleBlockOcr } from "@/components/drawings/drawing-experimental-title-block-ocr";
 import { DrawingPdfTextExtraction } from "@/components/drawings/drawing-pdf-text-extraction";
 import type { DetectionFeedbackSummary } from "@/lib/drawings/detection-merge";
@@ -20,8 +19,6 @@ type DrawingAutomationPanelProps = {
   canStartDetection: boolean;
   canExtractPdfText: boolean;
   canConfirmDetected: boolean;
-  showExperimentalAutoTakeoff: boolean;
-  existingTakeoffLineCount: number;
   showExperimentalTitleBlockOcr: boolean;
   lastDetectionFeedback: DetectionFeedbackSummary | null;
 };
@@ -61,8 +58,6 @@ export function DrawingAutomationPanel({
   canStartDetection,
   canExtractPdfText,
   canConfirmDetected,
-  showExperimentalAutoTakeoff,
-  existingTakeoffLineCount,
   showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
 }: DrawingAutomationPanelProps) {
@@ -70,7 +65,6 @@ export function DrawingAutomationPanel({
   const hasAutomationAccess =
     canStartDetection ||
     canExtractPdfText ||
-    showExperimentalAutoTakeoff ||
     showExperimentalTitleBlockOcr;
 
   if (!hasAutomationAccess && !isDetected) {
@@ -132,21 +126,6 @@ export function DrawingAutomationPanel({
             jobId={jobId}
             drawingId={drawingId}
             plain
-          />
-        </AutomationBlock>
-      ) : null}
-
-      {showExperimentalAutoTakeoff ? (
-        <AutomationBlock
-          title="Palillería sugerida (beta supervisada)"
-          description="Analiza la relación de materiales del PDF embebido y permite importar líneas seleccionadas a palillería real con confirmación explícita."
-          className="border-t border-sky-500/30 pt-6"
-        >
-          <DrawingExperimentalAutoTakeoff
-            companyId={companyId}
-            jobId={jobId}
-            drawingId={drawingId}
-            existingTakeoffLineCount={existingTakeoffLineCount}
           />
         </AutomationBlock>
       ) : null}

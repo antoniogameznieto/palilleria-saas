@@ -1,11 +1,9 @@
 import { DrawingTakeoffSection } from "@/components/drawings/takeoff/drawing-takeoff-section";
 import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card";
-import { DrawingAutomationPanel } from "@/components/drawings/drawing-automation-panel";
+import { DrawingBetaProposalPanel } from "@/components/drawings/drawing-beta-proposal-panel";
 import { DrawingDetailCompactHeader } from "@/components/drawings/drawing-detail-compact-header";
-import { DrawingDetailSummaryTab } from "@/components/drawings/drawing-detail-summary-tab";
 import { DrawingDetailWorkspace } from "@/components/drawings/drawing-detail-workspace";
-import { DrawingMetadataForm } from "@/components/drawings/drawing-metadata-form";
-import { DrawingMetadataReadonly } from "@/components/drawings/drawing-metadata-readonly";
+import { DrawingMetadataTab } from "@/components/drawings/drawing-metadata-tab";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
@@ -13,7 +11,6 @@ import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
-import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-title-block-ocr-config";
 import {
@@ -77,7 +74,6 @@ export default async function DrawingDetailPage({
     })),
   );
   const jobHref = `/companies/${companyId}/jobs/${jobId}`;
-  const takeoffSummary = buildTakeoffSummary(takeoffItems);
   const takeoffReviewedByLabel = formatTakeoffReviewedByLabel(
     drawing.takeoffReviewedBy,
   );
@@ -92,16 +88,20 @@ export default async function DrawingDetailPage({
     takeoffReviewedAt: drawing.takeoffReviewedAt,
   });
 
-  const metadataProps = {
-    companyId,
-    jobId,
-    drawingId: drawing.id,
-    fileSize: drawing.fileSize,
-    drawingNumber: drawing.drawingNumber,
-    lineNumber: drawing.lineNumber,
-    revision: drawing.revision,
-    createdByLabel,
-  };
+  const takeoffSection = (
+    <DrawingTakeoffSection
+      companyId={companyId}
+      jobId={jobId}
+      drawingId={drawing.id}
+      drawingNumber={drawing.drawingNumber}
+      items={takeoffItems}
+      jobSuggestionItems={jobSuggestionItems}
+      canEdit={canEditTakeoff}
+      takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
+      takeoffReviewedByLabel={takeoffReviewedByLabel}
+      variant="workspace"
+    />
+  );
 
   return (
     <div className="space-y-6">
@@ -122,6 +122,7 @@ export default async function DrawingDetailPage({
         createdByLabel={createdByLabel}
         canDelete={canDelete}
         takeoffItems={takeoffItems}
+        takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
       />
 
       <DrawingDetailWorkspace
@@ -129,35 +130,25 @@ export default async function DrawingDetailPage({
           <PdfViewer
             drawingId={drawing.id}
             fileName={drawing.originalFileName}
-            variant="hero"
+            variant="default"
           />
         }
-        resumen={
-          <DrawingDetailSummaryTab
-            companyId={companyId}
-            jobId={jobId}
-            drawingId={drawing.id}
-            status={drawing.status}
-            drawingNumber={drawing.drawingNumber}
-            lineNumber={drawing.lineNumber}
-            revision={drawing.revision}
-            canEditStatus={canEditStatus}
-            takeoffSummary={takeoffSummary}
-          />
+        palilleria={takeoffSection}
+        progress={drawingProgress}
+        showBetaProposal={showExperimentalAutoTakeoff}
+        takeoffLineCount={takeoffItems.length}
+        propuestaBeta={
+          showExperimentalAutoTakeoff ? (
+            <DrawingBetaProposalPanel
+              companyId={companyId}
+              jobId={jobId}
+              drawingId={drawing.id}
+              existingTakeoffLineCount={takeoffItems.length}
+            />
+          ) : null
         }
         metadatos={
-          canEditMetadata ? (
-            <DrawingMetadataForm
-              key={`${drawing.id}:${drawing.drawingNumber ?? ""}:${drawing.lineNumber ?? ""}:${drawing.revision ?? ""}`}
-              {...metadataProps}
-              plain
-            />
-          ) : (
-            <DrawingMetadataReadonly {...metadataProps} plain />
-          )
-        }
-        automatizacion={
-          <DrawingAutomationPanel
+          <DrawingMetadataTab
             companyId={companyId}
             jobId={jobId}
             drawingId={drawing.id}
@@ -165,11 +156,13 @@ export default async function DrawingDetailPage({
             drawingNumber={drawing.drawingNumber}
             lineNumber={drawing.lineNumber}
             revision={drawing.revision}
+            fileSize={drawing.fileSize}
+            createdByLabel={createdByLabel}
+            canEditMetadata={canEditMetadata}
+            canEditStatus={canEditStatus}
             canStartDetection={canStartDetection}
             canExtractPdfText={canExtractPdfText}
             canConfirmDetected={canConfirmDetected}
-            showExperimentalAutoTakeoff={showExperimentalAutoTakeoff}
-            existingTakeoffLineCount={takeoffItems.length}
             showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
             lastDetectionFeedback={lastDetectionFeedback}
           />
@@ -181,18 +174,6 @@ export default async function DrawingDetailPage({
             plain
           />
         }
-      />
-
-      <DrawingTakeoffSection
-        companyId={companyId}
-        jobId={jobId}
-        drawingId={drawing.id}
-        drawingNumber={drawing.drawingNumber}
-        items={takeoffItems}
-        jobSuggestionItems={jobSuggestionItems}
-        canEdit={canEditTakeoff}
-        takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
-        takeoffReviewedByLabel={takeoffReviewedByLabel}
       />
     </div>
   );

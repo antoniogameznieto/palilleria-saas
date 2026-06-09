@@ -1,73 +1,129 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
+import { DrawingOperationalStatusPanel } from "@/components/drawings/drawing-operational-status-panel";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+  resolveDrawingWorkspaceDefaultTab,
+  type DrawingWorkspaceTab,
+} from "@/lib/drawings/drawing-workspace-default-tab";
 import { cn } from "@/lib/utils";
 
-type DrawingDetailTab = "resumen" | "metadatos" | "automatizacion" | "actividad";
+export type { DrawingWorkspaceTab as DrawingDetailTab };
 
-const TAB_OPTIONS: Array<{ id: DrawingDetailTab; label: string }> = [
-  { id: "resumen", label: "Resumen" },
-  { id: "metadatos", label: "Metadatos" },
-  { id: "automatizacion", label: "Automatización" },
-  { id: "actividad", label: "Actividad" },
-];
+type TabOption = {
+  id: DrawingWorkspaceTab;
+  label: string;
+  visible: boolean;
+  emphasis?: boolean;
+};
 
 type DrawingDetailWorkspaceProps = {
   pdf: ReactNode;
-  resumen: ReactNode;
+  palilleria: ReactNode;
+  propuestaBeta: ReactNode | null;
   metadatos: ReactNode;
-  automatizacion: ReactNode;
   actividad: ReactNode;
+  progress: DrawingProgressState;
+  showBetaProposal: boolean;
+  takeoffLineCount: number;
 };
 
 export function DrawingDetailWorkspace({
   pdf,
-  resumen,
+  palilleria,
+  propuestaBeta,
   metadatos,
-  automatizacion,
   actividad,
+  progress,
+  showBetaProposal,
+  takeoffLineCount,
 }: DrawingDetailWorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<DrawingDetailTab>("resumen");
+  const defaultTab = useMemo(
+    () => resolveDrawingWorkspaceDefaultTab(showBetaProposal),
+    [showBetaProposal],
+  );
+  const [activeTab, setActiveTab] = useState<DrawingWorkspaceTab>(defaultTab);
 
-  const tabContent: Record<DrawingDetailTab, ReactNode> = {
-    resumen,
+  const tabOptions = useMemo<TabOption[]>(
+    () => [
+      {
+        id: "propuesta-beta",
+        label: "Propuesta beta",
+        visible: showBetaProposal && propuestaBeta != null,
+        emphasis: true,
+      },
+      { id: "palilleria", label: "Palillería", visible: true },
+      { id: "pdf", label: "Plano PDF", visible: true },
+      { id: "metadatos", label: "Metadatos", visible: true },
+      { id: "actividad", label: "Actividad", visible: true },
+    ],
+    [propuestaBeta, showBetaProposal],
+  );
+
+  const visibleTabs = tabOptions.filter((tab) => tab.visible);
+
+  const tabPanels: Record<DrawingWorkspaceTab, ReactNode> = {
+    "propuesta-beta": propuestaBeta,
+    palilleria,
+    pdf,
     metadatos,
-    automatizacion,
     actividad,
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)] lg:items-start">
-      <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">{pdf}</div>
+    <div className="space-y-4">
+      <DrawingOperationalStatusPanel
+        progress={progress}
+        showBetaProposal={showBetaProposal}
+        takeoffLineCount={takeoffLineCount}
+        activeTab={activeTab}
+        onNavigateTab={setActiveTab}
+      />
 
-      <Card className="min-w-0">
-        <CardHeader className="border-b pb-3">
-          <div className="-mx-1 flex flex-nowrap gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]">
-            {TAB_OPTIONS.map((tab) => (
+      <Card className="min-w-0 overflow-hidden">
+        <div className="border-b bg-muted/20 px-3 py-3 sm:px-4">
+          <nav
+            className="flex flex-wrap gap-2"
+            aria-label="Workspace del plano"
+          >
+            {visibleTabs.map((tab) => (
               <Button
                 key={tab.id}
                 type="button"
-                size="xs"
+                size="sm"
                 variant={activeTab === tab.id ? "default" : "outline"}
-                className="shrink-0 whitespace-nowrap"
+                className={cn(
+                  "shrink-0",
+                  tab.emphasis &&
+                    activeTab !== tab.id &&
+                    "border-sky-500/50 text-sky-900 dark:text-sky-100",
+                )}
+                aria-pressed={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
               </Button>
             ))}
-          </div>
-        </CardHeader>
-        <CardContent
-          className={cn("pt-4", "max-h-[calc(85vh-4rem)] overflow-y-auto")}
-        >
-          {tabContent[activeTab]}
+          </nav>
+        </div>
+
+        <CardContent className="p-4 sm:p-5">
+          {visibleTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className={cn(
+                "min-w-0",
+                activeTab === tab.id ? "block" : "hidden",
+              )}
+              aria-hidden={activeTab !== tab.id}
+            >
+              {tabPanels[tab.id]}
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

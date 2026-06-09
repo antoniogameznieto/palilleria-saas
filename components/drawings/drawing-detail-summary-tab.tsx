@@ -20,6 +20,7 @@ type DrawingDetailSummaryTabProps = {
   revision: string | null;
   canEditStatus: boolean;
   takeoffSummary: TakeoffSummary;
+  showBetaProposal: boolean;
 };
 
 export function DrawingDetailSummaryTab({
@@ -32,6 +33,7 @@ export function DrawingDetailSummaryTab({
   revision,
   canEditStatus,
   takeoffSummary,
+  showBetaProposal,
 }: DrawingDetailSummaryTabProps) {
   const metadataLine = formatDrawingMetadataLine(
     drawingNumber,
@@ -42,7 +44,7 @@ export function DrawingDetailSummaryTab({
   return (
     <div className="space-y-5">
       <section className="space-y-2">
-        <h3 className="text-sm font-medium">Estado</h3>
+        <h3 className="text-sm font-medium">Estado del plano</h3>
         <p className="text-sm text-muted-foreground">
           {DRAWING_STATUS_LABELS[status]}
         </p>
@@ -58,21 +60,23 @@ export function DrawingDetailSummaryTab({
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Metadatos</h3>
+        <p className="text-sm font-medium">{metadataLine}</p>
         <dl className="grid gap-2 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-muted-foreground">Resumen</dt>
-            <dd className="mt-1 font-medium">{metadataLine}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Número de plano</dt>
+            <dt className="text-muted-foreground">Nº plano</dt>
             <dd className="mt-1 font-medium">
               {formatMetadataValue(drawingNumber)}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Línea / revisión</dt>
+            <dt className="text-muted-foreground">Línea</dt>
             <dd className="mt-1 font-medium">
-              {formatMetadataValue(lineNumber)} /{" "}
+              {formatMetadataValue(lineNumber)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Revisión</dt>
+            <dd className="mt-1 font-medium">
               {formatMetadataValue(revision)}
             </dd>
           </div>
@@ -80,7 +84,7 @@ export function DrawingDetailSummaryTab({
       </section>
 
       <section className="space-y-2">
-        <h3 className="text-sm font-medium">Palillería del plano</h3>
+        <h3 className="text-sm font-medium">Palillería actual</h3>
         <dl className="grid grid-cols-3 gap-3 text-sm">
           <div>
             <dt className="text-muted-foreground">Líneas</dt>
@@ -109,6 +113,12 @@ export function DrawingDetailSummaryTab({
             Ir a palillería
           </Button>
         </Link>
+        {showBetaProposal ? (
+          <p className="w-full text-xs text-muted-foreground">
+            Usa la pestaña <span className="font-medium">Propuesta beta</span>{" "}
+            del panel operativo para analizar la relación de materiales.
+          </p>
+        ) : null}
       </div>
     </div>
   );

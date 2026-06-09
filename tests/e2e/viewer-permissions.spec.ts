@@ -30,8 +30,6 @@ test.describe("permisos viewer", () => {
     await expect(page.getByTestId("takeoff-add-line")).toHaveCount(0);
     await expect(page.getByTestId("takeoff-import-csv")).toHaveCount(0);
     await expect(page.getByTestId("confirm-takeoff-review")).toHaveCount(0);
-    const takeoffSection = page.locator("#palilleria");
-    await takeoffSection.scrollIntoViewIfNeeded();
-    await expect(takeoffSection.getByTestId("export-drawing-csv")).toBeEnabled();
+    await expect(page.locator("header").getByTestId("export-drawing-csv")).toBeEnabled();
   });
 });

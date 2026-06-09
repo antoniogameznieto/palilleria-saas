@@ -9,8 +9,12 @@ import { FileSize } from "@/components/drawings/file-size";
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { formatDrawingMetadataLine } from "@/lib/drawings/format-metadata-line";
-import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
+import { formatMetadataValue } from "@/lib/drawings/format-metadata-line";
+import {
+  DRAWING_PROGRESS_LABELS,
+  type DrawingProgressState,
+} from "@/lib/drawings/drawing-progress";
+import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
 type DrawingDetailCompactHeaderProps = {
@@ -30,6 +34,7 @@ type DrawingDetailCompactHeaderProps = {
   createdByLabel: string;
   canDelete: boolean;
   takeoffItems: SerializedTakeoffItem[];
+  takeoffReviewedAt: string | null;
 };
 
 export function DrawingDetailCompactHeader({
@@ -49,15 +54,19 @@ export function DrawingDetailCompactHeader({
   createdByLabel,
   canDelete,
   takeoffItems,
+  takeoffReviewedAt,
 }: DrawingDetailCompactHeaderProps) {
-  const metadataLine = formatDrawingMetadataLine(
-    drawingNumber,
-    lineNumber,
-    revision,
-  );
+  const takeoffSummary = buildTakeoffSummary(takeoffItems);
+  const metadataStatusLabel = getMetadataStatusLabel(progress);
+  const takeoffStatusLabel =
+    takeoffItems.length === 0
+      ? "Sin líneas"
+      : takeoffReviewedAt
+        ? "Revisada"
+        : "Pendiente de revisión";
 
   return (
-    <header className="space-y-3 rounded-lg border bg-card p-4">
+    <header className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
       <AppBreadcrumbs
         items={[
           { label: "Dashboard", href: "/dashboard" },
@@ -67,8 +76,8 @@ export function DrawingDetailCompactHeader({
         ]}
       />
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-2">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Link href={jobHref}>
               <Button variant="outline" size="sm" type="button">
@@ -80,11 +89,60 @@ export function DrawingDetailCompactHeader({
             <DrawingProgressBadge progress={progress} />
           </div>
 
-          <h1 className="text-xl font-semibold tracking-tight break-all sm:text-2xl">
-            {fileName}
-          </h1>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight break-all sm:text-2xl">
+              {fileName}
+            </h1>
+            <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+              <div>
+                <dt className="text-muted-foreground">Nº plano</dt>
+                <dd className="font-medium">
+                  {formatMetadataValue(drawingNumber)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Línea</dt>
+                <dd className="font-medium">
+                  {formatMetadataValue(lineNumber)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Revisión</dt>
+                <dd className="font-medium">
+                  {formatMetadataValue(revision)}
+                </dd>
+              </div>
+            </dl>
+          </div>
 
-          <p className="text-sm text-muted-foreground">{metadataLine}</p>
+          <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">Estado metadatos</dt>
+              <dd className="font-medium">{metadataStatusLabel}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Estado palillería</dt>
+              <dd className="font-medium">{takeoffStatusLabel}</dd>
+            </div>
+          </dl>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border bg-muted/20 px-3 py-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Palillería · </span>
+              <span className="font-semibold">{takeoffSummary.lineCount}</span>
+              <span className="text-muted-foreground"> líneas</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Cantidad · </span>
+              <span className="font-semibold">{takeoffSummary.totalQuantity}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Referencias · </span>
+              <span className="font-semibold">
+                {takeoffSummary.uniqueReferenceCount}
+              </span>
+            </div>
+          </div>
 
           <p className="text-xs text-muted-foreground">
             <time dateTime={createdAt.toISOString()}>
@@ -103,7 +161,9 @@ export function DrawingDetailCompactHeader({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Button size="sm">Abrir PDF</Button>
+            <Button size="sm" variant="outline">
+              Abrir PDF
+            </Button>
           </a>
           <ExportTakeoffCsvButton
             items={takeoffItems}
@@ -122,4 +182,17 @@ export function DrawingDetailCompactHeader({
       </div>
     </header>
   );
+}
+
+function getMetadataStatusLabel(progress: DrawingProgressState): string {
+  switch (progress) {
+    case "error":
+      return DRAWING_PROGRESS_LABELS.error;
+    case "missing_metadata":
+      return "Incompletos";
+    case "metadata_pending_review":
+      return "Pendiente de revisión";
+    default:
+      return "Completos";
+  }
 }

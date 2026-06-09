@@ -8,15 +8,22 @@ test.describe("importación experimental auto-takeoff", () => {
   }) => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingBomPath());
+    await page.getByRole("button", { name: "Palillería", exact: true }).click();
 
-    await expect(page.getByText("Revisar palillería")).toBeVisible();
+    await expect(
+      page.locator("#palilleria").getByTestId("confirm-takeoff-review"),
+    ).toBeVisible();
     await expect(page.locator("#palilleria").getByText("1000937601")).toBeVisible();
     await page.getByTestId("confirm-takeoff-review").click();
-    await expect(page.getByText("Listo", { exact: true })).toBeVisible({
+    await expect(
+      page.locator("header").getByText("Listo", { exact: true }),
+    ).toBeVisible({
       timeout: 15_000,
     });
 
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await page
+      .getByRole("button", { name: "Propuesta beta", exact: true })
+      .click();
     await expect(page.getByTestId("experimental-auto-takeoff-section")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-assistant")).toBeVisible();
     await expect(page.getByText("Propuesta beta supervisada de palillería")).toBeVisible();
@@ -164,12 +171,19 @@ test.describe("importación experimental auto-takeoff", () => {
     );
 
     await page.reload();
-    await expect(page.getByText("Revisar palillería")).toBeVisible();
-    await expect(page.getByText("Listo", { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Palillería", exact: true }).click();
+    await expect(
+      page.locator("#palilleria").getByTestId("confirm-takeoff-review"),
+    ).toBeVisible();
+    await expect(
+      page.locator("header").getByText("Listo", { exact: true }),
+    ).toHaveCount(0);
     await expect(page.locator("#palilleria").getByText("1000937596")).toBeVisible();
     await expect(page.locator("#palilleria").getByText("1000937601")).toBeVisible();
 
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await page
+      .getByRole("button", { name: "Propuesta beta", exact: true })
+      .click();
     await page.getByTestId("experimental-auto-takeoff-run").click();
     await expect(comparison).toBeVisible({ timeout: 30_000 });
     await expect(comparison).toContainText("2 ya existen");
@@ -186,7 +200,9 @@ test.describe("importación experimental auto-takeoff", () => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingPath());
 
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await page
+      .getByRole("button", { name: "Propuesta beta", exact: true })
+      .click();
     await expect(page.getByTestId("experimental-auto-takeoff-section")).toBeVisible();
     await page.getByTestId("experimental-auto-takeoff-run").click();
     await expect(page.getByTestId("auto-takeoff-beta-no-embedded-text")).toBeVisible({
@@ -203,7 +219,9 @@ test.describe("importación experimental auto-takeoff", () => {
   test("viewer no ve bloque experimental", async ({ page }) => {
     await login(page, E2E_USERS.viewer);
     await page.goto(drawingBomPath());
-    await page.getByRole("button", { name: "Automatización" }).click();
+    await expect(
+      page.getByRole("button", { name: "Propuesta beta" }),
+    ).toHaveCount(0);
     await expect(page.getByTestId("experimental-auto-takeoff-section")).toHaveCount(0);
   });
 });
