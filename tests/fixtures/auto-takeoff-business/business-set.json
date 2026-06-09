@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "pdfBaseDir": "../auto-takeoff-golden",
+  "cases": [
+    {
+      "id": "dms-703",
+      "pdf": "dms-703.pdf",
+      "notes": "Palillería de montaje DMS alta temperatura; referencia 14C/14D.",
+      "comments": "BOM embebido cubre materiales principales; soportes quedan fuera del parser.",
+      "expectedBusinessRows": [
+        {
+          "reference": "1000937601",
+          "quantity": "0.2",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT",
+          "category": "pipe",
+          "businessRequired": true,
+          "notes": "Tramo principal 1.1/2\""
+        },
+        {
+          "reference": "1000937596",
+          "quantity": "2.4",
+          "unit": "m",
+          "descriptionContains": "3/4\" SCH 160 TUBERIA",
+          "category": "pipe",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938321",
+          "quantity": "1",
+          "descriptionContains": "VALVULA COMPUERTA FORJADA C-238",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938368",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FORJADA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938214",
+          "quantity": "5",
+          "descriptionContains": "BRIDA SW RF 1500",
+          "category": "flange",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000937777",
+          "quantity": "1",
+          "descriptionContains": "CODO 90 SW",
+          "category": "fitting",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000927008",
+          "quantity": "12",
+          "descriptionContains": "ESPARRAGO",
+          "category": "bolt",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000024376",
+          "quantity": "5",
+          "descriptionContains": "JUNTA ESPIROM",
+          "category": "gasket",
+          "businessRequired": true
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "DISCO CIEGO TALADRADO",
+          "category": "blind",
+          "businessRequired": true,
+          "notes": "Sin SAP; sí entra en palillería de montaje"
+        },
+        {
+          "reference": "1000196324",
+          "quantity": "1",
+          "descriptionContains": "FIGURA 8",
+          "category": "blind",
+          "businessRequired": false,
+          "notes": "BOM correcto; oficina suele omitir en palillería de campo"
+        },
+        {
+          "reference": "SUP-001",
+          "quantity": "1",
+          "descriptionContains": "STD-PS-050",
+          "category": "support",
+          "businessRequired": true,
+          "bomExtractable": false,
+          "notes": "Bloque SOPORTES; no parseado desde BOM"
+        }
+      ]
+    },
+    {
+      "id": "dms-704",
+      "pdf": "dms-704.pdf",
+      "notes": "Variante DMS sin tubería 1.1/2\".",
+      "comments": "Misma familia que 703; utilidad alta en categorías de proceso.",
+      "expectedBusinessRows": [
+        {
+          "reference": "1000937596",
+          "quantity": "1.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT",
+          "category": "pipe",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000937706",
+          "quantity": "2",
+          "descriptionContains": "TE SW 6000",
+          "category": "fitting",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938214",
+          "quantity": "5",
+          "descriptionContains": "BRIDA SW RF 1500",
+          "category": "flange",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938321",
+          "quantity": "1",
+          "descriptionContains": "VALVULA COMPUERTA FORJADA C-238",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938368",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FORJADA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000927008",
+          "quantity": "12",
+          "descriptionContains": "ESPARRAGO",
+          "category": "bolt",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000024376",
+          "quantity": "5",
+          "descriptionContains": "JUNTA ESPIROM",
+          "category": "gasket",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000938241",
+          "quantity": "1",
+          "descriptionContains": "BRIDA CIEGA",
+          "category": "blind",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000196324",
+          "quantity": "1",
+          "descriptionContains": "FIGURA 8",
+          "category": "blind",
+          "businessRequired": false,
+          "notes": "Correcto en BOM; baja prioridad en palillería final"
+        },
+        {
+          "reference": "SUP-001",
+          "quantity": "1",
+          "descriptionContains": "STD-PS-050",
+          "category": "support",
+          "businessRequired": true,
+          "bomExtractable": false
+        }
+      ]
+    },
+    {
+      "id": "hl-1289-01",
+      "pdf": "hl-1289-01.pdf",
+      "notes": "HL AC estándar; palillería de línea.",
+      "comments": "BOM compacto; buena alineación tubería/accesorios.",
+      "expectedBusinessRows": [
+        {
+          "reference": "1000027194",
+          "quantity": "2.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA AC EXT",
+          "category": "pipe",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000029964",
+          "quantity": "2",
+          "descriptionContains": "CODO 90 RL",
+          "category": "fitting",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000043645",
+          "quantity": "4",
+          "descriptionContains": "BRIDA WN RF 150",
+          "category": "flange",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000023972",
+          "quantity": "6",
+          "descriptionContains": "JUNTA ESPIROM",
+          "category": "gasket",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000000767",
+          "quantity": "32",
+          "descriptionContains": "ESPARRAGO",
+          "category": "bolt",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000069035",
+          "quantity": "2",
+          "descriptionContains": "VALVULA COMPUERTA FUNDIDA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000070694",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FUNDIDA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000079108",
+          "quantity": "1",
+          "descriptionContains": "FIGURA 8",
+          "category": "blind",
+          "businessRequired": false,
+          "notes": "A menudo excluida de palillería de montaje HL"
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "SOPORTE",
+          "category": "support",
+          "businessRequired": true,
+          "bomExtractable": false,
+          "notes": "Partida manual habitual tras bloque SOPORTES"
+        }
+      ]
+    },
+    {
+      "id": "hl-1293-01",
+      "pdf": "hl-1293-01.pdf",
+      "notes": "HL con reducción excéntrica.",
+      "comments": "Incluye fitting de reducción adicional respecto a 1289.",
+      "expectedBusinessRows": [
+        {
+          "reference": "1000027194",
+          "quantity": "5.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA AC EXT",
+          "category": "pipe",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000916823",
+          "quantity": "1",
+          "descriptionContains": "RED EXC AC BW",
+          "category": "fitting",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000043645",
+          "quantity": "4",
+          "descriptionContains": "BRIDA WN RF 150",
+          "category": "flange",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000023972",
+          "quantity": "6",
+          "descriptionContains": "JUNTA ESPIROM",
+          "category": "gasket",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000000767",
+          "quantity": "32",
+          "descriptionContains": "ESPARRAGO",
+          "category": "bolt",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000069035",
+          "quantity": "2",
+          "descriptionContains": "VALVULA COMPUERTA FUNDIDA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000070694",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FUNDIDA",
+          "category": "valve",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000079108",
+          "quantity": "1",
+          "descriptionContains": "FIGURA 8",
+          "category": "blind",
+          "businessRequired": false
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "SOPORTE",
+          "category": "support",
+          "businessRequired": true,
+          "bomExtractable": false
+        }
+      ]
+    },
+    {
+      "id": "dw-701",
+      "pdf": "dw-701.pdf",
+      "notes": "DW con BOM corta; caso parcial.",
+      "comments": "Solo 2 filas en relación de materiales; palillería real suele incluir más partidas del dibujo.",
+      "expectedBusinessRows": [
+        {
+          "reference": "1000026994",
+          "quantity": "8.4",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT",
+          "category": "pipe",
+          "businessRequired": true
+        },
+        {
+          "reference": "1000030543",
+          "quantity": "5",
+          "descriptionContains": "CODO 90 SW",
+          "category": "fitting",
+          "businessRequired": true
+        },
+        {
+          "reference": null,
+          "quantity": "2",
+          "descriptionContains": "BRIDA WN",
+          "category": "flange",
+          "businessRequired": true,
+          "bomExtractable": false,
+          "notes": "Visible en dibujo DW; no en tabla BOM embebida"
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "VALVULA",
+          "category": "valve",
+          "businessRequired": true,
+          "bomExtractable": false,
+          "notes": "Partida manual típica en DW"
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "SOPORTE",
+          "category": "support",
+          "businessRequired": true,
+          "bomExtractable": false
+        }
+      ]
+    }
+  ]
+}

@@ -38,6 +38,11 @@ import {
 } from "../lib/drawings/auto-takeoff-benchmark";
 import { runAutoTakeoffGoldenValidation } from "../lib/drawings/auto-takeoff-golden-run";
 import {
+  classifyExtractedRows,
+  matchBusinessExpectedRows,
+  suggestionMatchesBusinessExpectedRow,
+} from "../lib/drawings/auto-takeoff-business-validate";
+import {
   matchGoldenExpectedRows,
   suggestionMatchesGoldenExpectedRow,
 } from "../lib/drawings/auto-takeoff-golden-validate";
@@ -620,6 +625,76 @@ async function main(): Promise<void> {
   });
 
   assert(goldenMatches.every((match) => match.matched), "Golden match greedy 1:1");
+
+  assert(
+    suggestionMatchesBusinessExpectedRow(goldenSuggestion, {
+      reference: "1000937601",
+      quantity: "0.2",
+      unit: "m",
+      descriptionContains: "TUBERIA EXT",
+      category: "pipe",
+      businessRequired: true,
+    }),
+    "Business match por ref/cantidad/desc",
+  );
+
+  const businessMatches = matchBusinessExpectedRows({
+    expectedRows: [
+      {
+        reference: "1000937601",
+        quantity: "0.2",
+        unit: "m",
+        descriptionContains: "TUBERIA EXT",
+        category: "pipe",
+        businessRequired: true,
+      },
+      {
+        reference: "1000196324",
+        quantity: "1",
+        descriptionContains: "FIGURA 8",
+        category: "blind",
+        businessRequired: false,
+      },
+    ],
+    suggestions: [
+      goldenSuggestion,
+      {
+        item: 6,
+        reference: "1000196324",
+        description: '3/4" FIGURA 8 1500# RF',
+        quantity: "1",
+        unit: null,
+        confidence: 1,
+        warnings: [],
+        rawLine: "",
+        lineNumber: 6,
+      },
+    ],
+  });
+
+  assert(businessMatches[0]?.matched, "Business required match");
+  const businessClassifications = classifyExtractedRows({
+    suggestions: [
+      goldenSuggestion,
+      {
+        item: 6,
+        reference: "1000196324",
+        description: '3/4" FIGURA 8 1500# RF',
+        quantity: "1",
+        unit: null,
+        confidence: 1,
+        warnings: [],
+        rawLine: "",
+        lineNumber: 6,
+      },
+    ],
+    rowMatches: businessMatches,
+  });
+  assert(businessClassifications[0]?.usefulForTakeoff, "Fila útil para takeoff");
+  assert(
+    businessClassifications[1]?.bomCorrectNotUseful,
+    "FIGURA 8 correcta pero no requerida",
+  );
 
   const goldenReport = await runAutoTakeoffGoldenValidation({
     goldenSetDir: path.join(

@@ -564,12 +564,68 @@ El motor reproduce de forma fiable el subconjunto etiquetado y el conteo total d
 
 ---
 
+## Fase 15C — precisión de negocio
+
+> **Commit de referencia:** `084cc6f` (post Fase 15B).  
+> **Herramienta:** `npm run validate:auto-takeoff-business`  
+> **Informe completo:** [auto-takeoff-business-validation.md](./auto-takeoff-business-validation.md)  
+> **Fixtures:** `tests/fixtures/auto-takeoff-business/business-set.json` (PDFs en `auto-takeoff-golden/`)
+
+Compara sugerencias BOM extraídas con **palillería esperada de negocio** (categorías, `businessRequired`, partidas fuera del BOM).
+
+### PDFs en el business set
+
+| ID | Tipo | Filas negocio | Required |
+|----|------|---------------|----------|
+| dms-703 | DMS | 11 | 10 |
+| dms-704 | DMS | 10 | 9 |
+| hl-1289-01 | HL | 9 | 8 |
+| hl-1293-01 | HL | 9 | 8 |
+| dw-701 | DW parcial | 5 | 5 |
+
+**Total:** 44 filas etiquetadas, **40 businessRequired**.
+
+### Resultados (primera validación)
+
+| Métrica | Resultado |
+|---------|-----------|
+| Recall de negocio (overall) | **82,5 %** (33/40) |
+| Recall desde BOM extraíble | **100 %** (33/33) |
+| Utilidad de extracción | **53,2 %** (filas útiles / total extraído) |
+| BOM correcto no requerido | 4 (FIGURA 8 × DMS/HL) |
+| Fuera del BOM (huecos) | 7 partidas (soportes, DW manual) |
+
+### Cobertura por categoría (required)
+
+| Bien cubiertas (100 %) | Parcial / fuera BOM |
+|------------------------|---------------------|
+| pipe, fitting, bolt, gasket, blind (desde BOM) | **support** 0 % (5/5 fuera del parser) |
+| | **flange** 80 % (DW manual) |
+| | **valve** 88,9 % (DW manual) |
+
+### Conclusión
+
+**Sirve como lista de materiales útil** y base de palillería asistida en DMS/HL, pero **requiere reglas adicionales** antes de palillería final: soportes (`SOPORTES`), partidas manuales en DW, exclusiones de oficina (FIGURA 8).
+
+Lo extraíble del BOM coincide al **100 %** con el subconjunto de negocio marcado como `bomExtractable`; la brecha es de **alcance de negocio**, no de parsing.
+
+### Recomendación → Fase 15D
+
+- Reglas opt-in para bloque SOPORTES y referencias no SAP.
+- Diferenciar en UI «materiales del plano» vs «palillería sugerida».
+- Ampliar business-set con palillería manual real de oficina.
+
+**CI:** script separado (`validate:auto-takeoff-business`); no bloquea `verify:auto-takeoff`.
+
+---
+
 ## Comandos
 
 ```bash
 npm run research:auto-takeoff -- ./ruta/plano.pdf
 npm run benchmark:auto-takeoff -- ./Ejemplos "./storage/.../job" --limit 30
 npm run validate:auto-takeoff-golden   # golden set precisión/recall (15B)
+npm run validate:auto-takeoff-business # precisión de negocio (15C)
 npm run verify:auto-takeoff            # parser + golden set en CI
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
@@ -587,6 +643,11 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `lib/drawings/auto-takeoff-golden-run.ts` | Ejecución golden sobre PDFs (15B) |
 | `tests/fixtures/auto-takeoff-golden/` | PDFs + `golden-set.json` (15B) |
 | `docs/auto-takeoff-golden-results.md` | Informe golden 15B |
+| `scripts/validate-auto-takeoff-business.ts` | Validación negocio (15C) |
+| `lib/drawings/auto-takeoff-business-validate.ts` | Matching negocio (15C) |
+| `lib/drawings/auto-takeoff-business-run.ts` | Ejecución business set (15C) |
+| `tests/fixtures/auto-takeoff-business/` | `business-set.json` (15C) |
+| `docs/auto-takeoff-business-validation.md` | Informe negocio 15C |
 | `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import + golden (14B–15B) |
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
@@ -621,3 +682,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 14G | Asistente experimental | 4 pasos, estados, métricas, copy guiado |
 | 2026-06-09 | 15A | Benchmark 17 PDFs (Ejemplos + storage) | 15 con BOM, 134 filas, 0 errores; beta acotada viable en DMS/HL |
 | 2026-06-09 | 15B | Golden set 7 PDFs, 35 expected rows | Recall 100 %, precision estructural 100 %; gate en verify:auto-takeoff |
+| 2026-06-09 | 15C | Business set 5 PDFs, 40 required rows | Recall negocio 82,5 %, recall BOM 100 %, utilidad 53,2 %; script separado |

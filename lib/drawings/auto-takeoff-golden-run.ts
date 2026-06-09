@@ -26,7 +26,7 @@ function isPdfBuffer(buffer: Buffer): boolean {
   return buffer.length >= 4 && buffer.subarray(0, 4).toString("utf8") === "%PDF";
 }
 
-async function extractSuggestionsFromPdf(
+export async function extractSuggestionsFromPdf(
   absolutePdfPath: string,
 ): Promise<{
   suggestions: ReturnType<typeof parseTakeoffRowsFromEmbeddedText>["candidateRows"];

@@ -16,6 +16,7 @@
     "research:auto-takeoff": "tsx scripts/research-auto-takeoff-from-pdf.ts",
     "benchmark:auto-takeoff": "tsx scripts/benchmark-auto-takeoff.ts",
     "validate:auto-takeoff-golden": "tsx scripts/validate-auto-takeoff-golden.ts",
+    "validate:auto-takeoff-business": "tsx scripts/validate-auto-takeoff-business.ts",
     "verify:auto-takeoff": "tsx scripts/verify-auto-takeoff-parse.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
