@@ -447,6 +447,41 @@ La action devuelve `takeoffReviewInvalidated`. La UI muestra:
 
 ---
 
+## Fase 14G — Asistente experimental (implementado)
+
+### Flujo guiado
+
+El bloque experimental se presenta como asistente de 4 pasos (`experimental-auto-takeoff-assistant`):
+
+| Paso | Contenido |
+|------|-----------|
+| 1. Analizar | Botón de análisis + estado del plano |
+| 2. Revisar | Filtros, búsqueda, tabla de sugerencias, métricas |
+| 3. Seleccionar e importar | Selección masiva, impacto, preview, botón importar |
+| 4. Revisar palillería | Mensaje final + enlace `#palilleria` |
+
+### Estados del asistente (`data-status`)
+
+| Estado | Cuándo |
+|--------|--------|
+| `not_analyzed` | Sin análisis |
+| `analyzed` | Resultados listos, sin selección |
+| `with_selection` | Hay sugerencias seleccionadas |
+| `imported` | Importación exitosa |
+| `requires_review` | Importación + revisión invalidada |
+
+### Copy y métricas
+
+- Descubrimiento: *La app ha encontrado X posibles líneas…*, *Y parecen nuevas*, *Z ya están en tu palillería*.
+- Aviso: *Revisa antes de importar. No se importa nada automáticamente.*
+- Métricas: sugeridas, nuevas, ya existentes, distintas, dudosas, seleccionadas.
+- Bloque **Qué pasará al importar** (`experimental-auto-takeoff-import-impact`).
+- Mensaje final: *Importación completada. Revisa la palillería antes de marcarla como revisada.*
+
+Helpers: `resolveExperimentalAssistantStatus`, `buildExperimentalAssistantDiscoveryCopy`, etc. en `experimental-auto-takeoff-ui.ts`. Sin cambios en validación servidor.
+
+---
+
 ## Comandos
 
 ```bash
@@ -491,3 +526,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-08 | 14D | Importación seleccionada | DMS-703: 8→10 líneas; import 2 → 2 matched, 19 missing |
 | 2026-06-09 | 14E | Hardening + E2E | Límites 200/duplicados; E2E seed BOM; verify + CI |
 | 2026-06-09 | 14F | Importación asistida | Filtros, selección visible, resumen previo, feedback |
+| 2026-06-09 | 14G | Asistente experimental | 4 pasos, estados, métricas, copy guiado |

@@ -30,7 +30,7 @@ Variables del servidor E2E:
 | Empresa E2E | `seed-company-e2e` |
 | Trabajo E2E | `seed-job-e2e` |
 | Plano con metadatos + palillería | `seed-drawing-e2e-pending` |
-| Plano BOM experimental (auto-takeoff) | `seed-drawing-e2e-bom` — PDF `tests/fixtures/e2e-dms-703-bom.pdf`, 1 línea SAP previa, revisión marcada |
+| Plano BOM experimental (auto-takeoff) | `seed-drawing-e2e-bom` — PDF `tests/fixtures/e2e-dms-703-bom.pdf`, 1 línea SAP previa; el spec marca revisión antes de importar |
 | Owner | `e2e-owner@palilleria.local` / `demo1234` |
 | Engineer | `e2e-engineer@palilleria.local` / `demo1234` |
 | Viewer | `e2e-viewer@palilleria.local` / `demo1234` |
@@ -48,11 +48,11 @@ El seed **resetea** `takeoffReviewedAt` del plano E2E en cada ejecución para qu
 | `protected-pdf.spec.ts` | API PDF 401 / 200 / 403 cross-tenant |
 | `ready-flow.spec.ts` | Marcar revisada → Listo → KPI + consolidado solo listos |
 | `ocr-flag.spec.ts` | Sin bloque OCR experimental; detección productiva visible |
-| `experimental-auto-takeoff-import.spec.ts` | Filtros/búsqueda/selección visible → import 1 missing → invalidación revisión → matched sin checkbox; viewer sin bloque |
+| `experimental-auto-takeoff-import.spec.ts` | Asistente (pasos/estados), filtros, impacto, import 1 → paso final + enlace palillería; viewer sin bloque |
 
 ## `data-testid` añadidos (mínimos)
 
-`login-form`, `job-upload-drawings`, `detect-metadata`, `takeoff-add-line`, `takeoff-import-csv`, `export-job-csv`, `export-job-excel`, `confirm-takeoff-review`, `delete-drawing`, `ocr-experimental-section`, `experimental-auto-takeoff-section`, `experimental-auto-takeoff-run`, `experimental-auto-takeoff-import`, `experimental-auto-takeoff-import-preview`, `experimental-auto-takeoff-import-success`, `experimental-auto-takeoff-import-success-count`, `experimental-auto-takeoff-import-review-reset`, `experimental-auto-takeoff-comparison-summary`, `experimental-auto-takeoff-status-filter`, `experimental-auto-takeoff-search`, `experimental-auto-takeoff-filtered-count`, `experimental-auto-takeoff-select-visible-missing`, `experimental-auto-takeoff-select-row`, `experimental-auto-takeoff-selected-count`.
+`login-form`, `job-upload-drawings`, `detect-metadata`, `takeoff-add-line`, `takeoff-import-csv`, `export-job-csv`, `export-job-excel`, `confirm-takeoff-review`, `delete-drawing`, `ocr-experimental-section`, `experimental-auto-takeoff-section`, `experimental-auto-takeoff-assistant`, `experimental-auto-takeoff-assistant-status`, `experimental-auto-takeoff-step-analyze`, `experimental-auto-takeoff-step-review`, `experimental-auto-takeoff-step-import`, `experimental-auto-takeoff-step-final`, `experimental-auto-takeoff-metrics`, `experimental-auto-takeoff-discovery-copy`, `experimental-auto-takeoff-import-impact`, `experimental-auto-takeoff-run`, `experimental-auto-takeoff-import`, `experimental-auto-takeoff-import-preview`, `experimental-auto-takeoff-import-success`, `experimental-auto-takeoff-import-success-count`, `experimental-auto-takeoff-import-review-reset`, `experimental-auto-takeoff-comparison-summary`, `experimental-auto-takeoff-status-filter`, `experimental-auto-takeoff-search`, `experimental-auto-takeoff-filtered-count`, `experimental-auto-takeoff-select-visible-missing`, `experimental-auto-takeoff-select-row`, `experimental-auto-takeoff-selected-count`.
 
 ## Limitaciones / fuera de alcance 12A
 

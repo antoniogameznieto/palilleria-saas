@@ -1,6 +1,6 @@
 /**
- * EXPERIMENTAL — Fase 14F
- * Helpers puros de filtro, selección y resumen previo (solo UI).
+ * EXPERIMENTAL — Fase 14F/14G
+ * Helpers puros de filtro, selección, resumen y asistente (solo UI).
  */
 
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
@@ -36,6 +36,161 @@ export const EXPERIMENTAL_IMPORT_PREVIEW_MAX_LINES = 5;
 
 export const EXPERIMENTAL_IMPORT_PREVIEW_WARNING =
   "Se crearán líneas reales y se invalidará la revisión de palillería si estaba marcada.";
+
+export const EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE =
+  "Revisa antes de importar. No se importa nada automáticamente.";
+
+export const EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS = [
+  "Se crearán líneas reales de palillería en este plano.",
+  "Se invalidará la revisión de palillería si estaba marcada.",
+  "Podrás revisar y editar las líneas después de importar.",
+  "No se borrará ninguna línea existente.",
+] as const;
+
+export const EXPERIMENTAL_ASSISTANT_FINAL_MESSAGE =
+  "Importación completada. Revisa la palillería antes de marcarla como revisada.";
+
+export type ExperimentalAssistantStatus =
+  | "not_analyzed"
+  | "analyzed"
+  | "with_selection"
+  | "imported"
+  | "requires_review";
+
+export type ExperimentalAssistantStepId = "analyze" | "review" | "import" | "final";
+
+export const EXPERIMENTAL_ASSISTANT_STEPS: ReadonlyArray<{
+  id: ExperimentalAssistantStepId;
+  label: string;
+  number: number;
+}> = [
+  { id: "analyze", number: 1, label: "Analizar relación de materiales" },
+  { id: "review", number: 2, label: "Revisar sugerencias" },
+  { id: "import", number: 3, label: "Seleccionar e importar" },
+  { id: "final", number: 4, label: "Revisar palillería" },
+];
+
+export type ExperimentalAssistantMetrics = {
+  suggested: number;
+  missing: number;
+  matched: number;
+  differentQuantity: number;
+  uncertain: number;
+  selected: number;
+};
+
+export type ExperimentalAssistantDiscoveryCopy = {
+  headline: string;
+  missingLine: string | null;
+  matchedLine: string | null;
+  safetyNote: string;
+};
+
+export type ComparisonSummaryCounts = {
+  matchedCount: number;
+  missingCount: number;
+  differentQuantityCount: number;
+  uncertainCount: number;
+};
+
+export function resolveExperimentalAssistantStatus(params: {
+  hasAnalysisResult: boolean;
+  hasSuggestions: boolean;
+  selectedCount: number;
+  importSuccess: boolean;
+  takeoffReviewInvalidated: boolean;
+}): ExperimentalAssistantStatus {
+  if (params.importSuccess && params.takeoffReviewInvalidated) {
+    return "requires_review";
+  }
+
+  if (params.importSuccess) {
+    return "imported";
+  }
+
+  if (params.selectedCount > 0) {
+    return "with_selection";
+  }
+
+  if (params.hasAnalysisResult && params.hasSuggestions) {
+    return "analyzed";
+  }
+
+  if (params.hasAnalysisResult) {
+    return "analyzed";
+  }
+
+  return "not_analyzed";
+}
+
+export function resolveExperimentalAssistantActiveStep(
+  status: ExperimentalAssistantStatus,
+): ExperimentalAssistantStepId {
+  switch (status) {
+    case "not_analyzed":
+      return "analyze";
+    case "analyzed":
+      return "review";
+    case "with_selection":
+      return "import";
+    case "imported":
+    case "requires_review":
+      return "final";
+  }
+}
+
+export function buildExperimentalAssistantMetrics(params: {
+  suggestedCount: number;
+  comparisonSummary: ComparisonSummaryCounts | null | undefined;
+  selectedCount: number;
+}): ExperimentalAssistantMetrics {
+  return {
+    suggested: params.suggestedCount,
+    missing: params.comparisonSummary?.missingCount ?? 0,
+    matched: params.comparisonSummary?.matchedCount ?? 0,
+    differentQuantity: params.comparisonSummary?.differentQuantityCount ?? 0,
+    uncertain: params.comparisonSummary?.uncertainCount ?? 0,
+    selected: params.selectedCount,
+  };
+}
+
+export function buildExperimentalAssistantDiscoveryCopy(params: {
+  suggestedCount: number;
+  comparisonSummary: ComparisonSummaryCounts | null | undefined;
+}): ExperimentalAssistantDiscoveryCopy | null {
+  if (params.suggestedCount <= 0) {
+    return null;
+  }
+
+  const missingCount = params.comparisonSummary?.missingCount ?? 0;
+  const matchedCount = params.comparisonSummary?.matchedCount ?? 0;
+
+  return {
+    headline: `La app ha encontrado ${params.suggestedCount} posible(s) línea(s) de palillería en la relación de materiales.`,
+    missingLine:
+      missingCount > 0 ? `${missingCount} parecen nuevas.` : null,
+    matchedLine:
+      matchedCount > 0
+        ? `${matchedCount} ya están en tu palillería.`
+        : null,
+    safetyNote: EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE,
+  };
+}
+
+export function isExperimentalAssistantStepComplete(
+  stepId: ExperimentalAssistantStepId,
+  status: ExperimentalAssistantStatus,
+): boolean {
+  const activeStep = resolveExperimentalAssistantActiveStep(status);
+  const activeIndex = EXPERIMENTAL_ASSISTANT_STEPS.findIndex(
+    (step) => step.id === activeStep,
+  );
+  const stepIndex = EXPERIMENTAL_ASSISTANT_STEPS.findIndex(
+    (step) => step.id === stepId,
+  );
+
+  return stepIndex < activeIndex;
+}
 
 function normalizeSearchQuery(query: string): string {
   return query.trim().toLowerCase();

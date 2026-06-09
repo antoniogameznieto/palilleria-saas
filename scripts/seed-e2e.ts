@@ -231,8 +231,6 @@ async function main() {
   await mkdir(path.dirname(bomAbsolutePath), { recursive: true });
   await writeFile(bomAbsolutePath, bomPdf);
 
-  const bomReviewedAt = new Date("2026-06-09T12:00:00.000Z");
-
   await prisma.drawing.upsert({
     where: { id: E2E_IDS.drawingBom },
     update: {
@@ -247,8 +245,8 @@ async function main() {
       drawingNumber: "E2E-BOM",
       lineNumber: "PL1-L",
       revision: "R03",
-      takeoffReviewedAt: bomReviewedAt,
-      takeoffReviewedById: engineer.id,
+      takeoffReviewedAt: null,
+      takeoffReviewedById: null,
       createdById: owner.id,
     },
     create: {
@@ -264,8 +262,8 @@ async function main() {
       drawingNumber: "E2E-BOM",
       lineNumber: "PL1-L",
       revision: "R03",
-      takeoffReviewedAt: bomReviewedAt,
-      takeoffReviewedById: engineer.id,
+      takeoffReviewedAt: null,
+      takeoffReviewedById: null,
       createdById: owner.id,
     },
   });

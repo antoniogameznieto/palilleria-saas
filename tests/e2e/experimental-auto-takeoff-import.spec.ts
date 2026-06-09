@@ -9,11 +9,21 @@ test.describe("importación experimental auto-takeoff", () => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingBomPath());
 
-    await expect(page.getByText("Listo", { exact: true })).toBeVisible();
+    await expect(page.getByText("Revisar palillería")).toBeVisible();
     await expect(page.locator("#palilleria").getByText("1000937601")).toBeVisible();
+    await page.getByTestId("confirm-takeoff-review").click();
+    await expect(page.getByText("Listo", { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByRole("button", { name: "Automatización" }).click();
     await expect(page.getByTestId("experimental-auto-takeoff-section")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-assistant")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
+      "data-status",
+      "not_analyzed",
+    );
+    await expect(page.getByTestId("experimental-auto-takeoff-step-analyze")).toBeVisible();
 
     await page.getByTestId("experimental-auto-takeoff-run").click();
     await expect(page.getByTestId("experimental-auto-takeoff-results")).toBeVisible({
@@ -23,6 +33,15 @@ test.describe("importación experimental auto-takeoff", () => {
     const comparison = page.getByTestId("experimental-auto-takeoff-comparison-summary");
     await expect(comparison).toContainText("1 ya existen");
     await expect(comparison).toContainText("20 faltan");
+    await expect(page.getByTestId("experimental-auto-takeoff-discovery-copy")).toContainText(
+      "No se importa nada automáticamente",
+    );
+    await expect(page.getByTestId("experimental-auto-takeoff-metrics")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-step-review")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
+      "data-status",
+      "analyzed",
+    );
 
     await page.getByTestId("experimental-auto-takeoff-status-filter").selectOption(
       "missing",
@@ -54,6 +73,11 @@ test.describe("importación experimental auto-takeoff", () => {
     await expect(page.getByTestId("experimental-auto-takeoff-import-preview")).toContainText(
       "1000937596",
     );
+    await expect(page.getByTestId("experimental-auto-takeoff-import-impact")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
+      "data-status",
+      "with_selection",
+    );
 
     page.once("dialog", (dialog) => {
       expect(dialog.message()).toContain("Se crearán 1 línea(s) reales");
@@ -62,15 +86,26 @@ test.describe("importación experimental auto-takeoff", () => {
     });
 
     await page.getByTestId("experimental-auto-takeoff-import").click();
-    await expect(page.getByTestId("experimental-auto-takeoff-import-success")).toBeVisible({
+    await expect(page.getByTestId("experimental-auto-takeoff-step-final")).toBeVisible({
       timeout: 30_000,
     });
+    await expect(page.getByTestId("experimental-auto-takeoff-import-success")).toContainText(
+      "Importación completada",
+    );
     await expect(
       page.getByTestId("experimental-auto-takeoff-import-success-count"),
     ).toContainText("1");
     await expect(
       page.getByTestId("experimental-auto-takeoff-import-review-reset"),
     ).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
+      "data-status",
+      "requires_review",
+    );
+    await expect(page.getByRole("link", { name: "Ir a la palillería real" })).toHaveAttribute(
+      "href",
+      "#palilleria",
+    );
 
     await page.reload();
     await expect(page.getByText("Revisar palillería")).toBeVisible();

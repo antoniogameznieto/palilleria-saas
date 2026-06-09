@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
 
@@ -15,18 +16,28 @@ import {
 } from "@/lib/drawings/experimental-auto-takeoff-compare-labels";
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
 import {
+  EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS,
+  EXPERIMENTAL_ASSISTANT_STEPS,
   EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS,
+  buildExperimentalAssistantDiscoveryCopy,
+  buildExperimentalAssistantMetrics,
   buildExperimentalImportPreviewSummary,
+  EXPERIMENTAL_ASSISTANT_FINAL_MESSAGE,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
   getVisibleImportableMissingKeys,
+  isExperimentalAssistantStepComplete,
   mergeSelectionWithVisibleMissing,
+  resolveExperimentalAssistantActiveStep,
+  resolveExperimentalAssistantStatus,
+  type ExperimentalAssistantStatus,
   type ExperimentalSuggestionStatusFilter,
 } from "@/lib/drawings/experimental-auto-takeoff-ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type DrawingExperimentalAutoTakeoffProps = {
   companyId: string;
@@ -37,6 +48,14 @@ type DrawingExperimentalAutoTakeoffProps = {
 
 const initialAnalyzeState: ExperimentalAutoTakeoffActionState = {};
 const initialImportState: ExperimentalAutoTakeoffImportActionState = {};
+
+const ASSISTANT_STATUS_LABELS: Record<ExperimentalAssistantStatus, string> = {
+  not_analyzed: "Sin analizar",
+  analyzed: "Analizado",
+  with_selection: "Con selección",
+  imported: "Importado",
+  requires_review: "Requiere revisión de palillería",
+};
 
 function formatCell(value: string | number | null | undefined): string {
   if (value == null || value === "") {
@@ -88,6 +107,74 @@ function formatComparisonSummary(
     `${summary.differentQuantityCount} distintas`,
     `${summary.uncertainCount} dudosas`,
   ].join(" · ");
+}
+
+function AssistantStepIndicator({
+  activeStepId,
+  status,
+}: {
+  activeStepId: ReturnType<typeof resolveExperimentalAssistantActiveStep>;
+  status: ExperimentalAssistantStatus;
+}) {
+  return (
+    <ol className="grid gap-2 sm:grid-cols-4">
+      {EXPERIMENTAL_ASSISTANT_STEPS.map((step) => {
+        const isActive = step.id === activeStepId;
+        const isComplete = isExperimentalAssistantStepComplete(step.id, status);
+
+        return (
+          <li
+            key={step.id}
+            className={cn(
+              "rounded-md border px-3 py-2 text-xs",
+              isActive && "border-sky-500/50 bg-sky-500/10",
+              isComplete && !isActive && "border-emerald-500/30 bg-emerald-500/5",
+              !isActive && !isComplete && "border-border bg-muted/20",
+            )}
+            data-testid={`experimental-auto-takeoff-step-indicator-${step.id}`}
+            data-step-active={isActive ? "true" : "false"}
+            data-step-complete={isComplete ? "true" : "false"}
+          >
+            <span className="font-medium text-foreground">
+              {step.number}. {step.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function AssistantMetrics({
+  metrics,
+}: {
+  metrics: ReturnType<typeof buildExperimentalAssistantMetrics>;
+}) {
+  const items = [
+    { label: "Sugeridas", value: metrics.suggested },
+    { label: "Nuevas", value: metrics.missing },
+    { label: "Ya existentes", value: metrics.matched },
+    { label: "Distintas", value: metrics.differentQuantity },
+    { label: "Dudosas", value: metrics.uncertain },
+    { label: "Seleccionadas", value: metrics.selected },
+  ];
+
+  return (
+    <dl
+      className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6"
+      data-testid="experimental-auto-takeoff-metrics"
+    >
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="rounded-md border bg-muted/20 px-3 py-2 text-center"
+        >
+          <dt className="text-[11px] text-muted-foreground">{item.label}</dt>
+          <dd className="text-lg font-semibold text-foreground">{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 export function DrawingExperimentalAutoTakeoff({
@@ -150,6 +237,24 @@ export function DrawingExperimentalAutoTakeoff({
     setStatusFilter("all");
     setSearchQuery("");
   }
+
+  const assistantStatus = resolveExperimentalAssistantStatus({
+    hasAnalysisResult: hasResult,
+    hasSuggestions,
+    selectedCount: selectedKeys.size,
+    importSuccess: importState.success != null,
+    takeoffReviewInvalidated: importState.takeoffReviewInvalidated === true,
+  });
+  const activeStepId = resolveExperimentalAssistantActiveStep(assistantStatus);
+  const metrics = buildExperimentalAssistantMetrics({
+    suggestedCount: suggestedItems.length,
+    comparisonSummary: analyzeState.comparisonSummary,
+    selectedCount: selectedKeys.size,
+  });
+  const discoveryCopy = buildExperimentalAssistantDiscoveryCopy({
+    suggestedCount: suggestedItems.length,
+    comparisonSummary: analyzeState.comparisonSummary,
+  });
 
   useEffect(() => {
     if (importState.success) {
@@ -216,361 +321,403 @@ export function DrawingExperimentalAutoTakeoff({
       className="space-y-4"
       data-testid="experimental-auto-takeoff-section"
     >
-      <p className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-950 dark:text-sky-100">
-        <strong>Extracción e importación experimental.</strong> Filtra, revisa y
-        selecciona sugerencias antes de crear líneas reales de palillería.
-      </p>
-
-      <p className="text-xs text-muted-foreground">
-        Palillería actual en este plano: <strong>{existingCount}</strong>{" "}
-        línea(s).
-        {comparisonLine ? (
-          <>
-            {" "}
-            Comparación:{" "}
-            <span
-              className="font-medium text-foreground"
-              data-testid="experimental-auto-takeoff-comparison-summary"
+      <div
+        className="space-y-4 rounded-lg border border-sky-500/40 bg-sky-500/5 p-4"
+        data-testid="experimental-auto-takeoff-assistant"
+      >
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-foreground">
+              Asistente experimental de palillería sugerida
+            </p>
+            <Badge
+              variant="outline"
+              data-testid="experimental-auto-takeoff-assistant-status"
+              data-status={assistantStatus}
             >
-              {comparisonLine}
-            </span>
-          </>
-        ) : (
-          " Ejecuta el análisis para comparar con la palillería existente."
-        )}
-      </p>
-
-      {analyzeState.error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {analyzeState.error}
-        </p>
-      ) : null}
-
-      {importState.error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {importState.error}
-        </p>
-      ) : null}
-
-      {analyzeState.success ? (
-        <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-          {analyzeState.success}
-        </p>
-      ) : null}
-
-      {importState.success ? (
-        <div
-          className="space-y-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400"
-          data-testid="experimental-auto-takeoff-import-success"
-        >
-          <p>{importState.success}</p>
-          {importState.importedCount != null ? (
-            <p data-testid="experimental-auto-takeoff-import-success-count">
-              Líneas creadas: <strong>{importState.importedCount}</strong>
-            </p>
-          ) : null}
-          {importState.takeoffReviewInvalidated ? (
-            <p data-testid="experimental-auto-takeoff-import-review-reset">
-              La revisión de palillería se invalidó. Vuelve a marcarla cuando
-              termines de revisar.
-            </p>
-          ) : null}
-          <p className="text-xs">
-            Reanaliza la relación de materiales o revisa la palillería para
-            confirmar los cambios.
+              {ASSISTANT_STATUS_LABELS[assistantStatus]}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Sigue los pasos: analizar → revisar → seleccionar/importar → revisar
+            palillería.
           </p>
+          <AssistantStepIndicator
+            activeStepId={activeStepId}
+            status={assistantStatus}
+          />
         </div>
-      ) : null}
 
-      {noEmbeddedText ? (
-        <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-          Este PDF no contiene texto embebido útil. Puede ser un plano escaneado
-          o vectorial sin capa de texto.
-        </p>
-      ) : null}
-
-      {emptyBom ? (
-        <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-          No se encontró una relación de materiales con filas parseables en el
-          texto embebido.
-          {analyzeState.sectionsFound && analyzeState.sectionsFound.length > 0
-            ? ` Secciones detectadas: ${analyzeState.sectionsFound.join(", ")}.`
-            : null}
-        </p>
-      ) : null}
-
-      {hasResult && hasSuggestions ? (
-        <div
-          className="space-y-3"
-          data-testid="experimental-auto-takeoff-results"
+        <section
+          className="space-y-3 rounded-md border bg-background p-3"
+          data-testid="experimental-auto-takeoff-step-analyze"
         >
-          {comparisonLine ? (
-            <p className="text-sm font-medium text-foreground">{comparisonLine}</p>
-          ) : null}
-
-          <dl className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-            <div>
-              <dt className="font-medium text-foreground">Filas sugeridas</dt>
-              <dd>{suggestedItems.length}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Confianza media</dt>
-              <dd>{formatConfidence(analyzeState.averageConfidence)}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Texto analizado</dt>
-              <dd>
-                {analyzeState.textLength != null
-                  ? `${analyzeState.textLength.toLocaleString("es-ES")} caracteres`
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label htmlFor="experimental-auto-takeoff-status-filter">
-                Estado
-              </Label>
-              <select
-                id="experimental-auto-takeoff-status-filter"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value as ExperimentalSuggestionStatusFilter,
-                  )
-                }
-                data-testid="experimental-auto-takeoff-status-filter"
-              >
-                {EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="experimental-auto-takeoff-search">
-                Buscar referencia o descripción
-              </Label>
-              <Input
-                id="experimental-auto-takeoff-search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Ej. 1000937596 o TUBERIA"
-                data-testid="experimental-auto-takeoff-search"
-              />
-            </div>
-          </div>
-
-          <p
-            className="text-xs text-muted-foreground"
-            data-testid="experimental-auto-takeoff-filtered-count"
-          >
-            Mostrando <strong>{filteredItems.length}</strong> de{" "}
-            {suggestedItems.length} sugerencia(s)
+          <h3 className="text-sm font-medium">1. Analizar relación de materiales</h3>
+          <p className="text-xs text-muted-foreground">
+            Palillería actual en este plano: <strong>{existingCount}</strong>{" "}
+            línea(s).
           </p>
-
-          {hasImportableMissing ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span
-                className="font-medium text-foreground"
-                data-testid="experimental-auto-takeoff-selected-count"
-              >
-                {selectedKeys.size} sugerencia(s) seleccionada(s) para importar
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2"
-                onClick={selectVisibleMissing}
-                disabled={visibleMissingKeys.length === 0}
-                data-testid="experimental-auto-takeoff-select-visible-missing"
-              >
-                Seleccionar faltantes visibles
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2"
-                onClick={clearSelection}
-              >
-                Deseleccionar todo
-              </Button>
-            </div>
+          {analyzeState.error ? (
+            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {analyzeState.error}
+            </p>
           ) : null}
+          {noEmbeddedText ? (
+            <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+              Este PDF no contiene texto embebido útil.
+            </p>
+          ) : null}
+          {emptyBom ? (
+            <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+              No se encontró una relación de materiales con filas parseables.
+            </p>
+          ) : null}
+          <form action={analyzeAction}>
+            <input type="hidden" name="companyId" value={companyId} />
+            <input type="hidden" name="jobId" value={jobId} />
+            <input type="hidden" name="drawingId" value={drawingId} />
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={analyzePending}
+              data-testid="experimental-auto-takeoff-run"
+            >
+              {analyzePending
+                ? "Analizando..."
+                : "Analizar relación de materiales"}
+            </Button>
+          </form>
+        </section>
 
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[56rem] text-sm">
-              <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 font-medium">Importar</th>
-                  <th className="px-3 py-2 font-medium">Ítem</th>
-                  <th className="px-3 py-2 font-medium">Referencia</th>
-                  <th className="px-3 py-2 font-medium">Cant.</th>
-                  <th className="px-3 py-2 font-medium">Ud.</th>
-                  <th className="px-3 py-2 font-medium">Descripción</th>
-                  <th className="px-3 py-2 font-medium">Conf.</th>
-                  <th className="px-3 py-2 font-medium">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="px-3 py-6 text-center text-xs text-muted-foreground"
-                    >
-                      Ninguna sugerencia coincide con el filtro actual.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredItems.map((row, index) => {
-                    const importable = row.comparisonStatus === "missing";
+        {hasResult && hasSuggestions ? (
+          <>
+            {discoveryCopy ? (
+              <div
+                className="space-y-1 rounded-md border border-sky-500/30 bg-sky-500/5 px-3 py-3 text-sm"
+                data-testid="experimental-auto-takeoff-discovery-copy"
+              >
+                <p>{discoveryCopy.headline}</p>
+                {discoveryCopy.missingLine ? <p>{discoveryCopy.missingLine}</p> : null}
+                {discoveryCopy.matchedLine ? <p>{discoveryCopy.matchedLine}</p> : null}
+                <p className="text-xs font-medium text-foreground">
+                  {discoveryCopy.safetyNote}
+                </p>
+              </div>
+            ) : null}
 
-                    return (
-                      <tr
-                        key={`${row.suggestionKey}-${index}`}
-                        className="border-b border-border/60 last:border-0"
-                        data-testid="experimental-auto-takeoff-result-row"
-                        data-suggestion-reference={row.reference ?? ""}
-                      >
-                        <td className="px-3 py-2 align-top">
-                          {importable ? (
-                            <input
-                              type="checkbox"
-                              className="size-4 rounded border border-input"
-                              checked={selectedKeys.has(row.suggestionKey)}
-                              onChange={(event) =>
-                                toggleSelection(
-                                  row.suggestionKey,
-                                  event.target.checked,
-                                )
-                              }
-                              data-testid="experimental-auto-takeoff-select-row"
-                              aria-label={`Seleccionar sugerencia ${row.item ?? index + 1}`}
-                            />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 align-top">{formatCell(row.item)}</td>
-                        <td className="px-3 py-2 align-top font-mono text-xs">
-                          {formatCell(row.reference)}
-                        </td>
-                        <td className="px-3 py-2 align-top">{formatCell(row.quantity)}</td>
-                        <td className="px-3 py-2 align-top">{formatCell(row.unit)}</td>
-                        <td className="px-3 py-2 align-top text-xs">
-                          {formatCell(row.description)}
-                        </td>
-                        <td className="px-3 py-2 align-top text-xs">
-                          {formatConfidence(row.confidence)}
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <ComparisonStatusBadge status={row.comparisonStatus} />
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+            <AssistantMetrics metrics={metrics} />
 
-          {hasImportableMissing ? (
-            <form action={importAction} onSubmit={handleImportSubmit}>
-              <input type="hidden" name="companyId" value={companyId} />
-              <input type="hidden" name="jobId" value={jobId} />
-              <input type="hidden" name="drawingId" value={drawingId} />
-              <input
-                type="hidden"
-                name="selectedSuggestionKeys"
-                value={JSON.stringify([...selectedKeys])}
-              />
-
-              {importPreview ? (
-                <div
-                  className="mb-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-xs text-amber-950 dark:text-amber-100"
-                  data-testid="experimental-auto-takeoff-import-preview"
+            <section
+              className="space-y-3 rounded-md border bg-background p-3"
+              data-testid="experimental-auto-takeoff-step-review"
+            >
+              <h3 className="text-sm font-medium">2. Revisar sugerencias</h3>
+              {comparisonLine ? (
+                <p
+                  className="text-xs text-muted-foreground"
+                  data-testid="experimental-auto-takeoff-comparison-summary"
                 >
-                  <p className="font-medium text-foreground">
-                    Resumen antes de importar
-                  </p>
-                  <p>
-                    Se crearán{" "}
-                    <strong>{importPreview.lineCount}</strong> línea(s) reales.
-                  </p>
-                  {importPreview.quantityByUnit.length > 0 ? (
-                    <p data-testid="experimental-auto-takeoff-import-preview-quantities">
-                      Totales por unidad:{" "}
-                      {importPreview.quantityByUnit
-                        .map((entry) => `${entry.total} ${entry.unit}`)
-                        .join(" · ")}
-                    </p>
-                  ) : null}
-                  {importPreview.previewLines.length > 0 ? (
-                    <ul className="list-disc space-y-1 pl-4">
-                      {importPreview.previewLines.map((line, index) => (
-                        <li key={`${line.reference ?? "ref"}-${index}`}>
-                          {formatCell(line.reference)} —{" "}
-                          {formatCell(line.description)}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  <p className="font-medium">{importPreview.warningMessage}</p>
-                </div>
+                  {comparisonLine}
+                </p>
               ) : null}
 
-              <p className="mb-2 text-xs text-muted-foreground">
-                Comparación experimental. No importa filas ya existentes ni
-                dudosas. Solo se validan sugerencias que sigan faltando tras
-                re-leer el PDF en el servidor.
-              </p>
-              <Button
-                type="submit"
-                variant="default"
-                disabled={importPending || selectedKeys.size === 0}
-                data-testid="experimental-auto-takeoff-import"
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="experimental-auto-takeoff-status-filter">
+                    Estado
+                  </Label>
+                  <select
+                    id="experimental-auto-takeoff-status-filter"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(
+                        event.target.value as ExperimentalSuggestionStatusFilter,
+                      )
+                    }
+                    data-testid="experimental-auto-takeoff-status-filter"
+                  >
+                    {EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS.map(
+                      (option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="experimental-auto-takeoff-search">
+                    Buscar referencia o descripción
+                  </Label>
+                  <Input
+                    id="experimental-auto-takeoff-search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Ej. 1000937596 o TUBERIA"
+                    data-testid="experimental-auto-takeoff-search"
+                  />
+                </div>
+              </div>
+
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="experimental-auto-takeoff-filtered-count"
               >
-                {importPending
-                  ? "Importando..."
-                  : "Importar seleccionadas (experimental)"}
-              </Button>
-            </form>
-          ) : null}
-        </div>
-      ) : null}
+                Mostrando <strong>{filteredItems.length}</strong> de{" "}
+                {suggestedItems.length} sugerencia(s)
+              </p>
 
-      {analyzeState.warnings && analyzeState.warnings.length > 0 ? (
-        <div className="space-y-1 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-950 dark:text-amber-100">
-          <p className="font-medium">Advertencias</p>
-          <ul className="list-disc space-y-1 pl-4">
-            {analyzeState.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+              <div
+                className="overflow-x-auto rounded-lg border"
+                data-testid="experimental-auto-takeoff-results"
+              >
+                <table className="w-full min-w-[56rem] text-sm">
+                  <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">Importar</th>
+                      <th className="px-3 py-2 font-medium">Ítem</th>
+                      <th className="px-3 py-2 font-medium">Referencia</th>
+                      <th className="px-3 py-2 font-medium">Cant.</th>
+                      <th className="px-3 py-2 font-medium">Ud.</th>
+                      <th className="px-3 py-2 font-medium">Descripción</th>
+                      <th className="px-3 py-2 font-medium">Conf.</th>
+                      <th className="px-3 py-2 font-medium">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredItems.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-3 py-6 text-center text-xs text-muted-foreground"
+                        >
+                          Ninguna sugerencia coincide con el filtro actual.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredItems.map((row, index) => {
+                        const importable = row.comparisonStatus === "missing";
 
-      <form action={analyzeAction}>
-        <input type="hidden" name="companyId" value={companyId} />
-        <input type="hidden" name="jobId" value={jobId} />
-        <input type="hidden" name="drawingId" value={drawingId} />
-        <Button
-          type="submit"
-          variant="outline"
-          disabled={analyzePending}
-          data-testid="experimental-auto-takeoff-run"
-        >
-          {analyzePending
-            ? "Analizando..."
-            : "Analizar relación de materiales"}
-        </Button>
-      </form>
+                        return (
+                          <tr
+                            key={`${row.suggestionKey}-${index}`}
+                            className="border-b border-border/60 last:border-0"
+                            data-testid="experimental-auto-takeoff-result-row"
+                            data-suggestion-reference={row.reference ?? ""}
+                          >
+                            <td className="px-3 py-2 align-top">
+                              {importable ? (
+                                <input
+                                  type="checkbox"
+                                  className="size-4 rounded border border-input"
+                                  checked={selectedKeys.has(row.suggestionKey)}
+                                  onChange={(event) =>
+                                    toggleSelection(
+                                      row.suggestionKey,
+                                      event.target.checked,
+                                    )
+                                  }
+                                  data-testid="experimental-auto-takeoff-select-row"
+                                  aria-label={`Seleccionar sugerencia ${row.item ?? index + 1}`}
+                                />
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              {formatCell(row.item)}
+                            </td>
+                            <td className="px-3 py-2 align-top font-mono text-xs">
+                              {formatCell(row.reference)}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              {formatCell(row.quantity)}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              {formatCell(row.unit)}
+                            </td>
+                            <td className="px-3 py-2 align-top text-xs">
+                              {formatCell(row.description)}
+                            </td>
+                            <td className="px-3 py-2 align-top text-xs">
+                              {formatConfidence(row.confidence)}
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <ComparisonStatusBadge
+                                status={row.comparisonStatus}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {hasImportableMissing ? (
+              <section
+                className="space-y-3 rounded-md border bg-background p-3"
+                data-testid="experimental-auto-takeoff-step-import"
+              >
+                <h3 className="text-sm font-medium">
+                  3. Seleccionar e importar
+                </h3>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span
+                    className="font-medium text-foreground"
+                    data-testid="experimental-auto-takeoff-selected-count"
+                  >
+                    {selectedKeys.size} sugerencia(s) seleccionada(s) para importar
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={selectVisibleMissing}
+                    disabled={visibleMissingKeys.length === 0}
+                    data-testid="experimental-auto-takeoff-select-visible-missing"
+                  >
+                    Seleccionar faltantes visibles
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={clearSelection}
+                  >
+                    Deseleccionar todo
+                  </Button>
+                </div>
+
+                <div
+                  className="space-y-2 rounded-md border border-muted-foreground/20 bg-muted/10 px-3 py-3 text-xs"
+                  data-testid="experimental-auto-takeoff-import-impact"
+                >
+                  <p className="font-medium text-foreground">
+                    Qué pasará al importar
+                  </p>
+                  <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+                    {EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <form action={importAction} onSubmit={handleImportSubmit}>
+                  <input type="hidden" name="companyId" value={companyId} />
+                  <input type="hidden" name="jobId" value={jobId} />
+                  <input type="hidden" name="drawingId" value={drawingId} />
+                  <input
+                    type="hidden"
+                    name="selectedSuggestionKeys"
+                    value={JSON.stringify([...selectedKeys])}
+                  />
+
+                  {importPreview ? (
+                    <div
+                      className="mb-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-xs text-amber-950 dark:text-amber-100"
+                      data-testid="experimental-auto-takeoff-import-preview"
+                    >
+                      <p className="font-medium text-foreground">
+                        Resumen antes de importar
+                      </p>
+                      <p>
+                        Se crearán{" "}
+                        <strong>{importPreview.lineCount}</strong> línea(s) reales.
+                      </p>
+                      {importPreview.quantityByUnit.length > 0 ? (
+                        <p data-testid="experimental-auto-takeoff-import-preview-quantities">
+                          Totales por unidad:{" "}
+                          {importPreview.quantityByUnit
+                            .map((entry) => `${entry.total} ${entry.unit}`)
+                            .join(" · ")}
+                        </p>
+                      ) : null}
+                      {importPreview.previewLines.length > 0 ? (
+                        <ul className="list-disc space-y-1 pl-4">
+                          {importPreview.previewLines.map((line, index) => (
+                            <li key={`${line.reference ?? "ref"}-${index}`}>
+                              {formatCell(line.reference)} —{" "}
+                              {formatCell(line.description)}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      <p className="font-medium">{importPreview.warningMessage}</p>
+                    </div>
+                  ) : null}
+
+                  <Button
+                    type="submit"
+                    variant="default"
+                    disabled={importPending || selectedKeys.size === 0}
+                    data-testid="experimental-auto-takeoff-import"
+                  >
+                    {importPending
+                      ? "Importando..."
+                      : "Importar seleccionadas (experimental)"}
+                  </Button>
+                </form>
+              </section>
+            ) : null}
+          </>
+        ) : null}
+
+        {importState.error ? (
+          <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {importState.error}
+          </p>
+        ) : null}
+
+        {importState.success ? (
+          <section
+            className="space-y-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-400"
+            data-testid="experimental-auto-takeoff-step-final"
+          >
+            <h3 className="font-medium text-foreground">4. Revisar palillería</h3>
+            <p data-testid="experimental-auto-takeoff-import-success">
+              {EXPERIMENTAL_ASSISTANT_FINAL_MESSAGE}
+            </p>
+            {importState.importedCount != null ? (
+              <p data-testid="experimental-auto-takeoff-import-success-count">
+                Líneas creadas: <strong>{importState.importedCount}</strong>
+              </p>
+            ) : null}
+            {importState.takeoffReviewInvalidated ? (
+              <p data-testid="experimental-auto-takeoff-import-review-reset">
+                La revisión de palillería se invalidó. Debes revisarla de nuevo
+                antes de marcarla como lista.
+              </p>
+            ) : null}
+            <p className="text-xs">
+              <Link href="#palilleria" className="font-medium underline-offset-4 hover:underline">
+                Ir a la palillería real de este plano
+              </Link>
+              {" · "}
+              Reanaliza la relación de materiales para actualizar la comparación.
+            </p>
+          </section>
+        ) : null}
+
+        {analyzeState.warnings && analyzeState.warnings.length > 0 ? (
+          <div className="space-y-1 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-950 dark:text-amber-100">
+            <p className="font-medium">Advertencias</p>
+            <ul className="list-disc space-y-1 pl-4">
+              {analyzeState.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -17,11 +17,16 @@ import {
   toImportableTakeoffRow,
 } from "../lib/drawings/experimental-auto-takeoff-import";
 import {
+  buildExperimentalAssistantDiscoveryCopy,
+  buildExperimentalAssistantMetrics,
   buildExperimentalImportPreviewSummary,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
   getVisibleImportableMissingKeys,
+  isExperimentalAssistantStepComplete,
   mergeSelectionWithVisibleMissing,
+  resolveExperimentalAssistantActiveStep,
+  resolveExperimentalAssistantStatus,
 } from "../lib/drawings/experimental-auto-takeoff-ui";
 import {
   findBomSections,
@@ -411,6 +416,70 @@ function main(): void {
       "Se crearán 1 línea(s) reales",
     ),
     "Mensaje de confirmación incluye conteo",
+  );
+
+  const assistantAnalyzed = resolveExperimentalAssistantStatus({
+    hasAnalysisResult: true,
+    hasSuggestions: true,
+    selectedCount: 0,
+    importSuccess: false,
+    takeoffReviewInvalidated: false,
+  });
+  assert(assistantAnalyzed === "analyzed", "Estado asistente analizado");
+
+  const assistantSelection = resolveExperimentalAssistantStatus({
+    hasAnalysisResult: true,
+    hasSuggestions: true,
+    selectedCount: 2,
+    importSuccess: false,
+    takeoffReviewInvalidated: false,
+  });
+  assert(
+    assistantSelection === "with_selection",
+    "Estado asistente con selección",
+  );
+  assert(
+    resolveExperimentalAssistantActiveStep(assistantSelection) === "import",
+    "Paso activo import con selección",
+  );
+
+  const discovery = buildExperimentalAssistantDiscoveryCopy({
+    suggestedCount: 21,
+    comparisonSummary: {
+      matchedCount: 1,
+      missingCount: 20,
+      differentQuantityCount: 0,
+      uncertainCount: 0,
+    },
+  });
+
+  if (!discovery) {
+    throw new Error("Copy descubrimiento esperado");
+  }
+
+  assert(
+    discovery.headline.includes("21 posible"),
+    "Copy descubrimiento con total",
+  );
+  assert(
+    discovery.safetyNote.includes("No se importa nada automáticamente"),
+    "Copy aviso no autoimportación",
+  );
+
+  const assistantMetrics = buildExperimentalAssistantMetrics({
+    suggestedCount: 21,
+    comparisonSummary: {
+      matchedCount: 1,
+      missingCount: 20,
+      differentQuantityCount: 0,
+      uncertainCount: 0,
+    },
+    selectedCount: 3,
+  });
+  assert(assistantMetrics.selected === 3, "Métricas incluyen seleccionadas");
+  assert(
+    isExperimentalAssistantStepComplete("analyze", "with_selection"),
+    "Paso analizar completado con selección",
   );
 
   console.log("verify-auto-takeoff-parse: all checks passed");
