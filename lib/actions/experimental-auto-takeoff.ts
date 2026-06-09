@@ -1,17 +1,20 @@
 "use server";
 
-import {
-  compareSuggestedTakeoffWithExisting,
-  type TakeoffComparisonStatus,
-  type TakeoffComparisonSummary,
+import { revalidatePath } from "next/cache";
+
+import type {
+  TakeoffComparisonStatus,
+  TakeoffComparisonSummary,
 } from "@/lib/drawings/experimental-auto-takeoff-compare";
-import {
-  hasUsefulEmbeddedText,
-  parseTakeoffRowsFromEmbeddedText,
-} from "@/lib/drawings/experimental-auto-takeoff-parse";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
-import { extractDrawingPdfTextForDetection } from "@/lib/drawings/pdf-text-extract";
+import {
+  extractVerifiedExperimentalSuggestions,
+  resolveSelectedSuggestionsForImport,
+} from "@/lib/drawings/experimental-auto-takeoff-import";
+import { buildExperimentalAutoTakeoffImportedActivityMessage } from "@/lib/drawings/activity";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
+import { invalidateDrawingTakeoffReviewInTransaction } from "@/lib/drawings/takeoff-review";
+import { prisma } from "@/lib/db";
 import { requireDrawingAccess } from "@/lib/permissions";
 
 function parseDrawingScopeFormData(formData: FormData) {
@@ -34,6 +37,46 @@ function parseDrawingScopeFormData(formData: FormData) {
   return { companyId, jobId, drawingId };
 }
 
+function revalidateDrawingPage(
+  companyId: string,
+  jobId: string,
+  drawingId: string,
+) {
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`);
+  revalidatePath(`/companies/${companyId}/jobs/${jobId}`);
+}
+
+function parseSelectedSuggestionKeys(formData: FormData):
+  | { error: string }
+  | { keys: string[] } {
+  const raw = formData.get("selectedSuggestionKeys");
+
+  if (typeof raw !== "string" || raw.trim().length === 0) {
+    return { error: "No se seleccionó ninguna sugerencia para importar." };
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { error: "No se seleccionó ninguna sugerencia para importar." };
+    }
+
+    const keys = parsed.filter(
+      (value): value is string =>
+        typeof value === "string" && value.trim().length > 0,
+    );
+
+    if (keys.length === 0) {
+      return { error: "No se seleccionó ninguna sugerencia para importar." };
+    }
+
+    return { keys };
+  } catch {
+    return { error: "Selección de sugerencias no válida." };
+  }
+}
+
 export type SerializedSuggestedTakeoffItem = {
   item: number | null;
   reference: string | null;
@@ -43,6 +86,7 @@ export type SerializedSuggestedTakeoffItem = {
   confidence: number;
   warnings: string[];
   comparisonStatus?: TakeoffComparisonStatus;
+  suggestionKey: string;
 };
 
 export type ExperimentalAutoTakeoffActionState = {
@@ -56,6 +100,12 @@ export type ExperimentalAutoTakeoffActionState = {
   averageConfidence?: number;
   existingTakeoffCount?: number;
   comparisonSummary?: TakeoffComparisonSummary;
+};
+
+export type ExperimentalAutoTakeoffImportActionState = {
+  error?: string;
+  success?: string;
+  importedCount?: number;
 };
 
 export async function analyzeExperimentalAutoTakeoffAction(
@@ -82,67 +132,50 @@ export async function analyzeExperimentalAutoTakeoffAction(
   }
 
   try {
-    const [extraction, existingTakeoffItems] = await Promise.all([
-      extractDrawingPdfTextForDetection({
-        storagePath: drawing.storagePath,
-        mimeType: drawing.mimeType,
-      }),
-      getDrawingTakeoffItems(companyId, jobId, drawingId),
-    ]);
+    const existingTakeoffItems = await getDrawingTakeoffItems(
+      companyId,
+      jobId,
+      drawingId,
+    );
 
-    const existingTakeoffCount = existingTakeoffItems.length;
-
-    const textLength = extraction.characterCount;
-    const hasEmbeddedText = extraction.hasEmbeddedText;
-    const useful = hasUsefulEmbeddedText(textLength);
-
-    if (!hasEmbeddedText || !useful) {
-      return {
-        success: useful
-          ? undefined
-          : "No se encontró texto embebido útil en este PDF. Puede ser un plano escaneado o sin relación de materiales legible.",
-        hasEmbeddedText,
-        textLength,
-        sectionsFound: [],
-        suggestedItems: [],
-        existingTakeoffCount,
-        warnings: [
-          "Sin texto embebido suficiente para analizar la relación de materiales.",
-        ],
-      };
-    }
-
-    const parseResult = parseTakeoffRowsFromEmbeddedText(extraction.text);
-    const parsedSuggestions = parseResult.candidateRows.map((row) => ({
-      item: row.item,
-      reference: row.reference,
-      description: row.description,
-      quantity: row.quantity,
-      unit: row.unit,
-      confidence: row.confidence,
-      warnings: row.warnings,
-    }));
-
-    const comparison = compareSuggestedTakeoffWithExisting(
-      parsedSuggestions,
-      existingTakeoffItems.map((item) => ({
+    const analysis = await extractVerifiedExperimentalSuggestions({
+      storagePath: drawing.storagePath,
+      mimeType: drawing.mimeType,
+      existingTakeoffItems: existingTakeoffItems.map((item) => ({
         reference: item.reference,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
       })),
-    );
+    });
 
-    const suggestedItems: SerializedSuggestedTakeoffItem[] = comparison.items.map(
-      (item, index) => ({
+    const existingTakeoffCount = existingTakeoffItems.length;
+
+    if (!analysis.ok) {
+      return {
+        success: analysis.hasEmbeddedText
+          ? undefined
+          : analysis.error,
+        hasEmbeddedText: analysis.hasEmbeddedText,
+        textLength: analysis.textLength,
+        sectionsFound: [],
+        suggestedItems: [],
+        existingTakeoffCount,
+        warnings: [analysis.error],
+      };
+    }
+
+    const suggestedItems: SerializedSuggestedTakeoffItem[] = analysis.items.map(
+      (item) => ({
         item: item.item,
         reference: item.reference,
         description: item.description,
         quantity: item.quantity,
         unit: item.unit,
         confidence: item.confidence,
-        warnings: parsedSuggestions[index]?.warnings ?? [],
+        warnings: [],
         comparisonStatus: item.comparisonStatus,
+        suggestionKey: item.suggestionKey,
       }),
     );
 
@@ -156,32 +189,148 @@ export async function analyzeExperimentalAutoTakeoffAction(
           )
         : undefined;
 
-    const sectionsFound = [
-      ...new Set(parseResult.sections.map((section) => section.id)),
-    ];
-
     const success =
       suggestedItems.length > 0
-        ? `Análisis completado: ${suggestedItems.length} fila(s) sugerida(s). Solo preview; no se guardó nada.`
-        : sectionsFound.length > 0
+        ? `Análisis completado: ${suggestedItems.length} fila(s) sugerida(s). Selecciona las que quieras importar.`
+        : analysis.sectionsFound.length > 0
           ? "Se detectó una sección de materiales pero ninguna fila pasó el parser conservador."
           : "No se encontró una relación de materiales reconocible en el texto embebido.";
 
     return {
       success,
       hasEmbeddedText: true,
-      textLength,
-      sectionsFound,
+      textLength: analysis.textLength,
+      sectionsFound: analysis.sectionsFound,
       suggestedItems,
-      warnings: parseResult.warnings,
+      warnings: analysis.warnings,
       averageConfidence,
       existingTakeoffCount,
-      comparisonSummary: comparison.summary,
+      comparisonSummary: analysis.comparisonSummary,
     };
   } catch {
     return {
       error:
         "No se pudo analizar el PDF. Comprueba que el archivo sea válido y accesible.",
+    };
+  }
+}
+
+export async function importExperimentalAutoTakeoffSuggestionsAction(
+  _prevState: ExperimentalAutoTakeoffImportActionState,
+  formData: FormData,
+): Promise<ExperimentalAutoTakeoffImportActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const keysResult = parseSelectedSuggestionKeys(formData);
+
+  if ("error" in keysResult) {
+    return { error: keysResult.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { user, membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canAccessExperimentalAutoTakeoff(membership.role)) {
+    return {
+      error: "No tienes permiso para importar sugerencias experimentales.",
+    };
+  }
+
+  try {
+    const existingTakeoffItems = await getDrawingTakeoffItems(
+      companyId,
+      jobId,
+      drawingId,
+    );
+
+    const analysis = await extractVerifiedExperimentalSuggestions({
+      storagePath: drawing.storagePath,
+      mimeType: drawing.mimeType,
+      existingTakeoffItems: existingTakeoffItems.map((item) => ({
+        reference: item.reference,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+      })),
+    });
+
+    if (!analysis.ok) {
+      return { error: analysis.error };
+    }
+
+    const resolved = resolveSelectedSuggestionsForImport({
+      verifiedItems: analysis.items,
+      selectedSuggestionKeys: keysResult.keys,
+    });
+
+    if (!resolved.ok) {
+      return { error: resolved.error };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const row of resolved.rows) {
+        await tx.drawingTakeoffItem.create({
+          data: {
+            companyId,
+            jobId,
+            drawingId,
+            createdById: user.id,
+            reference: row.reference,
+            description: row.description,
+            quantity: row.quantity,
+            unit: row.unit,
+            length: row.length,
+            width: row.width,
+            height: row.height,
+            notes: row.notes,
+          },
+        });
+      }
+
+      await tx.drawingActivity.create({
+        data: {
+          drawingId,
+          companyId,
+          jobId,
+          actorUserId: user.id,
+          type: "takeoff_items_imported",
+          message: buildExperimentalAutoTakeoffImportedActivityMessage(
+            resolved.rows.length,
+          ),
+          metadata: {
+            importedCount: resolved.rows.length,
+            source: "experimental_auto_takeoff",
+          },
+        },
+      });
+
+      await invalidateDrawingTakeoffReviewInTransaction(tx, {
+        drawingId,
+        companyId,
+        jobId,
+        actorUserId: user.id,
+        reason: "takeoff_changed",
+      });
+    });
+
+    revalidateDrawingPage(companyId, jobId, drawingId);
+
+    return {
+      success: `Se importaron ${resolved.rows.length} línea(s) reales de palillería desde sugerencias experimentales.`,
+      importedCount: resolved.rows.length,
+    };
+  } catch {
+    return {
+      error:
+        "No se pudieron importar las sugerencias seleccionadas. Inténtalo de nuevo.",
     };
   }
 }

@@ -139,7 +139,7 @@ export function DrawingAutomationPanel({
       {showExperimentalAutoTakeoff ? (
         <AutomationBlock
           title="Palillería sugerida (experimental)"
-          description="Preview de líneas candidatas desde la relación de materiales del PDF embebido. No guarda ni importa a la palillería real."
+          description="Analiza la relación de materiales del PDF embebido y permite importar líneas seleccionadas a palillería real con confirmación explícita."
           className="border-t border-sky-500/30 pt-6"
         >
           <DrawingExperimentalAutoTakeoff

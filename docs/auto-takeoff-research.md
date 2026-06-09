@@ -290,10 +290,74 @@ Plano `cmq5cxqwk000ho9i12qwjz667` — `1601GB16A-PL1-L-DMS-703-01-R03.pdf`:
 
 ### Pendiente post-14C
 
-- Import selectivo con revisión.
-- E2E del panel y comparación.
+- ~~Import selectivo con revisión.~~ → Fase 14D
+- E2E del panel, comparación e importación.
 - Diff visual sugerencia ↔ línea emparejada.
 - Benchmark con palillería cargada desde BOM de referencia.
+
+---
+
+## Fase 14D — Importación experimental seleccionada (implementado)
+
+### Alcance
+
+| Incluido | Excluido |
+|----------|----------|
+| `importExperimentalAutoTakeoffSuggestionsAction` | Autoimportar |
+| Checkboxes solo en filas `missing` (por defecto todas las faltantes seleccionadas) | Importar `matched` / `uncertain` |
+| Confirmación explícita antes de crear líneas | Cambios Prisma |
+| Re-extracción del PDF en servidor al importar | OCR |
+| Validación por `suggestionKey` (no payload libre) | Import masivo sin selección |
+| Creación real de `DrawingTakeoffItem` | Modificar exports |
+| Invalidación de `takeoffReviewedAt` + actividad `takeoff_items_imported` | |
+
+### Seguridad anti-payload inventado
+
+1. El cliente envía solo **`selectedSuggestionKeys`** (claves derivadas del análisis).
+2. En importación el servidor **vuelve a leer el PDF**, parsea sugerencias y compara con palillería actual.
+3. Solo se aceptan claves que sigan en estado **`missing`** tras esa re-validación.
+4. Campos importados provienen de la fila **verificada en servidor**, no del JSON del cliente.
+5. Límite: **200** líneas por operación; validación Zod (`takeoffCsvImportRowSchema`).
+
+### Mapeo a palillería real
+
+| Campo | Origen |
+|-------|--------|
+| `reference` | Código SAP de la sugerencia verificada |
+| `description` | Descripción de la sugerencia |
+| `quantity` | Cantidad parseada |
+| `unit` | Unidad normalizada (puede ser null) |
+| `notes` | «Importado desde extracción experimental de relación de materiales» |
+| `length` / `width` / `height` | `null` |
+
+### Invalidación de revisión
+
+Igual que create/import CSV manual: `invalidateDrawingTakeoffReviewInTransaction` con razón `takeoff_changed` si `takeoffReviewedAt` estaba informado.
+
+### UI
+
+- Checkbox por fila importable (`missing` únicamente).
+- Botón «Importar seleccionadas (experimental)» + `window.confirm`.
+- Tras éxito: `router.refresh()` y mensaje de líneas reales creadas.
+- `data-testid`: `experimental-auto-takeoff-import`, `experimental-auto-takeoff-select-row`, `experimental-auto-takeoff-selected-count`.
+
+### Resultado DMS-703 (validación local, 2026-06-08)
+
+Escenario: plano con 8 líneas manuales previas (`a1`, `a2`, …) y 21 sugerencias `missing`.
+
+| Paso | Resultado |
+|------|-----------|
+| Análisis inicial | 21 faltantes |
+| Importar 2 sugerencias SAP (`1000937601`, `1000937596`) | +2 líneas reales (total **10**) |
+| Re-análisis | **2 matched**, **19 missing** (las importadas pasan a «Ya existe» por referencia SAP) |
+| Importar solo 2 de 21 | Las otras **19 no se crean** |
+
+### Riesgos / límites 14D
+
+- Si el PDF cambia entre análisis e importación, claves pueden dejar de ser válidas (rechazo seguro).
+- Match post-import usa referencia SAP; palillería manual sin SAP no empareja con sugerencias importadas por descripción sola.
+- Sigue siendo experimental: revisión humana recomendada tras importar.
+- Sin E2E automatizado de importación en esta fase.
 
 ---
 
@@ -313,9 +377,10 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `scripts/verify-auto-takeoff-parse.ts` | Verificación pura del parser (14B) |
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
 | `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
-| `lib/actions/experimental-auto-takeoff.ts` | Server action (sin BD) |
+| `lib/actions/experimental-auto-takeoff.ts` | Analyze + import experimental |
 | `lib/drawings/experimental-auto-takeoff-compare.ts` | Comparador puro (14C) |
-| `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview + comparación |
+| `lib/drawings/experimental-auto-takeoff-import.ts` | Validación/import keys (14D) |
+| `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview + comparación + import |
 | `docs/auto-takeoff-research.md` | Este documento |
 
 ## Referencias
@@ -333,3 +398,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-08 | 14A | DMS-703, HL-1289-01, DMS-704 | Parcialmente viable; 49 filas totales en 3 PDFs |
 | 2026-06-08 | 14B | UI preview en Automatización | Sin persistencia; ~21 filas en DMS-703 |
 | 2026-06-08 | 14C | Comparación vs palillería existente | DMS-703: 0 matched, 21 missing (palillería manual sin SAP) |
+| 2026-06-08 | 14D | Importación seleccionada | DMS-703: 8→10 líneas; import 2 → 2 matched, 19 missing |

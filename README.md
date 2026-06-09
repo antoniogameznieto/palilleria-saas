@@ -20,7 +20,7 @@ Otros aspectos:
 - **Roles y permisos** por empresa: `owner`, `admin`, `engineer`, `viewer` (lectura y export sin edición).
 - **Visualización y descarga protegida** de PDFs (sin exponer rutas de storage al cliente).
 - **OCR del cajetín** como herramienta **experimental de diagnóstico** (`EXPERIMENTAL_TITLE_BLOCK_OCR`); no forma parte del flujo productivo ni sustituye la revisión manual.
-- **Preview experimental de palillería** desde relación de materiales del PDF embebido (pestaña Automatización); no guarda líneas ni sustituye la revisión manual. Ver [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md).
+- **Preview e importación experimental de palillería** desde relación de materiales del PDF embebido (pestaña Automatización); análisis/comparación sin guardar; importación solo con selección explícita y confirmación. Ver [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md).
 
 ## Estado actual
 

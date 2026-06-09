@@ -168,6 +168,12 @@ export function buildTakeoffItemsImportedActivityMessage(
   return `Se importaron ${importedCount} líneas de palillería desde CSV`;
 }
 
+export function buildExperimentalAutoTakeoffImportedActivityMessage(
+  importedCount: number,
+): string {
+  return `Se importaron ${importedCount} líneas desde extracción experimental de relación de materiales`;
+}
+
 export function buildTakeoffReviewedActivityMessage(): string {
   return "Palillería marcada como revisada.";
 }

@@ -9,6 +9,10 @@ import {
   quantitiesApproximatelyEqual,
 } from "../lib/drawings/experimental-auto-takeoff-compare";
 import {
+  buildExperimentalSuggestionKey,
+  resolveSelectedSuggestionsForImport,
+} from "../lib/drawings/experimental-auto-takeoff-import";
+import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
 } from "../lib/drawings/experimental-auto-takeoff-parse";
@@ -201,6 +205,55 @@ function main(): void {
     ],
   );
   assert(missing.summary.missingCount === 1, "Sin match → falta");
+
+  const key = buildExperimentalSuggestionKey({
+    item: 1,
+    reference: "1000937601",
+    description: '1.1/2" TUBERIA',
+    quantity: "0.2",
+    unit: "M",
+  });
+  assert(key.includes("1000937601"), "Suggestion key incluye referencia");
+
+  const verifiedMissing = [
+    {
+      item: 1,
+      reference: "1000937601",
+      description: '1.1/2" TUBERIA',
+      quantity: "0.2",
+      unit: "M",
+      confidence: 1,
+      comparisonStatus: "missing" as const,
+      suggestionKey: key,
+    },
+  ];
+
+  const importOk = resolveSelectedSuggestionsForImport({
+    verifiedItems: verifiedMissing,
+    selectedSuggestionKeys: [key],
+  });
+  assert(importOk.ok, "Importación resuelve sugerencia missing verificada");
+  assert(
+    importOk.ok && importOk.rows[0]?.reference === "1000937601",
+    "Fila importable conserva referencia",
+  );
+
+  const importRejected = resolveSelectedSuggestionsForImport({
+    verifiedItems: verifiedMissing,
+    selectedSuggestionKeys: ["clave-inventada"],
+  });
+  assert(!importRejected.ok, "Clave inventada rechazada");
+
+  const importMatchedRejected = resolveSelectedSuggestionsForImport({
+    verifiedItems: [
+      {
+        ...verifiedMissing[0],
+        comparisonStatus: "matched",
+      },
+    ],
+    selectedSuggestionKeys: [key],
+  });
+  assert(!importMatchedRejected.ok, "No importa sugerencias matched");
 
   console.log("verify-auto-takeoff-parse: all checks passed");
 }
