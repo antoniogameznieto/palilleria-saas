@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
 import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
@@ -19,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
+import type { SerializedCandidateDimensionsResult } from "@/lib/trameado/candidate-dimensions";
 import {
   getCreatableTrameadoSheetSuggestions,
   shouldShowTrameadoSheetAssistant,
@@ -37,6 +39,7 @@ type TrameadoSectionProps = {
   drawingFileName: string;
   sheets: SerializedTrameadoSheet[];
   sheetSuggestions: TrameadoSheetSuggestion[];
+  candidateDimensions: SerializedCandidateDimensionsResult;
   canManage: boolean;
   suggestedLineIdentifier: string | null;
   variant?: "page" | "workspace";
@@ -61,6 +64,7 @@ export function TrameadoSection({
   drawingFileName,
   sheets,
   sheetSuggestions,
+  candidateDimensions,
   canManage,
   suggestedLineIdentifier,
   variant = "workspace",
@@ -72,6 +76,10 @@ export function TrameadoSection({
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [stickyCreateValues, setStickyCreateValues] =
     useState<TrameadoStickySegmentValues | undefined>();
+  const [palilloPrefill, setPalilloPrefill] = useState<{
+    value: string;
+    token: number;
+  } | null>(null);
 
   const handleSegmentStickyCapture = (sticky: TrameadoStickySegmentValues) => {
     setStickyCreateValues(sticky);
@@ -117,6 +125,19 @@ export function TrameadoSection({
   const creatableSuggestionCount = getCreatableTrameadoSheetSuggestions(
     sheetSuggestions,
   ).length;
+
+  const handleApplyCandidatePalillo = (value: string) => {
+    if (!canManage) {
+      return;
+    }
+
+    if (!showAddSegment && !editingSegmentId) {
+      setShowAddSegment(true);
+      setEditingSegmentId(null);
+    }
+
+    setPalilloPrefill({ value, token: Date.now() });
+  };
 
   const handleSuggestedSheetsCreated = (sheetIds: string[]) => {
     const lastSheetId = sheetIds[sheetIds.length - 1];
@@ -344,7 +365,7 @@ export function TrameadoSection({
 
                 {canManage && showAddSegment ? (
                   <TrameadoSegmentForm
-                    key={`create-${selectedSheet.id}-${selectedSheet.segments.length}`}
+                    key={`create-${selectedSheet.id}-${selectedSheet.segments.length}-${palilloPrefill?.token ?? "base"}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
@@ -352,6 +373,7 @@ export function TrameadoSection({
                     mode="create"
                     nextSegmentNumber={nextSegmentNumber}
                     stickyValues={stickyCreateValues}
+                    prefilledPalilloLength={palilloPrefill?.value}
                     onCancel={() => setShowAddSegment(false)}
                     onSubmitCapture={handleSegmentStickyCapture}
                   />
@@ -359,12 +381,14 @@ export function TrameadoSection({
 
                 {canManage && editingSegment ? (
                   <TrameadoSegmentForm
+                    key={`edit-${editingSegment.id}-${palilloPrefill?.token ?? "base"}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
                     sheetId={selectedSheet.id}
                     mode="edit"
                     segment={editingSegment}
+                    prefilledPalilloLength={palilloPrefill?.value}
                     onCancel={() => setEditingSegmentId(null)}
                     onSuccess={() => setEditingSegmentId(null)}
                   />
@@ -425,10 +449,16 @@ export function TrameadoSection({
           data-testid="trameado-workspace"
         >
           <div className="order-1 lg:order-2">{sheetPanel}</div>
-          <div className="order-2 lg:order-1 lg:sticky lg:top-4">
+          <div className="order-2 lg:order-1 lg:sticky lg:top-4 space-y-4">
             <TrameadoPdfPanel
               drawingId={drawingId}
               fileName={drawingFileName}
+            />
+            <TrameadoCandidateDimensionsPanel
+              result={candidateDimensions}
+              onApplyPalillo={
+                canManage ? handleApplyCandidatePalillo : undefined
+              }
             />
           </div>
         </div>

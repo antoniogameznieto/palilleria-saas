@@ -213,10 +213,14 @@ Columnas:
 - Posición X/Y **no** disponible con API pública `pdf-parse`.
 - **Recomendación:** 18K-A panel de cotas candidatas.
 
-### 18K-A — Panel cotas candidatas (recomendado)
+### 18K-A — Panel cotas candidatas (completado)
 
-- Listar cotas filtradas junto al visor PDF + hoja de palilleo.
-- Ingeniero selecciona/introduce longitudes; sin auto-PALILLO.
+- Helper: `lib/trameado/candidate-dimensions.ts` + loader server `load-candidate-dimensions.ts`.
+- UI: `TrameadoCandidateDimensionsPanel` debajo del visor PDF en pestaña Trameado.
+- Extrae cotas del texto embebido del PDF original; **no** crea palillos ni tramos.
+- Engineer: copiar o «Usar en PALILLO» (abre/rellena formulario activo).
+- Viewer: ve panel y puede copiar; sin «Usar en PALILLO».
+- Sin posición X/Y; lista filtrada con avisos de confianza.
 
 ### 18K-B — Prepropuesta experimental palillos (condicional)
 

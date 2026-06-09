@@ -17,6 +17,7 @@ import { TrameadoSection } from "@/components/trameado/trameado-section";
 import { getDrawingTrameadoSheets } from "@/lib/trameado/db";
 import { buildSuggestedLineIdentifier } from "@/lib/trameado/suggest-line-identifier";
 import { buildTrameadoSheetSuggestions } from "@/lib/trameado/suggestions";
+import { loadCandidateDimensionsForDrawing } from "@/lib/trameado/load-candidate-dimensions";
 import { prisma } from "@/lib/db";
 import {
   canConfirmDetectedDrawingMetadata,
@@ -50,7 +51,7 @@ export default async function DrawingDetailPage({
   );
   const canEditTakeoff = canManageTakeoffItems(membership.role);
   const canEditTrameado = canManageTrameado(membership.role);
-  const [{ job }, activities, takeoffItems, jobTakeoffItems, trameadoSheets, jobDrawings] =
+  const [{ job }, activities, takeoffItems, jobTakeoffItems, trameadoSheets, jobDrawings, candidateDimensions] =
     await Promise.all([
       requireJobAccess(companyId, jobId),
       getDrawingRecentActivity(companyId, jobId, drawingId),
@@ -70,6 +71,13 @@ export default async function DrawingDetailPage({
           lineNumber: true,
           revision: true,
         },
+      }),
+      loadCandidateDimensionsForDrawing({
+        storagePath: drawing.storagePath,
+        mimeType: drawing.mimeType,
+        drawingNumber: drawing.drawingNumber,
+        lineNumber: drawing.lineNumber,
+        originalFileName: drawing.originalFileName,
       }),
     ]);
 
@@ -147,6 +155,7 @@ export default async function DrawingDetailPage({
       drawingFileName={drawing.originalFileName}
       sheets={trameadoSheets}
       sheetSuggestions={trameadoSheetSuggestions}
+      candidateDimensions={candidateDimensions}
       canManage={canEditTrameado}
       suggestedLineIdentifier={suggestedLineIdentifier}
       variant="workspace"

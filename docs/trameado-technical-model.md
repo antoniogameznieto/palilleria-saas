@@ -130,6 +130,7 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 | Export CSV hoja cliente | 18D ✅ |
 | Export Excel básico hoja cliente | 18G ✅ |
 | Asistente BOM/metadatos | 18I-A ✅ |
+| Panel cotas candidatas | 18K-A ✅ |
 | Export Excel formateado / PDF plantilla | posterior |
 | Hints desde BOM (Ø, SCH.) | 18E |
 | Anotaciones iso trameado | 18F |
@@ -206,6 +207,26 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 - Dedupe por `lineIdentifier` existente en el drawing.
 
 **Verificación:** `verifySheetSuggestions()` en `scripts/verify-trameado-model.ts`.
+
+## Panel cotas candidatas (18K-A)
+
+**Helper:** `lib/trameado/candidate-dimensions.ts`  
+**Loader server:** `lib/trameado/load-candidate-dimensions.ts` (lee PDF vía `extractDrawingPdfTextForDetection`; sin persistir en BD)  
+**UI:** `TrameadoCandidateDimensionsPanel` — columna izquierda del workspace Trameado, bajo el visor PDF.
+
+| Automatiza | No automatiza |
+|------------|---------------|
+| Listar cotas candidatas filtradas del texto embebido | Crear tramos / segmentos |
+| Copiar valor al portapapeles | Auto-PALILLO |
+| Rellenar campo PALILLO del formulario (engineer) | Posición X/Y espacial |
+| Avisos de confianza / texto insuficiente | Lectura golden escaneado |
+
+- Extracción en server component (`DrawingDetailPage`); resultado serializado al cliente.
+- Filtros: SAP, fechas, presiones/temperaturas, coordenadas E/N/EL, cantidades BOM, SCH 40/80, 3000#, espárragos, números HL de línea/plano.
+- Límite por defecto: 24 cotas (`DEFAULT_MAX_CANDIDATE_DIMENSIONS`).
+- Permisos: viewer ve panel y copia; engineer además «Usar en PALILLO».
+
+**Verificación:** `verifyCandidateDimensions()` en `scripts/verify-trameado-model.ts`.
 
 ## Archivos tocados en 18B
 

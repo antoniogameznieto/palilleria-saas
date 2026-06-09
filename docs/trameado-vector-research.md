@@ -208,16 +208,18 @@ Para **prepropuesta con revisión obligatoria** en subconjunto `-02`: **marginal
 | Nivel | Descripción | Estado |
 |-------|-------------|--------|
 | **1** | Precrear hojas + Ø/SCH desde BOM/metadatos | ✅ 18I-A |
-| **2** | Panel de **cotas candidatas** filtradas junto al PDF/hoja | ❌ pendiente — **recomendado 18K-A** |
+| **2** | Panel de **cotas candidatas** filtradas junto al PDF/hoja | ✅ 18K-A |
 | **3** | Prepropuesta de palillos desde cotas + revisión obligatoria | ⚠️ solo plausible en `-02`; experimental |
 | **4** | Interpretación geométrica vectorial (paths, topología iso) | Research; requiere motor nuevo |
 | **5** | Iso trameado automático completo + marcas `<n>` | No viable MVP; OCR/visión alto riesgo |
 
-## 11. Siguiente fase recomendada: **18K-A**
+## 11. Siguiente fase recomendada: **18K-A** ✅ implementado
+
+Producto: panel «Cotas candidatas» en pestaña Trameado (`TrameadoCandidateDimensionsPanel`). Ver [trameado-technical-model.md](./trameado-technical-model.md#panel-cotas-candidatas-18k-a).
 
 | Opción | Descripción | Viabilidad | Recomendación |
 |--------|-------------|------------|---------------|
-| **18K-A** | Panel cotas candidatas junto PDF/hoja | **Alta** — datos ya en vectorial | **✅ Recomendada** |
+| **18K-A** | Panel cotas candidatas junto PDF/hoja | **Alta** — datos ya en vectorial | **✅ Completado** |
 | 18K-B | Prepropuesta experimental palillos desde cotas | Media-baja — `-02` okish, `-01` no | Tras 18K-A + golden manual |
 | 18K-C | Extracción geométrica vectorial experimental | Media investigación / alto esfuerzo | Backlog; no bloquear MVP |
 | 18K-D | Solo asistente manual; descartar auto | Conservadora | Innecesaria tras 18J — sí hay valor en cotas |

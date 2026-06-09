@@ -29,6 +29,7 @@ type TrameadoSegmentFormProps = {
   segment?: SerializedTrameadoSegment;
   nextSegmentNumber?: string;
   stickyValues?: TrameadoStickySegmentValues;
+  prefilledPalilloLength?: string;
   onCancel?: () => void;
   onSubmitCapture?: (sticky: TrameadoStickySegmentValues) => void;
   onSuccess?: () => void;
@@ -40,13 +41,14 @@ function resolveInitialValues(
   segment: SerializedTrameadoSegment | undefined,
   nextSegmentNumber: string | undefined,
   stickyValues: TrameadoStickySegmentValues | undefined,
+  prefilledPalilloLength?: string,
 ) {
   if (segment) {
     return {
       segmentNumber: formatSegmentLabel(segment.segmentNumber),
       diameter: segment.diameter,
       schedule: segment.schedule,
-      palilloLength: segment.palilloLength,
+      palilloLength: prefilledPalilloLength ?? segment.palilloLength,
       heatNumber: segment.heatNumber ?? "",
       notes: segment.notes ?? "",
     };
@@ -58,7 +60,7 @@ function resolveInitialValues(
       : "",
     diameter: stickyValues?.diameter ?? "",
     schedule: stickyValues?.schedule ?? "",
-    palilloLength: "",
+    palilloLength: prefilledPalilloLength ?? "",
     heatNumber: stickyValues?.heatNumber ?? "",
     notes: "",
   };
@@ -73,16 +75,22 @@ export function TrameadoSegmentForm({
   segment,
   nextSegmentNumber,
   stickyValues,
+  prefilledPalilloLength,
   onCancel,
   onSubmitCapture,
   onSuccess,
 }: TrameadoSegmentFormProps) {
   const router = useRouter();
-  const formKey = segment?.id ?? `new-${nextSegmentNumber ?? "segment"}`;
+  const formKey = segment?.id ?? `new-${nextSegmentNumber ?? "segment"}-${prefilledPalilloLength ?? "base"}`;
   const palilloInputRef = useRef<HTMLInputElement>(null);
   const handledSuccessRef = useRef(false);
   const [values, setValues] = useState(() =>
-    resolveInitialValues(segment, nextSegmentNumber, stickyValues),
+    resolveInitialValues(
+      segment,
+      nextSegmentNumber,
+      stickyValues,
+      prefilledPalilloLength,
+    ),
   );
   const action =
     mode === "edit" ? updateTrameadoSegmentAction : createTrameadoSegmentAction;

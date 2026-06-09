@@ -26,6 +26,10 @@ import {
   getCreatableTrameadoSheetSuggestions,
 } from "../lib/trameado/suggestions";
 import {
+  DEFAULT_MAX_CANDIDATE_DIMENSIONS,
+  extractCandidateDimensionsFromText,
+} from "../lib/trameado/candidate-dimensions";
+import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
   formatTrameadoSheetSummary,
@@ -353,6 +357,79 @@ function verifySheetSuggestions(): void {
   );
 }
 
+const SAMPLE_HL_1291_02_TEXT = `
+2301GB47G-C1-L-HL-1291-02
+APROBADO PARA CONSTRUCCION 11-03-2025 GRG
+PRESIÓN DISEÑO kg/cm g
+TEMPERATURA DISEÑO ºC
+13.00
+17.60
+51.0
+79.0
+A012AA
+RELACIÓN DE MATERIALES
+1 3/4" SCH 80 TUBERIA AC EXT. PLANOS A-106 B	1000027194	0.4 M
+2 3/4" CODO 90 AC SW 3000# A-105	1000039880	1
+PARA CONT. VER LINEA NUM.
+2301GB47G-C1-4"-HL-1291-A012AA-N
+PLANO Nº: 2301GB47G-C1-L-HL-1291-01
+120
+85
+193
+68
+100
+361
+E= 1179904
+N= 651601
+EL=+101500
+5/8"x90mm ESPARRAGO+2 TUERCAS A.AL. B7/2H
+`.trim();
+
+function verifyCandidateDimensions(): void {
+  const result = extractCandidateDimensionsFromText(SAMPLE_HL_1291_02_TEXT, {
+    fileName: "2301GB47G-C1-L-HL-1291-02.pdf",
+    drawingNumber: "2301GB47G-C1-L-HL-1291-02",
+    lineNumber: "HL-1291-A012AA-N-02",
+  });
+
+  const values = result.candidates.map((candidate) => candidate.value);
+
+  assert(result.hasEmbeddedText, "Sample HL-1291-02 text should be embedded");
+  assert(values.includes(120), "Should detect 120 as candidate dimension");
+  assert(values.includes(193), "Should detect 193 as candidate dimension");
+  assert(values.includes(361), "Should detect 361 as candidate dimension");
+  assert(values.includes(100), "Should detect 100 as candidate dimension");
+  assert(!values.includes(1000027194), "Should exclude SAP codes");
+  assert(!values.includes(2025), "Should exclude revision year noise");
+  assert(!values.includes(51), "Should exclude design pressure 51");
+  assert(!values.includes(79), "Should exclude design temperature 79");
+  assert(!values.includes(1179904), "Should exclude UTM coordinate values");
+  assert(!values.includes(1291), "Should exclude HL line number as noise");
+  assert(!values.includes(3000), "Should exclude 3000# accessory rating");
+  assert(!values.includes(90), "Should exclude bolt length from espárrago line");
+
+  const limited = extractCandidateDimensionsFromText(SAMPLE_HL_1291_02_TEXT, {
+    maxCandidates: 3,
+  });
+  assert(
+    limited.candidates.length === 3,
+    "maxCandidates should cap visible candidate dimensions",
+  );
+  assert(
+    limited.warnings.some((warning) => warning.includes("primeras 3")),
+    "maxCandidates cap should add a warning",
+  );
+
+  const empty = extractCandidateDimensionsFromText("");
+  assert(empty.candidates.length === 0, "Empty text should yield no candidates");
+  assert(empty.insufficientText, "Empty text should flag insufficient text");
+
+  assert(
+    DEFAULT_MAX_CANDIDATE_DIMENSIONS >= 10,
+    "Default candidate limit should allow a useful panel size",
+  );
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -442,6 +519,7 @@ async function main(): Promise<void> {
   verifySegmentHelpers();
   verifyCsvExport();
   verifySheetSuggestions();
+  verifyCandidateDimensions();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

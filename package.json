@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/palilleria?schema=public} prisma generate && next build",
     "db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/palilleria?schema=public} prisma generate",
+    "postinstall": "npm run db:generate",
     "start": "next start",
     "lint": "eslint",
     "verify:takeoff": "tsx scripts/verify-takeoff-pure.ts",
