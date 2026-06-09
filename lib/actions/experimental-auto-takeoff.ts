@@ -7,6 +7,7 @@ import type {
   TakeoffComparisonSummary,
 } from "@/lib/drawings/experimental-auto-takeoff-compare";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
+import type { AppliedBusinessRule } from "@/lib/drawings/auto-takeoff-business-rules";
 import {
   extractVerifiedExperimentalSuggestions,
   resolveSelectedSuggestionsForImport,
@@ -87,7 +88,7 @@ export type SerializedSuggestedTakeoffItem = {
   warnings: string[];
   comparisonStatus?: TakeoffComparisonStatus;
   suggestionKey: string;
-};
+} & AppliedBusinessRule;
 
 export type ExperimentalAutoTakeoffActionState = {
   error?: string;
@@ -177,6 +178,10 @@ export async function analyzeExperimentalAutoTakeoffAction(
         warnings: [],
         comparisonStatus: item.comparisonStatus,
         suggestionKey: item.suggestionKey,
+        businessCategory: item.businessCategory,
+        businessAction: item.businessAction,
+        businessReason: item.businessReason,
+        businessConfidence: item.businessConfidence,
       }),
     );
 

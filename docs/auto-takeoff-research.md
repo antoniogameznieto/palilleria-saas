@@ -660,11 +660,30 @@ Las 4 `exclude` corresponden a FIGURA 8 (DMS/HL). La 1 `review` es disco ciego s
 
 La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni importación. Sigue faltando lo **fuera del BOM** (soportes, DW manual).
 
-### Recomendación → Fase 15E
+### Fase 15E — Reglas de negocio en asistente experimental
 
-Exponer `businessAction` y categoría en el preview experimental del asistente (sin autoimportar).
+**Objetivo:** Mostrar categoría y acción de negocio de cada sugerencia en el asistente 14G, sin cambiar importación productiva ni autoimportar.
 
-**CI:** tests puros en `verify:auto-takeoff`; script `validate:auto-takeoff-business-rules` separado.
+**Enriquecimiento:** En `extractVerifiedExperimentalSuggestions` (`experimental-auto-takeoff-import.ts`), cada fila verificada recibe `businessCategory`, `businessAction`, `businessReason` y `businessConfidence` vía `applyBusinessRulesToSuggestionInput()` (capa 15D, sin duplicar lógica).
+
+**UI:**
+
+| Elemento | Detalle |
+|----------|---------|
+| Métricas negocio | Incluir / Revisar / Excluir + categorías principales |
+| Tabla | Columnas Acción, Categoría, Motivo (badges + tooltip) |
+| Filtro acción | Todas / Incluir / Revisar / Excluir |
+| Selección masiva | Solo `missing` + `include` |
+| Preview import | Conteo include/review; aviso si hay review seleccionadas |
+| Copy | “La app clasifica las sugerencias como incluir, revisar o excluir…” |
+
+**Servidor:** `resolveSelectedSuggestionsForImport` rechaza claves con `businessAction = exclude`.
+
+**E2E DMS-703:** FIGURA 8 como Excluir sin checkbox; bulk select 18 (no 20); import de include sigue operativo.
+
+**Archivos:** `experimental-auto-takeoff-business-labels.ts`, cambios en `experimental-auto-takeoff-ui.ts`, `drawing-experimental-auto-takeoff.tsx`, `experimental-auto-takeoff.ts`.
+
+**CI:** tests puros ampliados en `verify:auto-takeoff`; E2E en `experimental-auto-takeoff-import.spec.ts`.
 
 ---
 
@@ -705,7 +724,8 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
 | `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E–14F) |
-| `lib/drawings/experimental-auto-takeoff-ui.ts` | Filtros/selección/resumen UI (14F) |
+| `lib/drawings/experimental-auto-takeoff-ui.ts` | Filtros/selección/resumen UI (14F/15E) |
+| `lib/drawings/experimental-auto-takeoff-business-labels.ts` | Etiquetas UI reglas negocio (15E) |
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
 | `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
 | `lib/actions/experimental-auto-takeoff.ts` | Analyze + import experimental |
@@ -737,3 +757,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15B | Golden set 7 PDFs, 35 expected rows | Recall 100 %, precision estructural 100 %; gate en verify:auto-takeoff |
 | 2026-06-09 | 15C | Business set 5 PDFs, 40 required rows | Recall negocio 82,5 %, recall BOM 100 %, utilidad 53,2 %; script separado |
 | 2026-06-09 | 15D | Reglas include/exclude/review | 57 include, 4 exclude FIGURA 8, pureza propuesta 100 %; tests en verify |
+| 2026-06-09 | 15E | Reglas en asistente experimental | Métricas/filtros/badges; bulk solo include; exclude no importable; E2E DMS-703 |

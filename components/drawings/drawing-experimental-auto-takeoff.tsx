@@ -15,22 +15,34 @@ import {
   TAKEOFF_COMPARISON_STATUS_LABELS,
 } from "@/lib/drawings/experimental-auto-takeoff-compare-labels";
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import type { BusinessAction } from "@/lib/drawings/auto-takeoff-business-rules";
+import {
+  BUSINESS_ACTION_BADGE_CLASS,
+  BUSINESS_ACTION_LABELS,
+  BUSINESS_CATEGORY_LABELS,
+} from "@/lib/drawings/experimental-auto-takeoff-business-labels";
 import {
   EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS,
   EXPERIMENTAL_ASSISTANT_STEPS,
+  EXPERIMENTAL_SUGGESTION_ACTION_FILTER_OPTIONS,
   EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS,
   buildExperimentalAssistantDiscoveryCopy,
   buildExperimentalAssistantMetrics,
+  buildExperimentalBusinessCategoryMetrics,
+  buildExperimentalBusinessMetrics,
   buildExperimentalImportPreviewSummary,
   EXPERIMENTAL_ASSISTANT_FINAL_MESSAGE,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
   getVisibleImportableMissingKeys,
   isExperimentalAssistantStepComplete,
+  isExperimentalSuggestionImportable,
   mergeSelectionWithVisibleMissing,
   resolveExperimentalAssistantActiveStep,
   resolveExperimentalAssistantStatus,
   type ExperimentalAssistantStatus,
+  type ExperimentalBusinessMetrics,
+  type ExperimentalSuggestionActionFilter,
   type ExperimentalSuggestionStatusFilter,
 } from "@/lib/drawings/experimental-auto-takeoff-ui";
 import { Badge } from "@/components/ui/badge";
@@ -145,6 +157,61 @@ function AssistantStepIndicator({
   );
 }
 
+function BusinessActionBadge({ action }: { action: BusinessAction }) {
+  return (
+    <Badge
+      variant="outline"
+      className={BUSINESS_ACTION_BADGE_CLASS[action]}
+      data-testid="experimental-auto-takeoff-business-action-badge"
+      data-business-action={action}
+    >
+      {BUSINESS_ACTION_LABELS[action]}
+    </Badge>
+  );
+}
+
+function BusinessMetrics({ metrics }: { metrics: ExperimentalBusinessMetrics }) {
+  const actionItems = [
+    { label: "Incluir", value: metrics.include },
+    { label: "Revisar", value: metrics.review },
+    { label: "Excluir", value: metrics.exclude },
+  ];
+  const categoryItems = buildExperimentalBusinessCategoryMetrics(metrics);
+
+  return (
+    <div className="space-y-2" data-testid="experimental-auto-takeoff-business-metrics">
+      <p className="text-xs font-medium text-foreground">Reglas de negocio (experimental)</p>
+      <dl className="grid grid-cols-3 gap-2 sm:grid-cols-3">
+        {actionItems.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-md border bg-muted/20 px-3 py-2 text-center"
+          >
+            <dt className="text-[11px] text-muted-foreground">{item.label}</dt>
+            <dd className="text-lg font-semibold text-foreground">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {categoryItems.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          <span className="text-[11px] text-muted-foreground">Categorías principales:</span>
+          {categoryItems.map((item) => (
+            <Badge
+              key={item.category}
+              variant="outline"
+              className="text-[11px]"
+              data-testid="experimental-auto-takeoff-business-category-badge"
+              data-business-category={item.category}
+            >
+              {item.label}: {item.count}
+            </Badge>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function AssistantMetrics({
   metrics,
 }: {
@@ -199,6 +266,8 @@ export function DrawingExperimentalAutoTakeoff({
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] =
     useState<ExperimentalSuggestionStatusFilter>("all");
+  const [actionFilter, setActionFilter] =
+    useState<ExperimentalSuggestionActionFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const hasResult = analyzeState.success != null || analyzeState.error != null;
   const hasSuggestions = suggestedItems.length > 0;
@@ -212,9 +281,14 @@ export function DrawingExperimentalAutoTakeoff({
     () =>
       filterExperimentalSuggestions(suggestedItems, {
         statusFilter,
+        actionFilter,
         searchQuery,
       }),
-    [suggestedItems, statusFilter, searchQuery],
+    [suggestedItems, statusFilter, actionFilter, searchQuery],
+  );
+  const businessMetrics = useMemo(
+    () => buildExperimentalBusinessMetrics(suggestedItems),
+    [suggestedItems],
   );
   const visibleMissingKeys = useMemo(
     () => getVisibleImportableMissingKeys(filteredItems),
@@ -235,6 +309,7 @@ export function DrawingExperimentalAutoTakeoff({
     setResultsFingerprint(analysisFingerprint);
     setSelectedKeys(new Set());
     setStatusFilter("all");
+    setActionFilter("all");
     setSearchQuery("");
   }
 
@@ -312,8 +387,8 @@ export function DrawingExperimentalAutoTakeoff({
     }
   }
 
-  const hasImportableMissing = suggestedItems.some(
-    (item) => item.comparisonStatus === "missing",
+  const hasImportableMissing = suggestedItems.some((item) =>
+    isExperimentalSuggestionImportable(item),
   );
 
   return (
@@ -399,6 +474,9 @@ export function DrawingExperimentalAutoTakeoff({
                 <p>{discoveryCopy.headline}</p>
                 {discoveryCopy.missingLine ? <p>{discoveryCopy.missingLine}</p> : null}
                 {discoveryCopy.matchedLine ? <p>{discoveryCopy.matchedLine}</p> : null}
+                <p className="text-xs text-muted-foreground">
+                  {discoveryCopy.businessRulesNote}
+                </p>
                 <p className="text-xs font-medium text-foreground">
                   {discoveryCopy.safetyNote}
                 </p>
@@ -406,6 +484,7 @@ export function DrawingExperimentalAutoTakeoff({
             ) : null}
 
             <AssistantMetrics metrics={metrics} />
+            <BusinessMetrics metrics={businessMetrics} />
 
             <section
               className="space-y-3 rounded-md border bg-background p-3"
@@ -421,7 +500,7 @@ export function DrawingExperimentalAutoTakeoff({
                 </p>
               ) : null}
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1">
                   <Label htmlFor="experimental-auto-takeoff-status-filter">
                     Estado
@@ -438,6 +517,30 @@ export function DrawingExperimentalAutoTakeoff({
                     data-testid="experimental-auto-takeoff-status-filter"
                   >
                     {EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS.map(
+                      (option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="experimental-auto-takeoff-business-action-filter">
+                    Acción de negocio
+                  </Label>
+                  <select
+                    id="experimental-auto-takeoff-business-action-filter"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    value={actionFilter}
+                    onChange={(event) =>
+                      setActionFilter(
+                        event.target.value as ExperimentalSuggestionActionFilter,
+                      )
+                    }
+                    data-testid="experimental-auto-takeoff-business-action-filter"
+                  >
+                    {EXPERIMENTAL_SUGGESTION_ACTION_FILTER_OPTIONS.map(
                       (option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
@@ -472,7 +575,7 @@ export function DrawingExperimentalAutoTakeoff({
                 className="overflow-x-auto rounded-lg border"
                 data-testid="experimental-auto-takeoff-results"
               >
-                <table className="w-full min-w-[56rem] text-sm">
+                <table className="w-full min-w-[72rem] text-sm">
                   <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 font-medium">Importar</th>
@@ -483,13 +586,16 @@ export function DrawingExperimentalAutoTakeoff({
                       <th className="px-3 py-2 font-medium">Descripción</th>
                       <th className="px-3 py-2 font-medium">Conf.</th>
                       <th className="px-3 py-2 font-medium">Estado</th>
+                      <th className="px-3 py-2 font-medium">Acción</th>
+                      <th className="px-3 py-2 font-medium">Categoría</th>
+                      <th className="px-3 py-2 font-medium">Motivo</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredItems.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={8}
+                          colSpan={11}
                           className="px-3 py-6 text-center text-xs text-muted-foreground"
                         >
                           Ninguna sugerencia coincide con el filtro actual.
@@ -497,20 +603,30 @@ export function DrawingExperimentalAutoTakeoff({
                       </tr>
                     ) : (
                       filteredItems.map((row, index) => {
-                        const importable = row.comparisonStatus === "missing";
+                        const importable = isExperimentalSuggestionImportable(row);
+                        const isReviewMissing =
+                          row.comparisonStatus === "missing" &&
+                          row.businessAction === "review";
 
                         return (
                           <tr
                             key={`${row.suggestionKey}-${index}`}
-                            className="border-b border-border/60 last:border-0"
+                            className={cn(
+                              "border-b border-border/60 last:border-0",
+                              isReviewMissing && "bg-amber-500/5",
+                            )}
                             data-testid="experimental-auto-takeoff-result-row"
                             data-suggestion-reference={row.reference ?? ""}
+                            data-business-action={row.businessAction}
                           >
                             <td className="px-3 py-2 align-top">
                               {importable ? (
                                 <input
                                   type="checkbox"
-                                  className="size-4 rounded border border-input"
+                                  className={cn(
+                                    "size-4 rounded border border-input",
+                                    isReviewMissing && "border-amber-500",
+                                  )}
                                   checked={selectedKeys.has(row.suggestionKey)}
                                   onChange={(event) =>
                                     toggleSelection(
@@ -521,6 +637,14 @@ export function DrawingExperimentalAutoTakeoff({
                                   data-testid="experimental-auto-takeoff-select-row"
                                   aria-label={`Seleccionar sugerencia ${row.item ?? index + 1}`}
                                 />
+                              ) : row.businessAction === "exclude" ? (
+                                <span
+                                  className="text-xs text-muted-foreground"
+                                  data-testid="experimental-auto-takeoff-row-import-disabled"
+                                  title="Excluida por reglas de negocio"
+                                >
+                                  —
+                                </span>
                               ) : (
                                 <span className="text-xs text-muted-foreground">
                                   —
@@ -549,6 +673,27 @@ export function DrawingExperimentalAutoTakeoff({
                               <ComparisonStatusBadge
                                 status={row.comparisonStatus}
                               />
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <BusinessActionBadge action={row.businessAction} />
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <Badge
+                                variant="outline"
+                                className="text-[11px]"
+                                data-testid="experimental-auto-takeoff-business-category-badge"
+                                data-business-category={row.businessCategory}
+                              >
+                                {BUSINESS_CATEGORY_LABELS[row.businessCategory]}
+                              </Badge>
+                            </td>
+                            <td className="px-3 py-2 align-top text-xs text-muted-foreground">
+                              <span
+                                title={row.businessReason}
+                                data-testid="experimental-auto-takeoff-business-reason"
+                              >
+                                {row.businessReason}
+                              </span>
                             </td>
                           </tr>
                         );
@@ -631,8 +776,21 @@ export function DrawingExperimentalAutoTakeoff({
                       </p>
                       <p>
                         Se crearán{" "}
-                        <strong>{importPreview.lineCount}</strong> línea(s) reales.
+                        <strong>{importPreview.lineCount}</strong> línea(s) reales
+                        ({importPreview.includeCount} incluir
+                        {importPreview.reviewCount > 0
+                          ? `, ${importPreview.reviewCount} revisar`
+                          : ""}
+                        ).
                       </p>
+                      {importPreview.reviewWarningMessage ? (
+                        <p
+                          className="font-medium text-amber-900 dark:text-amber-100"
+                          data-testid="experimental-auto-takeoff-import-review-warning"
+                        >
+                          {importPreview.reviewWarningMessage}
+                        </p>
+                      ) : null}
                       {importPreview.quantityByUnit.length > 0 ? (
                         <p data-testid="experimental-auto-takeoff-import-preview-quantities">
                           Totales por unidad:{" "}

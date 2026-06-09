@@ -30,6 +30,22 @@ export type BusinessAction = "include" | "exclude" | "review";
 
 export type BusinessConfidence = "high" | "medium" | "low";
 
+export type BusinessRuleSuggestionInput = {
+  item: number | null;
+  reference: string | null;
+  description: string | null;
+  quantity: string | null;
+  unit: string | null;
+  confidence: number;
+};
+
+export type AppliedBusinessRule = {
+  businessCategory: BusinessRuleCategory;
+  businessAction: BusinessAction;
+  businessReason: string;
+  businessConfidence: BusinessConfidence;
+};
+
 export type BusinessRuleApplication = {
   suggestion: ExperimentalTakeoffCandidateRow;
   suggestionIndex: number;
@@ -154,9 +170,20 @@ function matchBlindRule(
   return null;
 }
 
+export function applyBusinessRulesToSuggestionInput(
+  suggestion: BusinessRuleSuggestionInput,
+): AppliedBusinessRule {
+  return applyBusinessRulesToSuggestion({
+    ...suggestion,
+    warnings: [],
+    rawLine: "",
+    lineNumber: 0,
+  });
+}
+
 export function applyBusinessRulesToSuggestion(
   suggestion: ExperimentalTakeoffCandidateRow,
-): Omit<BusinessRuleApplication, "suggestion" | "suggestionIndex"> {
+): AppliedBusinessRule {
   const description = normalizeForRules(suggestion.description);
 
   const exclusion = matchExclusionRule(description);
@@ -263,6 +290,16 @@ export function applyBusinessRulesToSuggestions(
     suggestionIndex,
     ...applyBusinessRulesToSuggestion(suggestion),
   }));
+}
+
+export function countBusinessActions(
+  applications: ReadonlyArray<Pick<AppliedBusinessRule, "businessAction">>,
+): Record<BusinessAction, number> {
+  return {
+    include: applications.filter((row) => row.businessAction === "include").length,
+    review: applications.filter((row) => row.businessAction === "review").length,
+    exclude: applications.filter((row) => row.businessAction === "exclude").length,
+  };
 }
 
 function expectedActionForBusinessRow(

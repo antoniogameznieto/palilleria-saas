@@ -21,11 +21,15 @@ import {
 import {
   buildExperimentalAssistantDiscoveryCopy,
   buildExperimentalAssistantMetrics,
+  buildExperimentalBusinessMetrics,
   buildExperimentalImportPreviewSummary,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
+  getBulkSelectableMissingKeys,
   getVisibleImportableMissingKeys,
   isExperimentalAssistantStepComplete,
+  isExperimentalSuggestionBulkSelectable,
+  isExperimentalSuggestionImportable,
   mergeSelectionWithVisibleMissing,
   resolveExperimentalAssistantActiveStep,
   resolveExperimentalAssistantStatus,
@@ -37,7 +41,10 @@ import {
   matchesPdfNameFilter,
 } from "../lib/drawings/auto-takeoff-benchmark";
 import { runAutoTakeoffGoldenValidation } from "../lib/drawings/auto-takeoff-golden-run";
-import { applyBusinessRulesToSuggestion } from "../lib/drawings/auto-takeoff-business-rules";
+import {
+  applyBusinessRulesToSuggestion,
+  applyBusinessRulesToSuggestionInput,
+} from "../lib/drawings/auto-takeoff-business-rules";
 import {
   classifyExtractedRows,
   matchBusinessExpectedRows,
@@ -250,16 +257,20 @@ async function main(): Promise<void> {
   });
   assert(key.includes("1000937601"), "Suggestion key incluye referencia");
 
+  const verifiedMissingBase = {
+    item: 1,
+    reference: "1000937601",
+    description: '1.1/2" TUBERIA',
+    quantity: "0.2",
+    unit: "M",
+    confidence: 1,
+    comparisonStatus: "missing" as const,
+    suggestionKey: key,
+  };
   const verifiedMissing = [
     {
-      item: 1,
-      reference: "1000937601",
-      description: '1.1/2" TUBERIA',
-      quantity: "0.2",
-      unit: "M",
-      confidence: 1,
-      comparisonStatus: "missing" as const,
-      suggestionKey: key,
+      ...verifiedMissingBase,
+      ...applyBusinessRulesToSuggestionInput(verifiedMissingBase),
     },
   ];
 
@@ -366,8 +377,45 @@ async function main(): Promise<void> {
     "Fila inválida devuelve invalidRow",
   );
 
+  const importExcludeRejected = resolveSelectedSuggestionsForImport({
+    verifiedItems: [
+      {
+        ...verifiedMissing[0],
+        businessAction: "exclude",
+        businessCategory: "exclusion",
+        businessReason: "Excluida por prueba",
+        businessConfidence: "high",
+      },
+    ],
+    selectedSuggestionKeys: [key],
+  });
+  assert(
+    !importExcludeRejected.ok &&
+      importExcludeRejected.error ===
+        EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.excludeNotImportable,
+    "Exclude no importable en servidor",
+  );
+
+  function withBusinessRuleFields<
+    T extends {
+      item: number | null;
+      reference: string | null;
+      description: string | null;
+      quantity: string | null;
+      unit: string | null;
+      confidence: number;
+      comparisonStatus: "matched" | "missing" | "differentQuantity" | "uncertain";
+      suggestionKey: string;
+    },
+  >(item: T) {
+    return {
+      ...item,
+      ...applyBusinessRulesToSuggestionInput(item),
+    };
+  }
+
   const uiItems = [
-    {
+    withBusinessRuleFields({
       item: 1,
       reference: "1000937601",
       description: '1.1/2" TUBERIA',
@@ -376,8 +424,8 @@ async function main(): Promise<void> {
       confidence: 1,
       comparisonStatus: "matched" as const,
       suggestionKey: "k-matched",
-    },
-    {
+    }),
+    withBusinessRuleFields({
       item: 2,
       reference: "1000937596",
       description: '3/4" TUBERIA',
@@ -386,8 +434,8 @@ async function main(): Promise<void> {
       confidence: 1,
       comparisonStatus: "missing" as const,
       suggestionKey: "k-missing",
-    },
-    {
+    }),
+    withBusinessRuleFields({
       item: 3,
       reference: null,
       description: "texto corto",
@@ -396,14 +444,34 @@ async function main(): Promise<void> {
       confidence: 0.4,
       comparisonStatus: "uncertain" as const,
       suggestionKey: "k-uncertain",
-    },
+    }),
+    withBusinessRuleFields({
+      item: 14,
+      reference: null,
+      description: "DISCO CIEGO TALADRADO",
+      quantity: "1",
+      unit: "ud",
+      confidence: 0.9,
+      comparisonStatus: "missing" as const,
+      suggestionKey: "k-review",
+    }),
+    withBusinessRuleFields({
+      item: 15,
+      reference: "1000196324",
+      description: '3/4" FIGURA 8 1500# RF',
+      quantity: "1",
+      unit: "ud",
+      confidence: 0.95,
+      comparisonStatus: "missing" as const,
+      suggestionKey: "k-exclude",
+    }),
   ];
 
   const missingOnly = filterExperimentalSuggestions(uiItems, {
     statusFilter: "missing",
     searchQuery: "",
   });
-  assert(missingOnly.length === 1, "Filtro Faltan devuelve solo missing");
+  assert(missingOnly.length === 3, "Filtro Faltan devuelve missing (include, review, exclude)");
 
   const searchRef = filterExperimentalSuggestions(uiItems, {
     statusFilter: "all",
@@ -411,11 +479,71 @@ async function main(): Promise<void> {
   });
   assert(searchRef.length === 1, "Búsqueda por referencia");
 
+  const excludeOnly = filterExperimentalSuggestions(uiItems, {
+    statusFilter: "all",
+    actionFilter: "exclude",
+    searchQuery: "",
+  });
+  assert(
+    excludeOnly.length === 1 && excludeOnly[0]?.businessAction === "exclude",
+    "Filtro acción Excluir",
+  );
+
+  const includeOnly = filterExperimentalSuggestions(uiItems, {
+    statusFilter: "missing",
+    actionFilter: "include",
+    searchQuery: "",
+  });
+  assert(includeOnly.length === 1, "Filtro acción Incluir en missing");
+
+  const reviewOnly = filterExperimentalSuggestions(uiItems, {
+    statusFilter: "missing",
+    actionFilter: "review",
+    searchQuery: "",
+  });
+  assert(reviewOnly.length === 1, "Filtro acción Revisar en missing");
+
   const visibleMissing = getVisibleImportableMissingKeys(missingOnly);
-  assert(visibleMissing.length === 1, "Visible missing keys");
+  assert(
+    visibleMissing.length === 1 && visibleMissing[0] === "k-missing",
+    "Visible missing keys solo include",
+  );
+
+  const bulkSelectable = getBulkSelectableMissingKeys(missingOnly);
+  assert(
+    bulkSelectable.length === 1 && bulkSelectable[0] === "k-missing",
+    "Bulk selectable solo include missing",
+  );
+
+  assert(
+    !isExperimentalSuggestionImportable(
+      uiItems.find((item) => item.suggestionKey === "k-exclude")!,
+    ),
+    "Exclude no importable en UI",
+  );
+  assert(
+    isExperimentalSuggestionImportable(
+      uiItems.find((item) => item.suggestionKey === "k-review")!,
+    ),
+    "Review missing importable manualmente",
+  );
+  assert(
+    isExperimentalSuggestionBulkSelectable(
+      uiItems.find((item) => item.suggestionKey === "k-review")!,
+    ) === false,
+    "Review no seleccionable en masa",
+  );
 
   const merged = mergeSelectionWithVisibleMissing(new Set(["k-matched"]), visibleMissing);
-  assert(merged.size === 2 && merged.has("k-missing"), "Selección masiva añade missing visibles");
+  assert(
+    merged.size === 2 && merged.has("k-missing") && !merged.has("k-review"),
+    "Selección masiva añade solo include missing visibles",
+  );
+
+  const businessMetrics = buildExperimentalBusinessMetrics(uiItems);
+  assert(businessMetrics.include >= 2, "Métricas negocio include");
+  assert(businessMetrics.review === 2, "Métricas negocio review (disco ciego + desconocido)");
+  assert(businessMetrics.exclude === 1, "Métricas negocio exclude");
 
   const preview = buildExperimentalImportPreviewSummary(
     uiItems,
@@ -479,6 +607,10 @@ async function main(): Promise<void> {
   assert(
     discovery.headline.includes("21 posible"),
     "Copy descubrimiento con total",
+  );
+  assert(
+    discovery.businessRulesNote.includes("incluir, revisar o excluir"),
+    "Copy reglas de negocio",
   );
   assert(
     discovery.safetyNote.includes("No se importa nada automáticamente"),

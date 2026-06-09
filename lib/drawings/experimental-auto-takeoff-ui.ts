@@ -5,6 +5,16 @@
 
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
 import { normalizeTakeoffDescription } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import type {
+  AppliedBusinessRule,
+  BusinessAction,
+  BusinessRuleCategory,
+} from "@/lib/drawings/auto-takeoff-business-rules";
+import {
+  BUSINESS_CATEGORY_LABELS,
+  EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE,
+  EXPERIMENTAL_IMPORT_REVIEW_WARNING,
+} from "@/lib/drawings/experimental-auto-takeoff-business-labels";
 
 export type ExperimentalSuggestionListItem = {
   item: number | null;
@@ -15,7 +25,7 @@ export type ExperimentalSuggestionListItem = {
   confidence: number;
   comparisonStatus?: TakeoffComparisonStatus;
   suggestionKey: string;
-};
+} & AppliedBusinessRule;
 
 export type ExperimentalSuggestionStatusFilter =
   | "all"
@@ -30,6 +40,18 @@ export const EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS: ReadonlyArray<{
   { value: "matched", label: "Ya existen" },
   { value: "differentQuantity", label: "Cantidad distinta" },
   { value: "uncertain", label: "Dudosas" },
+];
+
+export type ExperimentalSuggestionActionFilter = "all" | BusinessAction;
+
+export const EXPERIMENTAL_SUGGESTION_ACTION_FILTER_OPTIONS: ReadonlyArray<{
+  value: ExperimentalSuggestionActionFilter;
+  label: string;
+}> = [
+  { value: "all", label: "Todas" },
+  { value: "include", label: "Incluir" },
+  { value: "review", label: "Revisar" },
+  { value: "exclude", label: "Excluir" },
 ];
 
 export const EXPERIMENTAL_IMPORT_PREVIEW_MAX_LINES = 5;
@@ -79,12 +101,60 @@ export type ExperimentalAssistantMetrics = {
   selected: number;
 };
 
+export type ExperimentalBusinessMetrics = {
+  include: number;
+  review: number;
+  exclude: number;
+  pipe: number;
+  flange: number;
+  valve: number;
+  fitting: number;
+  bolt: number;
+  gasket: number;
+  blind: number;
+  support: number;
+  exclusion: number;
+  unknown: number;
+};
+
 export type ExperimentalAssistantDiscoveryCopy = {
   headline: string;
   missingLine: string | null;
   matchedLine: string | null;
+  businessRulesNote: string;
   safetyNote: string;
 };
+
+export type ExperimentalBusinessCategoryMetric = {
+  category: BusinessRuleCategory;
+  label: string;
+  count: number;
+};
+
+export function buildExperimentalBusinessCategoryMetrics(
+  metrics: ExperimentalBusinessMetrics,
+): ExperimentalBusinessCategoryMetric[] {
+  const entries: Array<[BusinessRuleCategory, number]> = [
+    ["pipe", metrics.pipe],
+    ["flange", metrics.flange],
+    ["valve", metrics.valve],
+    ["fitting", metrics.fitting],
+    ["bolt", metrics.bolt],
+    ["gasket", metrics.gasket],
+    ["blind", metrics.blind],
+    ["support", metrics.support],
+    ["exclusion", metrics.exclusion],
+    ["unknown", metrics.unknown],
+  ];
+
+  return entries
+    .filter(([, count]) => count > 0)
+    .map(([category, count]) => ({
+      category,
+      label: BUSINESS_CATEGORY_LABELS[category],
+      count,
+    }));
+}
 
 export type ComparisonSummaryCounts = {
   matchedCount: number;
@@ -173,6 +243,7 @@ export function buildExperimentalAssistantDiscoveryCopy(params: {
       matchedCount > 0
         ? `${matchedCount} ya están en tu palillería.`
         : null,
+    businessRulesNote: EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE,
     safetyNote: EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE,
   };
 }
@@ -217,10 +288,12 @@ export function filterExperimentalSuggestions(
   items: ExperimentalSuggestionListItem[],
   params: {
     statusFilter: ExperimentalSuggestionStatusFilter;
+    actionFilter?: ExperimentalSuggestionActionFilter;
     searchQuery: string;
   },
 ): ExperimentalSuggestionListItem[] {
   const normalizedQuery = normalizeSearchQuery(params.searchQuery);
+  const actionFilter = params.actionFilter ?? "all";
 
   return items.filter((item) => {
     if (
@@ -230,25 +303,77 @@ export function filterExperimentalSuggestions(
       return false;
     }
 
+    if (actionFilter !== "all" && item.businessAction !== actionFilter) {
+      return false;
+    }
+
     return itemMatchesSearch(item, normalizedQuery);
   });
+}
+
+export function isExperimentalSuggestionImportable(
+  item: ExperimentalSuggestionListItem,
+): boolean {
+  return (
+    item.comparisonStatus === "missing" &&
+    item.businessAction !== "exclude" &&
+    item.suggestionKey.length > 0
+  );
+}
+
+export function isExperimentalSuggestionBulkSelectable(
+  item: ExperimentalSuggestionListItem,
+): boolean {
+  return (
+    item.comparisonStatus === "missing" &&
+    item.businessAction === "include" &&
+    item.suggestionKey.length > 0
+  );
+}
+
+export function buildExperimentalBusinessMetrics(
+  items: ExperimentalSuggestionListItem[],
+): ExperimentalBusinessMetrics {
+  const countCategory = (category: BusinessRuleCategory) =>
+    items.filter((item) => item.businessCategory === category).length;
+
+  return {
+    include: items.filter((item) => item.businessAction === "include").length,
+    review: items.filter((item) => item.businessAction === "review").length,
+    exclude: items.filter((item) => item.businessAction === "exclude").length,
+    pipe: countCategory("pipe"),
+    flange: countCategory("flange"),
+    valve: countCategory("valve"),
+    fitting: countCategory("fitting"),
+    bolt: countCategory("bolt"),
+    gasket: countCategory("gasket"),
+    blind: countCategory("blind"),
+    support: countCategory("support"),
+    exclusion: countCategory("exclusion"),
+    unknown: countCategory("unknown"),
+  };
 }
 
 export function getImportableMissingKeys(
   items: ExperimentalSuggestionListItem[],
 ): string[] {
   return items
-    .filter(
-      (item) =>
-        item.comparisonStatus === "missing" && item.suggestionKey.length > 0,
-    )
+    .filter((item) => isExperimentalSuggestionImportable(item))
+    .map((item) => item.suggestionKey);
+}
+
+export function getBulkSelectableMissingKeys(
+  items: ExperimentalSuggestionListItem[],
+): string[] {
+  return items
+    .filter((item) => isExperimentalSuggestionBulkSelectable(item))
     .map((item) => item.suggestionKey);
 }
 
 export function getVisibleImportableMissingKeys(
   visibleItems: ExperimentalSuggestionListItem[],
 ): string[] {
-  return getImportableMissingKeys(visibleItems);
+  return getBulkSelectableMissingKeys(visibleItems);
 }
 
 export function mergeSelectionWithVisibleMissing(
@@ -262,6 +387,17 @@ export function mergeSelectionWithVisibleMissing(
   }
 
   return next;
+}
+
+export function pruneSelectionToImportableKeys(
+  currentSelection: ReadonlySet<string>,
+  items: ExperimentalSuggestionListItem[],
+): Set<string> {
+  const importableKeys = new Set(getImportableMissingKeys(items));
+
+  return new Set(
+    [...currentSelection].filter((key) => importableKeys.has(key)),
+  );
 }
 
 function parseQuantityForSummary(quantity: string | null): number | null {
@@ -296,6 +432,10 @@ export type ExperimentalImportQuantityByUnit = {
 
 export type ExperimentalImportPreviewSummary = {
   lineCount: number;
+  includeCount: number;
+  reviewCount: number;
+  hasReviewSelected: boolean;
+  reviewWarningMessage: string | null;
   quantityByUnit: ExperimentalImportQuantityByUnit[];
   previewLines: ExperimentalImportPreviewLine[];
   warningMessage: string;
@@ -353,8 +493,22 @@ export function buildExperimentalImportPreviewSummary(
       description: item.description,
     }));
 
+  const includeCount = selectedItems.filter(
+    (item) => item.businessAction === "include",
+  ).length;
+  const reviewCount = selectedItems.filter(
+    (item) => item.businessAction === "review",
+  ).length;
+  const hasReviewSelected = reviewCount > 0;
+
   return {
     lineCount: selectedKeys.size,
+    includeCount,
+    reviewCount,
+    hasReviewSelected,
+    reviewWarningMessage: hasReviewSelected
+      ? EXPERIMENTAL_IMPORT_REVIEW_WARNING
+      : null,
     quantityByUnit,
     previewLines,
     warningMessage: EXPERIMENTAL_IMPORT_PREVIEW_WARNING,
@@ -382,8 +536,19 @@ export function formatExperimentalImportConfirmMessage(
           .join("\n")}`
       : "";
 
+  const businessPart = [
+    `${summary.includeCount} marcada(s) para incluir.`,
+    summary.reviewCount > 0
+      ? `${summary.reviewCount} marcada(s) para revisión.`
+      : null,
+    summary.reviewWarningMessage,
+  ]
+    .filter((part): part is string => part != null && part.length > 0)
+    .join("\n");
+
   return [
     `Se crearán ${summary.lineCount} línea(s) reales de palillería.`,
+    businessPart,
     summary.warningMessage,
     "¿Continuar?",
     quantityPart,

@@ -12,6 +12,8 @@ import {
   type TakeoffComparisonStatus,
   type TakeoffComparisonSummary,
 } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import { applyBusinessRulesToSuggestionInput } from "@/lib/drawings/auto-takeoff-business-rules";
+import type { AppliedBusinessRule } from "@/lib/drawings/auto-takeoff-business-rules";
 import {
   hasUsefulEmbeddedText,
   parseTakeoffRowsFromEmbeddedText,
@@ -36,6 +38,8 @@ export const EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS = {
     "Una o más sugerencias seleccionadas no son válidas, no existen en el PDF actual o ya están en la palillería.",
   invalidRow:
     "Una sugerencia seleccionada no cumple los requisitos mínimos de importación.",
+  excludeNotImportable:
+    "Una o más sugerencias seleccionadas están marcadas para excluir y no se pueden importar.",
 } as const;
 
 export type ExperimentalSuggestionKeyInput = {
@@ -50,7 +54,9 @@ export type VerifiedExperimentalSuggestion = ExperimentalSuggestionKeyInput & {
   suggestionKey: string;
   comparisonStatus: TakeoffComparisonStatus;
   confidence: number;
-};
+} & AppliedBusinessRule;
+
+export type SerializedExperimentalBusinessFields = AppliedBusinessRule;
 
 export function buildExperimentalSuggestionKey(
   input: ExperimentalSuggestionKeyInput,
@@ -157,16 +163,24 @@ export async function extractVerifiedExperimentalSuggestions(params: {
   );
 
   const items: VerifiedExperimentalSuggestion[] = comparison.items.map(
-    (item) => ({
-      item: item.item,
-      reference: item.reference,
-      description: item.description,
-      quantity: item.quantity,
-      unit: item.unit,
-      confidence: item.confidence,
-      comparisonStatus: item.comparisonStatus,
-      suggestionKey: buildExperimentalSuggestionKey(item),
-    }),
+    (item) => {
+      const business = applyBusinessRulesToSuggestionInput(item);
+
+      return {
+        item: item.item,
+        reference: item.reference,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        confidence: item.confidence,
+        comparisonStatus: item.comparisonStatus,
+        suggestionKey: buildExperimentalSuggestionKey(item),
+        businessCategory: business.businessCategory,
+        businessAction: business.businessAction,
+        businessReason: business.businessReason,
+        businessConfidence: business.businessConfidence,
+      };
+    },
   );
 
   return {
@@ -236,6 +250,13 @@ export function resolveSelectedSuggestionsForImport(params: {
 
     if (!suggestion) {
       return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys };
+    }
+
+    if (suggestion.businessAction === "exclude") {
+      return {
+        ok: false,
+        error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.excludeNotImportable,
+      };
     }
 
     const row = toImportableTakeoffRow(suggestion);
