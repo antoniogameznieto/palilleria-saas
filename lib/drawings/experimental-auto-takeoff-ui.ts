@@ -98,7 +98,7 @@ export const EXPERIMENTAL_ASSISTANT_STEPS: ReadonlyArray<{
   { id: "final", number: 4, label: "Revisar palillería" },
 ];
 
-export const BETA_PROPOSAL_PREVIEW_MAX_ITEMS = 4;
+export const BETA_PROPOSAL_PREVIEW_MAX_ITEMS = 3;
 
 export type BetaProposalSummary = {
   readyCount: number;
@@ -242,6 +242,29 @@ export function buildExperimentalAssistantMetrics(params: {
     differentQuantity: params.comparisonSummary?.differentQuantityCount ?? 0,
     uncertain: params.comparisonSummary?.uncertainCount ?? 0,
     selected: params.selectedCount,
+  };
+}
+
+export type CompactBetaDiscoveryCopy = {
+  summaryLine: string;
+  businessRulesNote: string;
+  safetyNote: string;
+};
+
+export function buildCompactBetaDiscoveryCopy(params: {
+  suggestedCount: number;
+  readyCount: number;
+  reviewCount: number;
+  excludedCount: number;
+}): CompactBetaDiscoveryCopy | null {
+  if (params.suggestedCount <= 0) {
+    return null;
+  }
+
+  return {
+    summaryLine: `La app ha encontrado ${params.suggestedCount} sugerencias: ${params.readyCount} recomendadas para importar, ${params.reviewCount} para revisar y ${params.excludedCount} excluidas por reglas.`,
+    businessRulesNote: BETA_SUPERVISED_DISCOVERY_NOTE,
+    safetyNote: EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE,
   };
 }
 

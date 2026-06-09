@@ -2,6 +2,17 @@ import { expect, test } from "@playwright/test";
 
 import { drawingBomPath, drawingPath, E2E_USERS, login } from "./fixtures";
 
+async function openBetaDetailPanel(page: import("@playwright/test").Page) {
+  await page.getByTestId("experimental-auto-takeoff-detail-toggle").click();
+}
+
+async function openManualChecklistPanel(page: import("@playwright/test").Page) {
+  const toggle = page.getByTestId("auto-takeoff-manual-checklist-toggle");
+  if (await toggle.isVisible()) {
+    await toggle.click();
+  }
+}
+
 test.describe("importación experimental auto-takeoff", () => {
   test("engineer filtra, selecciona e importa 1 missing sin matched", async ({
     page,
@@ -34,6 +45,7 @@ test.describe("importación experimental auto-takeoff", () => {
     await expect(page.getByTestId("experimental-auto-takeoff-step-analyze")).toBeVisible();
 
     await page.getByTestId("experimental-auto-takeoff-run").click();
+    await openBetaDetailPanel(page);
     await expect(page.getByTestId("experimental-auto-takeoff-results")).toBeVisible({
       timeout: 30_000,
     });
@@ -56,6 +68,7 @@ test.describe("importación experimental auto-takeoff", () => {
     await expect(page.getByTestId("auto-takeoff-manual-checklist")).toContainText(
       "Revisión manual recomendada",
     );
+    await openManualChecklistPanel(page);
     await expect(page.getByTestId("auto-takeoff-manual-checklist")).toContainText(
       "no crean líneas automáticamente",
     );
@@ -81,8 +94,8 @@ test.describe("importación experimental auto-takeoff", () => {
       "data-status",
       "analyzed",
     );
-    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "0 línea",
+    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toHaveText(
+      "0",
     );
 
     await page.getByTestId("experimental-auto-takeoff-business-action-filter").selectOption(
@@ -111,13 +124,13 @@ test.describe("importación experimental auto-takeoff", () => {
     );
 
     await page.getByTestId("auto-takeoff-select-all-ready").click();
-    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "18 línea",
+    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toHaveText(
+      "18",
     );
 
     await page.getByRole("button", { name: "Deseleccionar todo" }).click();
-    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "0 línea",
+    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toHaveText(
+      "0",
     );
 
     await page.getByTestId("experimental-auto-takeoff-search").fill("1000937596");
@@ -126,8 +139,8 @@ test.describe("importación experimental auto-takeoff", () => {
     );
 
     await page.getByTestId("experimental-auto-takeoff-select-row").check();
-    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "1 línea",
+    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toHaveText(
+      "1",
     );
     await expect(page.getByTestId("experimental-auto-takeoff-import-preview")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-import-preview")).toContainText(
@@ -142,16 +155,34 @@ test.describe("importación experimental auto-takeoff", () => {
       "with_selection",
     );
 
-    page.once("dialog", (dialog) => {
-      expect(dialog.message()).toContain("Se crearán 1 línea(s) reales");
-      expect(dialog.message()).toContain("invalidará la revisión");
-      void dialog.accept();
+    let nativeDialogShown = false;
+    page.on("dialog", () => {
+      nativeDialogShown = true;
     });
 
     await page.getByTestId("auto-takeoff-import-reviewed-proposal").click();
+    await expect(page.getByTestId("confirm-import-proposal-dialog")).toBeVisible();
+    await expect(
+      page.getByTestId("confirm-import-proposal-dialog"),
+    ).toContainText("Se crearán");
+    await expect(
+      page.getByTestId("confirm-import-proposal-dialog"),
+    ).toContainText("invalidará la revisión");
+    await expect(
+      page.getByTestId("confirm-import-proposal-dialog"),
+    ).toContainText("1000937596");
+    await page.getByTestId("confirm-import-proposal-cancel").click();
+    await expect(page.getByTestId("confirm-import-proposal-dialog")).toHaveCount(0);
+    await expect(page.getByTestId("experimental-auto-takeoff-step-final")).toHaveCount(0);
+    expect(nativeDialogShown).toBe(false);
+
+    await page.getByTestId("auto-takeoff-import-reviewed-proposal").click();
+    await expect(page.getByTestId("confirm-import-proposal-dialog")).toBeVisible();
+    await page.getByTestId("confirm-import-proposal-confirm").click();
     await expect(page.getByTestId("experimental-auto-takeoff-step-final")).toBeVisible({
       timeout: 30_000,
     });
+    expect(nativeDialogShown).toBe(false);
     await expect(page.getByTestId("experimental-auto-takeoff-import-success")).toContainText(
       "Importación completada",
     );
@@ -185,6 +216,7 @@ test.describe("importación experimental auto-takeoff", () => {
       .getByRole("button", { name: "Propuesta beta", exact: true })
       .click();
     await page.getByTestId("experimental-auto-takeoff-run").click();
+    await openBetaDetailPanel(page);
     await expect(comparison).toBeVisible({ timeout: 30_000 });
     await expect(comparison).toContainText("2 ya existen");
     await expect(comparison).toContainText("20 faltan");
@@ -209,6 +241,7 @@ test.describe("importación experimental auto-takeoff", () => {
       timeout: 15_000,
     });
     await expect(page.getByTestId("auto-takeoff-manual-checklist")).toBeVisible();
+    await openManualChecklistPanel(page);
     await expect(
       page.getByTestId("auto-takeoff-manual-checklist-item-noUsefulText"),
     ).toBeVisible();
