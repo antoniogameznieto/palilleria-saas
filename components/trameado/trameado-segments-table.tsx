@@ -21,6 +21,7 @@ type TrameadoSegmentsTableProps = {
   segments: SerializedTrameadoSegment[];
   canManage: boolean;
   editingSegmentId: string | null;
+  showSummary?: boolean;
   onEdit: (segmentId: string) => void;
 };
 
@@ -40,6 +41,7 @@ export function TrameadoSegmentsTable({
   segments,
   canManage,
   editingSegmentId,
+  showSummary = true,
   onEdit,
 }: TrameadoSegmentsTableProps) {
   const sortedSegments = sortTrameadoSegmentsForDisplay(segments);
@@ -58,15 +60,17 @@ export function TrameadoSegmentsTable({
 
   return (
     <div className="space-y-2">
-      <div
-        className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-3 py-2 text-sm"
-        data-testid="trameado-segment-summary"
-      >
-        <span className="font-medium text-foreground">Hoja de palilleo</span>
-        <span className="tabular-nums text-muted-foreground">
-          {formatTrameadoSheetSummary(segments)}
-        </span>
-      </div>
+      {showSummary ? (
+        <div
+          className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-3 py-2 text-sm"
+          data-testid="trameado-segment-summary"
+        >
+          <span className="font-medium text-foreground">Hoja de palilleo</span>
+          <span className="tabular-nums text-muted-foreground">
+            {formatTrameadoSheetSummary(segments)}
+          </span>
+        </div>
+      ) : null}
 
       <div
         className="overflow-x-auto rounded-lg border"

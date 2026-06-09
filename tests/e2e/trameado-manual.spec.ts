@@ -27,6 +27,9 @@ test.describe("trameado manual", () => {
 
     await page.getByRole("button", { name: "Trameado", exact: true }).click();
     await expect(page.getByTestId("trameado-section")).toBeVisible();
+    await expect(page.getByTestId("trameado-workspace")).toBeVisible();
+    await expect(page.getByTestId("trameado-pdf-panel")).toBeVisible();
+    await expect(page.getByTestId("trameado-pdf-open-button")).toBeVisible();
 
     await page.getByTestId("trameado-create-sheet").click();
     await page.locator("#trameado-line-identifier").fill("HL-E2E-A012AA-N-01");
@@ -135,6 +138,9 @@ test.describe("trameado manual", () => {
     await page.goto(drawingPath());
     await page.getByRole("button", { name: "Trameado", exact: true }).click();
 
+    await expect(page.getByTestId("trameado-workspace")).toBeVisible();
+    await expect(page.getByTestId("trameado-pdf-panel")).toBeVisible();
+    await expect(page.getByTestId("trameado-sheet-panel")).toBeVisible();
     await expect(page.getByTestId("trameado-segments-table")).toBeVisible();
     await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
       "HL-E2E-VIEWER-01",

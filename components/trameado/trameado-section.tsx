@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
+import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
 import { TrameadoSegmentForm } from "@/components/trameado/trameado-segment-form";
 import type { TrameadoStickySegmentValues } from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
@@ -18,7 +18,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
-import { getNextSegmentNumber } from "@/lib/trameado/segment-helpers";
+import {
+  formatTrameadoSheetSummary,
+  getNextSegmentNumber,
+} from "@/lib/trameado/segment-helpers";
 import { cn } from "@/lib/utils";
 
 type TrameadoSectionProps = {
@@ -61,12 +64,8 @@ export function TrameadoSection({
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [stickyCreateValues, setStickyCreateValues] =
     useState<TrameadoStickySegmentValues | undefined>();
-  const stickyCreateValuesRef = useRef<TrameadoStickySegmentValues | undefined>(
-    undefined,
-  );
 
   const handleSegmentStickyCapture = (sticky: TrameadoStickySegmentValues) => {
-    stickyCreateValuesRef.current = sticky;
     setStickyCreateValues(sticky);
   };
 
@@ -100,41 +99,23 @@ export function TrameadoSection({
     ? getNextSegmentNumber(selectedSheet.segments)
     : "1";
 
-  return (
-    <Card
-      id="trameado"
-      className={cn(
-        "scroll-mt-4",
-        isWorkspace && "border-0 bg-transparent shadow-none",
-      )}
-      data-testid="trameado-section"
+  const sheetSummary = selectedSheet
+    ? formatTrameadoSheetSummary(selectedSheet.segments)
+    : "0 tramos · 0 mm";
+
+  const sheetPanel = (
+    <div
+      className="flex min-h-0 flex-col rounded-lg border bg-card p-4"
+      data-testid="trameado-sheet-panel"
     >
-      <CardHeader
-        className={cn(
-          "flex flex-row flex-wrap items-start justify-between gap-3",
-          !isWorkspace && "border-b pb-4",
-          isWorkspace && "px-0 pt-0",
-        )}
-      >
-        <div className="space-y-1">
-          <CardTitle className={isWorkspace ? "text-base" : "text-lg"}>
-            Trameado
-          </CardTitle>
-          <CardDescription>
-            Hoja de palillería por tramos fabricables. Introduce manualmente los
-            palillos de corte para este plano.
-          </CardDescription>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/api/files/drawings/${drawingId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button type="button" variant="outline" size="sm">
-              Ver PDF
-            </Button>
-          </Link>
+      <div className="mb-4 space-y-3 border-b pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold">Hoja de palilleo</h3>
+            <p className="text-xs text-muted-foreground">
+              Introduce manualmente los tramos fabricables de este plano.
+            </p>
+          </div>
           {canManage && sheets.length > 0 ? (
             <Button
               type="button"
@@ -151,9 +132,29 @@ export function TrameadoSection({
             </Button>
           ) : null}
         </div>
-      </CardHeader>
 
-      <CardContent className={cn("space-y-4", isWorkspace && "px-0 pb-0")}>
+        {selectedSheet ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Estado · </span>
+              <span className="font-medium">{getSheetStatusLabel(selectedSheet)}</span>
+            </div>
+            <div
+              className="tabular-nums text-muted-foreground"
+              data-testid="trameado-segment-summary"
+            >
+              {sheetSummary}
+            </div>
+            <ExportTrameadoCsvButton
+              sheetId={selectedSheet.id}
+              segmentCount={selectedSheet.segments.length}
+              reviewedAt={selectedSheet.reviewedAt}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      <div className="min-h-0 flex-1 space-y-4">
         {sheets.length === 0 ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-dashed bg-muted/15 px-4 py-6 text-sm text-muted-foreground">
@@ -209,7 +210,7 @@ export function TrameadoSection({
                   htmlFor="trameado-sheet-select"
                   className="text-xs font-medium text-muted-foreground"
                 >
-                  Hoja de palilleo
+                  Hoja activa
                 </label>
                 <select
                   id="trameado-sheet-select"
@@ -220,7 +221,6 @@ export function TrameadoSection({
                     setUserSheetId(event.target.value);
                     setShowAddSegment(false);
                     setEditingSegmentId(null);
-                    stickyCreateValuesRef.current = undefined;
                     setStickyCreateValues(undefined);
                   }}
                 >
@@ -254,27 +254,12 @@ export function TrameadoSection({
                         </span>
                       </div>
                     ) : null}
-                    <div>
-                      <span className="text-muted-foreground">Estado · </span>
-                      <span className="font-medium">
-                        {getSheetStatusLabel(selectedSheet)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Tramos · </span>
-                      <span className="font-medium">
-                        {selectedSheet.segments.length}
-                      </span>
-                    </div>
                   </div>
                   {selectedSheet.notes ? (
                     <p className="mt-2 text-muted-foreground">
                       {selectedSheet.notes}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Plano: {drawingFileName}
-                  </p>
                 </div>
 
                 <TrameadoReviewButton
@@ -286,12 +271,6 @@ export function TrameadoSection({
                   reviewedAt={selectedSheet.reviewedAt}
                   reviewedByLabel={selectedSheet.reviewedByLabel}
                   canManage={canManage}
-                />
-
-                <ExportTrameadoCsvButton
-                  sheetId={selectedSheet.id}
-                  segmentCount={selectedSheet.segments.length}
-                  reviewedAt={selectedSheet.reviewedAt}
                 />
 
                 {canManage ? (
@@ -318,9 +297,7 @@ export function TrameadoSection({
                     sheetId={selectedSheet.id}
                     mode="create"
                     nextSegmentNumber={nextSegmentNumber}
-                    stickyValues={
-                      stickyCreateValuesRef.current ?? stickyCreateValues
-                    }
+                    stickyValues={stickyCreateValues}
                     onCancel={() => setShowAddSegment(false)}
                     onSubmitCapture={handleSegmentStickyCapture}
                   />
@@ -339,23 +316,68 @@ export function TrameadoSection({
                   />
                 ) : null}
 
-                <TrameadoSegmentsTable
-                  companyId={companyId}
-                  jobId={jobId}
-                  drawingId={drawingId}
-                  sheetId={selectedSheet.id}
-                  segments={selectedSheet.segments}
-                  canManage={canManage}
-                  editingSegmentId={editingSegmentId}
-                  onEdit={(segmentId) => {
-                    setEditingSegmentId(segmentId);
-                    setShowAddSegment(false);
-                  }}
-                />
+                <div className="max-h-[min(50vh,28rem)] overflow-y-auto rounded-lg">
+                  <TrameadoSegmentsTable
+                    companyId={companyId}
+                    jobId={jobId}
+                    drawingId={drawingId}
+                    sheetId={selectedSheet.id}
+                    segments={selectedSheet.segments}
+                    canManage={canManage}
+                    editingSegmentId={editingSegmentId}
+                    showSummary={false}
+                    onEdit={(segmentId) => {
+                      setEditingSegmentId(segmentId);
+                      setShowAddSegment(false);
+                    }}
+                  />
+                </div>
               </>
             ) : null}
           </div>
         )}
+      </div>
+    </div>
+  );
+
+  return (
+    <Card
+      id="trameado"
+      className={cn(
+        "scroll-mt-4",
+        isWorkspace && "border-0 bg-transparent shadow-none",
+      )}
+      data-testid="trameado-section"
+    >
+      <CardHeader
+        className={cn(
+          !isWorkspace && "border-b pb-4",
+          isWorkspace && "px-0 pt-0",
+        )}
+      >
+        <div className="space-y-1">
+          <CardTitle className={isWorkspace ? "text-base" : "text-lg"}>
+            Trameado
+          </CardTitle>
+          <CardDescription>
+            Consulta el isométrico y completa la hoja de palilleo en paralelo.
+          </CardDescription>
+        </div>
+      </CardHeader>
+
+      <CardContent className={cn(isWorkspace && "px-0 pb-0")}>
+        <div
+          className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start"
+          data-testid="trameado-workspace"
+        >
+          <div className="order-1 lg:order-2">{sheetPanel}</div>
+          <div className="order-2 lg:order-1 lg:sticky lg:top-4">
+            <TrameadoPdfPanel
+              drawingId={drawingId}
+              fileName={drawingFileName}
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

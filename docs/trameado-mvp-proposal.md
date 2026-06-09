@@ -152,14 +152,20 @@ Columnas:
 - Resumen «N tramos · X mm» en tabla.
 - Sin cambios de modelo ni export CSV.
 
-### 18F — Semiautomático asistido
+### 18F — Workspace PDF + hoja (completado)
+
+- Pestaña Trameado con layout de trabajo: plano embebido a la izquierda (desktop) y hoja de palilleo a la derecha.
+- En móvil: hoja primero, PDF debajo.
+- Sigue siendo manual asistido; sin OCR ni automatización.
+
+### 18G — Semiautomático asistido
 
 - Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
 - Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
 - Sugerencia de longitudes desde cotas extraídas (si texto embebido).
 - Alertas de discrepancia; sin autoaplicar.
 
-### 18G — Iso trameado y export PDF
+### 18H — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.
