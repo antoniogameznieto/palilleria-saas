@@ -203,7 +203,26 @@ Basado en la sesión con `1601GB16A-PL1-L-DMS-703-01-R03.pdf` (Tesseract 5.5.2, 
 | Tiempo medio por plano | ~500–790 ms (6 pruebas, mismo PDF) |
 | Línea / revisión | Línea **PL1-L** con `high-contrast`/`upscale` + bottom-wide; revisión pendiente |
 | Preprocesado OCR (10H) | `high-contrast` mejor opción probada; default sigue `original` |
-| ¿Listo para integración seria? | **No** — hace falta validar más planos y revisión antes de «Aplicar» |
+| ¿Listo para integración seria? | **No** — ver conclusión final 10I |
+
+---
+
+## Conclusión final del bloque 10F–10I
+
+**No listo para producción. Mantener como diagnóstico experimental.**
+
+Tras presets (10D), benchmark (10F), parser tolerante (10G) y preprocesado (10H), el mejor caso observado en el PDF de referencia fue **`bottom-wide` + `high-contrast`**: nº plano **DMS-703** y línea **PL1-L**. Aun así:
+
+- Ninguna combinación detecta de forma fiable **nº plano + línea + revisión**.
+- Resultados muy sensibles al ROI y al preprocesado.
+- Riesgo de falsos positivos si se usara sin revisión humana.
+
+**Decisión (Fase 10I):** OCR queda solo como apoyo experimental detrás de `EXPERIMENTAL_TITLE_BLOCK_OCR`. Flujo principal recomendado:
+
+1. Parser de nombre de archivo
+2. Texto embebido del PDF (si existe)
+3. Revisión manual
+4. OCR del cajetín solo como diagnóstico opcional
 
 ---
 

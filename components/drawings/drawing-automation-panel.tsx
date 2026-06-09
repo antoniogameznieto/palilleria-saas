@@ -128,10 +128,14 @@ export function DrawingAutomationPanel({
 
       {showExperimentalTitleBlockOcr ? (
         <AutomationBlock
-          title="OCR experimental del cajetín"
-          description="Renderiza la primera página, recorta la zona inferior derecha del cajetín y ejecuta OCR local si Tesseract está disponible. Solo sugerencias; no aplica metadatos."
-          className="border-t border-border/60 pt-6"
+          title="Herramientas experimentales (OCR del cajetín)"
+          description="Fuera del flujo productivo de detección. Sirve para diagnóstico visual y pruebas internas con Tesseract; los resultados son parciales y requieren revisión manual."
+          className="border-t border-amber-500/30 pt-6"
         >
+          <p className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-950 dark:text-amber-100">
+            No sustituye «Detectar metadatos» ni la extracción de texto embebido.
+            No hay aplicación automática de metadatos desde OCR.
+          </p>
           <DrawingExperimentalTitleBlockOcr
             companyId={companyId}
             jobId={jobId}

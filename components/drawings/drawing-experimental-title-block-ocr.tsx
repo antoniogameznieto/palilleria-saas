@@ -58,6 +58,20 @@ function parseCropFieldValue(value: string, fallback: number): number {
   return Math.round(parsed);
 }
 
+function countDetectedCandidates(
+  candidates: ExperimentalTitleBlockOcrActionState["metadataCandidates"],
+): number {
+  if (!candidates) {
+    return 0;
+  }
+
+  return [
+    candidates.drawingNumber,
+    candidates.lineNumber,
+    candidates.revision,
+  ].filter((value) => value != null && value.trim() !== "").length;
+}
+
 export function DrawingExperimentalTitleBlockOcr({
   companyId,
   jobId,
@@ -74,6 +88,15 @@ export function DrawingExperimentalTitleBlockOcr({
   );
 
   const hasResult = state.success != null || state.error != null;
+  const detectedCandidateCount = countDetectedCandidates(state.metadataCandidates);
+  const hasPartialCandidates =
+    hasResult && detectedCandidateCount > 0 && detectedCandidateCount < 3;
+  const showMissingRevisionNotice =
+    hasResult &&
+    state.metadataCandidates != null &&
+    (state.textPreview != null || detectedCandidateCount > 0) &&
+    (state.metadataCandidates.revision == null ||
+      state.metadataCandidates.revision.trim() === "");
 
   function updateCropField(key: CropField, rawValue: string) {
     setCropParams((current) => ({
@@ -85,12 +108,29 @@ export function DrawingExperimentalTitleBlockOcr({
   return (
     <div className="space-y-4">
       <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100">
-        Funcionalidad <strong>experimental</strong> (Fases 10B–10D). Analiza la
-        zona del cajetín con OCR local si Tesseract está disponible. Puedes
-        ajustar el recorte manualmente para probar distintos formatos. No aplica
-        metadatos automáticamente ni persiste resultados ni configuración del
-        recorte.
+        <strong>OCR experimental.</strong> Puede ayudar a leer partes del
+        cajetín, pero <strong>no es fiable</strong> para completar metadatos
+        automáticamente. Revisa siempre manualmente. No forma parte del flujo
+        productivo de detección ni guarda resultados.
       </p>
+
+      <div className="rounded-lg border border-border/80 bg-muted/20 px-4 py-3 text-sm">
+        <p className="font-medium">Estado del experimento</p>
+        <dl className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+          <div>
+            <dt className="font-medium text-foreground">Estado</dt>
+            <dd>Experimental / No productivo</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground">Uso recomendado</dt>
+            <dd>Diagnóstico visual y pruebas internas</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="font-medium text-foreground">Uso no recomendado</dt>
+            <dd>Completar metadatos sin revisión humana</dd>
+          </div>
+        </dl>
+      </div>
 
       <p className="text-xs text-muted-foreground">
         OCR real requiere Tesseract CLI en el servidor donde corre Next.js. Guía
@@ -178,8 +218,20 @@ export function DrawingExperimentalTitleBlockOcr({
       ) : null}
 
       {state.success ? (
-        <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
+        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-100">
           {state.success}
+        </p>
+      ) : null}
+
+      {hasPartialCandidates ? (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-950 dark:text-amber-100">
+          Resultado parcial. No uses estos datos sin revisión manual.
+        </p>
+      ) : null}
+
+      {showMissingRevisionNotice ? (
+        <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+          La revisión no se ha detectado. Complétala manualmente si procede.
         </p>
       ) : null}
 
@@ -221,26 +273,35 @@ export function DrawingExperimentalTitleBlockOcr({
       ) : null}
 
       {state.metadataCandidates ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Sugerencias parseadas (solo diagnóstico)
+          </p>
+          <p className="text-xs text-muted-foreground">
+            No se guardan ni se aplican al plano. Compara con el PDF antes de
+            usar cualquier valor.
+          </p>
         <dl className="grid gap-3 rounded-lg border bg-muted/10 p-4 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-muted-foreground">Nº plano (candidato)</dt>
+            <dt className="text-muted-foreground">Nº plano (sugerencia)</dt>
             <dd className="mt-1 font-medium">
               {formatCandidate(state.metadataCandidates.drawingNumber)}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Línea (candidato)</dt>
+            <dt className="text-muted-foreground">Línea (sugerencia)</dt>
             <dd className="mt-1 font-medium">
               {formatCandidate(state.metadataCandidates.lineNumber)}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Revisión (candidato)</dt>
+            <dt className="text-muted-foreground">Revisión (sugerencia)</dt>
             <dd className="mt-1 font-medium">
               {formatCandidate(state.metadataCandidates.revision)}
             </dd>
           </div>
         </dl>
+        </div>
       ) : null}
 
       {state.textPreview ? (
@@ -278,7 +339,9 @@ export function DrawingExperimentalTitleBlockOcr({
           value={preprocessStrategy}
         />
         <Button type="submit" variant="outline" disabled={isPending}>
-          {isPending ? "Analizando cajetín..." : "Analizar cajetín con OCR"}
+          {isPending
+            ? "Ejecutando diagnóstico OCR..."
+            : "Ejecutar diagnóstico OCR (experimental)"}
         </Button>
       </form>
     </div>

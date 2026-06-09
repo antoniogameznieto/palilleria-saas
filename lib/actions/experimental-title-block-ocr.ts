@@ -99,12 +99,12 @@ export async function analyzeExperimentalTitleBlockOcrAction(
 
     const success =
       result.textPreview && detectedFields.length > 0
-        ? `OCR experimental completado. Candidatos detectados: ${detectedFields.join(", ")}.`
+        ? `Diagnóstico OCR completado. Sugerencias parciales en: ${detectedFields.join(", ")}. Revisa manualmente antes de usar.`
         : result.textPreview
-          ? "OCR experimental completado. Revisa el texto y los candidatos sugeridos."
+          ? "Diagnóstico OCR completado. Revisa el texto y las sugerencias; no son fiables sin verificación."
           : result.hasPreview
-            ? "Render del cajetín completado. OCR no disponible o sin texto detectado."
-            : "Análisis experimental completado sin contenido útil.";
+            ? "Recorte del cajetín generado. OCR no disponible o sin texto legible."
+            : "Diagnóstico experimental completado sin contenido útil.";
 
     return {
       success,

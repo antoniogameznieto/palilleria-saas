@@ -342,13 +342,9 @@ Reutilizar patrón de **metadatos detectados**:
 - No hay botón «Aplicar» — candidatos no se guardan.
 - Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
 
-### Próximos pasos (10G+)
+### Estado tras Fase 10I
 
-1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
-2. Templates de ROI por cliente/proyecto (persistidos) tras validar con 10D/10F.
-3. Cola background + timeout para PDFs grandes.
-4. Evaluar cloud OCR / multimodal solo tras baseline local validada.
-5. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
+OCR local del cajetín **cerrado como herramienta experimental de apoyo** (ver Fase 10I). No se integra como automatización seria ni botón «Aplicar».
 
 ### Verificación local
 
@@ -595,4 +591,47 @@ npm run verify:title-block-crop
 npm run lint
 npm run build
 ```
+
+---
+
+## Fase 10I — Cierre como herramienta experimental de apoyo (implementado)
+
+> **Estado:** experimental y **no productivo**. Sin botón «Aplicar» ni integración con detección.
+
+### Decisión de producto
+
+Tras las fases 10B–10H, el OCR local del cajetín queda como **herramienta de diagnóstico y apoyo interno**, no como automatización fiable de metadatos.
+
+### Por qué no se integra como flujo serio
+
+| Motivo | Detalle |
+|--------|---------|
+| Resultados parciales | En el PDF benchmark, como máximo 2 de 3 campos (nº plano + línea); revisión nunca fiable |
+| Sensibilidad ROI/preprocesado | Misma página cambia resultados según preset y estrategia |
+| Revisión no detectada | Ninguna variante probada extrajo revisión de forma consistente |
+| Falsos positivos | OCR ruidoso + parser tolerante pueden sugerir valores incorrectos |
+
+### Mejor combinación observada (no suficiente)
+
+`bottom-wide` + `high-contrast` → DMS-703 + PL1-L en un plano de prueba. **No generalizable** sin revisión manual.
+
+### Flujo principal recomendado (productivo)
+
+1. **Filename parser** — primera fuente
+2. **Texto embebido PDF** — si el PDF lo incluye
+3. **Revisión manual** — confirmación humana
+4. **OCR experimental** — solo apoyo opcional (`EXPERIMENTAL_TITLE_BLOCK_OCR=true`)
+
+### Cambios en UI
+
+- Avisos explícitos: no fiable, resultado parcial, revisión manual
+- Bloque «Estado del experimento» (Experimental / No productivo)
+- Panel Automatización separa detección productiva vs herramientas OCR experimentales
+- Sin botón aplicar ni copy de «detección automática fiable»
+
+### Qué no se hace en 10I
+
+- No botón «Aplicar» OCR
+- No integración con `detection-apply` ni palillería
+- No cambios en parser productivo ni Prisma
 
