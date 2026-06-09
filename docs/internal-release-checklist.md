@@ -333,4 +333,4 @@ Consideramos el MVP **demo-ready** para revisión interna cuando se cumple **tod
 
 | Fecha | Revisor | Commit | lint | build | verify:takeoff | verify:crop | Demo OK |
 |-------|---------|--------|------|-------|----------------|-------------|---------|
-| 2026-06-09 | Antonio | `516b84c` | OK | OK | OK | OK | pendiente |
+| 2026-06-09 | Antonio | `d8d2f1c` | OK | OK | OK | OK | Observaciones ([informe](./internal-demo-run-2026-06-09.md)) |
