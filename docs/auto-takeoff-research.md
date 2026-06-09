@@ -519,12 +519,58 @@ Golden set etiquetado (10–15 PDFs) con filas esperadas para medir **precisión
 
 ---
 
+## Fase 15B — golden set etiquetado
+
+> **Commit de referencia:** `01a4f3e` (post Fase 15A).  
+> **Herramienta:** `npm run validate:auto-takeoff-golden`  
+> **Informe completo:** [auto-takeoff-golden-results.md](./auto-takeoff-golden-results.md)  
+> **Fixtures:** `tests/fixtures/auto-takeoff-golden/` (~500 KB versionados en repo)
+
+Golden set de **7 PDFs** con **35 expected rows** etiquetadas (subconjunto verificable por PDF) para medir precisión/recall del parser sin OCR ni BD.
+
+### PDFs en el golden set
+
+| ID | PDF | Tipo | Expected rows etiquetadas | Total BOM |
+|----|-----|------|---------------------------|-----------|
+| dms-703 | `dms-703.pdf` | DMS bueno | 8 | 21 |
+| dms-704 | `dms-704.pdf` | DMS bueno | 7 | 17 |
+| dms-702 | `dms-702.pdf` | DMS bueno | 6 | 21 |
+| hl-1289-01 | `hl-1289-01.pdf` | HL bueno | 6 | 11 |
+| hl-1293-01 | `hl-1293-01.pdf` | HL bueno | 6 | 11 |
+| dw-701 | `dw-701.pdf` | DW corto | 2 | 2 |
+| no-bom-negative | `no-bom-negative.pdf` | Negativo | 0 | 0 |
+
+### Resultados (primera validación)
+
+| Métrica | Resultado |
+|---------|-----------|
+| Recall agregado (subset etiquetado) | **100 %** (35/35) |
+| Precision estructural (conteo vs `expectedTotalRows`) | **100 %** |
+| Violaciones en PDF negativo | **0** |
+| Excepciones documentadas | **0** |
+| Umbral recall ≥ 0,90 | Cumplido |
+| Umbral precision ≥ 0,85 | Cumplido |
+
+**Precision estructural:** penaliza solo sobre-extracción (`sugeridas > expectedTotalRows`). Las filas correctas no etiquetadas en el subset no cuentan como falsos positivos.
+
+### Conclusión
+
+El motor reproduce de forma fiable el subconjunto etiquetado y el conteo total de filas en DMS/HL/DW del golden set. Listo para ampliar etiquetado y gates de regresión.
+
+### Recomendación → Fase 15C
+
+- Ampliar golden set con hojas `-02`, más DW y comparación contra palillería manual en BD.
+- Mantener `validate:auto-takeoff-golden` (también vía `verify:auto-takeoff` en CI).
+
+---
+
 ## Comandos
 
 ```bash
 npm run research:auto-takeoff -- ./ruta/plano.pdf
 npm run benchmark:auto-takeoff -- ./Ejemplos "./storage/.../job" --limit 30
-npm run verify:auto-takeoff          # tests puros del parser + benchmark helpers
+npm run validate:auto-takeoff-golden   # golden set precisión/recall (15B)
+npm run verify:auto-takeoff            # parser + golden set en CI
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
 
@@ -536,7 +582,12 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `scripts/benchmark-auto-takeoff.ts` | Benchmark ampliado multi-PDF (15A) |
 | `lib/drawings/auto-takeoff-benchmark.ts` | Helpers puros de benchmark (15A) |
 | `docs/auto-takeoff-benchmark-results.md` | Informe benchmark 15A |
-| `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import (14B–14E) |
+| `scripts/validate-auto-takeoff-golden.ts` | Validación golden set (15B) |
+| `lib/drawings/auto-takeoff-golden-validate.ts` | Matching y umbrales golden (15B) |
+| `lib/drawings/auto-takeoff-golden-run.ts` | Ejecución golden sobre PDFs (15B) |
+| `tests/fixtures/auto-takeoff-golden/` | PDFs + `golden-set.json` (15B) |
+| `docs/auto-takeoff-golden-results.md` | Informe golden 15B |
+| `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import + golden (14B–15B) |
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
 | `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E–14F) |
@@ -569,3 +620,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 14F | Importación asistida | Filtros, selección visible, resumen previo, feedback |
 | 2026-06-09 | 14G | Asistente experimental | 4 pasos, estados, métricas, copy guiado |
 | 2026-06-09 | 15A | Benchmark 17 PDFs (Ejemplos + storage) | 15 con BOM, 134 filas, 0 errores; beta acotada viable en DMS/HL |
+| 2026-06-09 | 15B | Golden set 7 PDFs, 35 expected rows | Recall 100 %, precision estructural 100 %; gate en verify:auto-takeoff |

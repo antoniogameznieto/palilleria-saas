@@ -2,6 +2,8 @@
  * Verificación pura del parser y comparador experimental de auto-takeoff (14B/14C).
  */
 
+import path from "node:path";
+
 import {
   compareSuggestedTakeoffWithExisting,
   normalizeTakeoffDescription,
@@ -34,6 +36,11 @@ import {
   dedupePdfPathsByBasename,
   matchesPdfNameFilter,
 } from "../lib/drawings/auto-takeoff-benchmark";
+import { runAutoTakeoffGoldenValidation } from "../lib/drawings/auto-takeoff-golden-run";
+import {
+  matchGoldenExpectedRows,
+  suggestionMatchesGoldenExpectedRow,
+} from "../lib/drawings/auto-takeoff-golden-validate";
 import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
@@ -63,7 +70,7 @@ CANT. DESCRIPCIÓN
 2 3/4" HALF COUPLING AC SW 3000# A-105 C<=0,25% CE<=0,42%	1000039880	1
 `;
 
-function main(): void {
+async function main(): Promise<void> {
   const dmsSections = findBomSections(DMS_703_SAMPLE);
   assert(dmsSections.length > 0, "DMS-703 sample debe detectar sección BOM");
 
@@ -560,7 +567,73 @@ function main(): void {
     "Agregado media filas con BOM",
   );
 
+  const goldenSuggestion = {
+    item: 1,
+    reference: "1000937601",
+    description: '1.1/2" SCH 160 TUBERIA EXT. PLANOS A.AL. A-335 P11',
+    quantity: "0.2",
+    unit: "M",
+    confidence: 1,
+    warnings: [],
+    rawLine: "",
+    lineNumber: 1,
+  };
+
+  assert(
+    suggestionMatchesGoldenExpectedRow(goldenSuggestion, {
+      reference: "1000937601",
+      quantity: "0.2",
+      unit: "m",
+      descriptionContains: "TUBERIA EXT",
+    }),
+    "Golden match por ref/cantidad/desc",
+  );
+
+  const goldenMatches = matchGoldenExpectedRows({
+    expectedRows: [
+      {
+        reference: "1000937601",
+        quantity: "0.2",
+        unit: "m",
+        descriptionContains: "TUBERIA EXT",
+      },
+      {
+        reference: "1000937596",
+        quantity: "2.4",
+        descriptionContains: "3/4",
+      },
+    ],
+    suggestions: [
+      goldenSuggestion,
+      {
+        item: 2,
+        reference: "1000937596",
+        description: '3/4" SCH 160 TUBERIA',
+        quantity: "2.4",
+        unit: "M",
+        confidence: 1,
+        warnings: [],
+        rawLine: "",
+        lineNumber: 2,
+      },
+    ],
+  });
+
+  assert(goldenMatches.every((match) => match.matched), "Golden match greedy 1:1");
+
+  const goldenReport = await runAutoTakeoffGoldenValidation({
+    goldenSetDir: path.join(
+      import.meta.dirname,
+      "../tests/fixtures/auto-takeoff-golden",
+    ),
+  });
+
+  assert(goldenReport.summary.passed, "Golden set versionado cumple umbrales");
+
   console.log("verify-auto-takeoff-parse: all checks passed");
 }
 
-main();
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

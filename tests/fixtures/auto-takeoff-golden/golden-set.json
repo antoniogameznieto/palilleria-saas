@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "thresholds": {
+    "recallMin": 0.9,
+    "precisionMin": 0.85,
+    "highConfidenceMin": 0.9
+  },
+  "cases": [
+    {
+      "id": "dms-703",
+      "pdf": "dms-703.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 21,
+      "notes": "Plano DMS referencia; misma familia que E2E BOM fixture.",
+      "expectedRows": [
+        {
+          "reference": "1000937601",
+          "quantity": "0.2",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT"
+        },
+        {
+          "reference": "1000937596",
+          "quantity": "2.4",
+          "unit": "m",
+          "descriptionContains": "3/4\" SCH 160 TUBERIA"
+        },
+        {
+          "reference": "1000938125",
+          "quantity": "1",
+          "descriptionContains": "HALF COUPLING"
+        },
+        {
+          "reference": "1000938321",
+          "quantity": "1",
+          "descriptionContains": "VALVULA COMPUERTA FORJADA C-238"
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "DISCO CIEGO TALADRADO"
+        },
+        {
+          "reference": "1000927008",
+          "quantity": "12",
+          "descriptionContains": "ESPARRAGO"
+        },
+        {
+          "reference": "1000938243",
+          "quantity": "1",
+          "descriptionContains": "BRIDA CIEGA RF 1500"
+        },
+        {
+          "reference": "1000938241",
+          "quantity": "1",
+          "descriptionContains": "3/4\" BRIDA CIEGA"
+        }
+      ]
+    },
+    {
+      "id": "dms-704",
+      "pdf": "dms-704.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 17,
+      "notes": "DMS sin tubería 1.1/2\"; 17 filas en relación de materiales.",
+      "expectedRows": [
+        {
+          "reference": "1000937596",
+          "quantity": "1.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT"
+        },
+        {
+          "reference": "1000937706",
+          "quantity": "2",
+          "descriptionContains": "TE SW 6000"
+        },
+        {
+          "reference": "1000938214",
+          "quantity": "5",
+          "descriptionContains": "BRIDA SW RF 1500"
+        },
+        {
+          "reference": "1000938321",
+          "quantity": "1",
+          "descriptionContains": "VALVULA COMPUERTA FORJADA C-238"
+        },
+        {
+          "reference": "1000927008",
+          "quantity": "12",
+          "descriptionContains": "ESPARRAGO"
+        },
+        {
+          "reference": "1000938243",
+          "quantity": "1",
+          "descriptionContains": "BRIDA CIEGA RF 1500"
+        },
+        {
+          "reference": "1000938241",
+          "quantity": "1",
+          "descriptionContains": "3/4\" BRIDA CIEGA"
+        }
+      ]
+    },
+    {
+      "id": "dms-702",
+      "pdf": "dms-702.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 21,
+      "notes": "Otro DMS bueno de la misma plantilla que 703.",
+      "expectedRows": [
+        {
+          "reference": "1000937601",
+          "quantity": "0.3",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT"
+        },
+        {
+          "reference": "1000937596",
+          "quantity": "1.4",
+          "unit": "m",
+          "descriptionContains": "3/4\" SCH 160 TUBERIA"
+        },
+        {
+          "reference": "1000938125",
+          "quantity": "1",
+          "descriptionContains": "HALF COUPLING"
+        },
+        {
+          "reference": "1000938321",
+          "quantity": "1",
+          "descriptionContains": "VALVULA COMPUERTA FORJADA C-238"
+        },
+        {
+          "reference": null,
+          "quantity": "1",
+          "descriptionContains": "DISCO CIEGO TALADRADO"
+        },
+        {
+          "reference": "1000938241",
+          "quantity": "1",
+          "descriptionContains": "BRIDA CIEGA"
+        }
+      ]
+    },
+    {
+      "id": "hl-1289-01",
+      "pdf": "hl-1289-01.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 11,
+      "notes": "HL AC con RELACIÓN DE M ATERIALES normalizada.",
+      "expectedRows": [
+        {
+          "reference": "1000027194",
+          "quantity": "2.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA AC EXT"
+        },
+        {
+          "reference": "1000039880",
+          "quantity": "1",
+          "descriptionContains": "HALF COUPLING AC"
+        },
+        {
+          "reference": "1000043645",
+          "quantity": "4",
+          "descriptionContains": "BRIDA WN RF 150"
+        },
+        {
+          "reference": "1000000767",
+          "quantity": "32",
+          "descriptionContains": "ESPARRAGO"
+        },
+        {
+          "reference": "1000069035",
+          "quantity": "2",
+          "descriptionContains": "VALVULA COMPUERTA FUNDIDA"
+        },
+        {
+          "reference": "1000070694",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FUNDIDA"
+        }
+      ]
+    },
+    {
+      "id": "hl-1293-01",
+      "pdf": "hl-1293-01.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 11,
+      "notes": "HL con reducción excéntrica adicional vs 1289.",
+      "expectedRows": [
+        {
+          "reference": "1000027194",
+          "quantity": "5.0",
+          "unit": "m",
+          "descriptionContains": "TUBERIA AC EXT"
+        },
+        {
+          "reference": "1000916823",
+          "quantity": "1",
+          "descriptionContains": "RED EXC AC BW"
+        },
+        {
+          "reference": "1000039880",
+          "quantity": "1",
+          "descriptionContains": "HALF COUPLING AC"
+        },
+        {
+          "reference": "1000043645",
+          "quantity": "4",
+          "descriptionContains": "BRIDA WN RF 150"
+        },
+        {
+          "reference": "1000000767",
+          "quantity": "32",
+          "descriptionContains": "ESPARRAGO"
+        },
+        {
+          "reference": "1000070694",
+          "quantity": "1",
+          "descriptionContains": "VALVULA RETENCION FUNDIDA"
+        }
+      ]
+    },
+    {
+      "id": "dw-701",
+      "pdf": "dw-701.pdf",
+      "expectedHasBom": true,
+      "expectedTotalRows": 2,
+      "notes": "DW con BOM corta; extracción parcial respecto al dibujo pero completa respecto a la tabla embebida.",
+      "expectedRows": [
+        {
+          "reference": "1000026994",
+          "quantity": "8.4",
+          "unit": "m",
+          "descriptionContains": "TUBERIA EXT"
+        },
+        {
+          "reference": "1000030543",
+          "quantity": "5",
+          "descriptionContains": "CODO 90 SW 3000"
+        }
+      ]
+    },
+    {
+      "id": "no-bom-negative",
+      "pdf": "no-bom-negative.pdf",
+      "expectedHasBom": false,
+      "expectedTotalRows": 0,
+      "notes": "PDF mínimo sin relación de materiales; caso negativo.",
+      "expectedRows": []
+    }
+  ]
+}
