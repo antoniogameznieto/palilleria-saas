@@ -37,6 +37,7 @@ import {
   matchesPdfNameFilter,
 } from "../lib/drawings/auto-takeoff-benchmark";
 import { runAutoTakeoffGoldenValidation } from "../lib/drawings/auto-takeoff-golden-run";
+import { applyBusinessRulesToSuggestion } from "../lib/drawings/auto-takeoff-business-rules";
 import {
   classifyExtractedRows,
   matchBusinessExpectedRows,
@@ -695,6 +696,69 @@ async function main(): Promise<void> {
     businessClassifications[1]?.bomCorrectNotUseful,
     "FIGURA 8 correcta pero no requerida",
   );
+
+  const rowFixture = (
+    description: string,
+    reference: string | null = "1000000001",
+  ) => ({
+    item: 1,
+    reference,
+    description,
+    quantity: "1",
+    unit: "M",
+    confidence: 1,
+    warnings: [] as string[],
+    rawLine: "",
+    lineNumber: 1,
+  });
+
+  const figura8Rule = applyBusinessRulesToSuggestion(
+    rowFixture('3/4" FIGURA 8 1500# RF AA'),
+  );
+  assert(figura8Rule.businessCategory === "exclusion", "FIGURA 8 exclusion");
+  assert(figura8Rule.businessAction === "exclude", "FIGURA 8 exclude");
+
+  const pipeRule = applyBusinessRulesToSuggestion(
+    rowFixture('1.1/2" SCH 160 TUBERIA EXT. PLANOS'),
+  );
+  assert(pipeRule.businessCategory === "pipe", "Tubería pipe");
+  assert(pipeRule.businessAction === "include", "Tubería include");
+
+  const valveRule = applyBusinessRulesToSuggestion(
+    rowFixture('3/4" VALVULA COMPUERTA FORJADA C-238'),
+  );
+  assert(valveRule.businessCategory === "valve", "Válvula valve");
+  assert(valveRule.businessAction === "include", "Válvula include");
+
+  const flangeRule = applyBusinessRulesToSuggestion(
+    rowFixture('3/4" SCH 160 BRIDA SW RF 1500#'),
+  );
+  assert(flangeRule.businessCategory === "flange", "Brida flange");
+  assert(flangeRule.businessAction === "include", "Brida include");
+
+  const gasketRule = applyBusinessRulesToSuggestion(
+    rowFixture('3/4" JUNTA ESPIROM. 1500# RF'),
+  );
+  assert(gasketRule.businessCategory === "gasket", "Junta gasket");
+  assert(gasketRule.businessAction === "include", "Junta include");
+
+  const boltRule = applyBusinessRulesToSuggestion(
+    rowFixture('3/4"x120mm ESPARRAGO+2 TUERCAS'),
+  );
+  assert(boltRule.businessCategory === "bolt", "Espárrago bolt");
+  assert(boltRule.businessAction === "include", "Espárrago include");
+
+  const supportRule = applyBusinessRulesToSuggestion(
+    rowFixture("STD-PS-050 (PSL) SOPORTE"),
+  );
+  assert(supportRule.businessCategory === "support", "Soporte support");
+  assert(supportRule.businessAction === "review", "Soporte review");
+
+  const unknownRule = applyBusinessRulesToSuggestion(
+    rowFixture("ELEMENTO AUXILIAR SIN CLASIFICAR XYZ-99"),
+  );
+  assert(unknownRule.businessCategory === "unknown", "Desconocido unknown");
+  assert(unknownRule.businessAction === "review", "Desconocido review");
 
   const goldenReport = await runAutoTakeoffGoldenValidation({
     goldenSetDir: path.join(

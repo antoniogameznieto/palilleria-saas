@@ -5,7 +5,7 @@
 | Campo | Valor |
 | --- | --- |
 | Fecha | 2026-06-09 |
-| Commit probado | `084cc6f` |
+| Commit probado | `7da37c7` |
 | Comando | `npm run validate:auto-takeoff-golden` |
 | Golden set | `tests/fixtures/auto-takeoff-golden/golden-set.json` |
 | PDFs en set | 7 |

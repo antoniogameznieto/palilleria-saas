@@ -619,6 +619,55 @@ Lo extraíble del BOM coincide al **100 %** con el subconjunto de negocio marcad
 
 ---
 
+## Fase 15D — reglas de negocio (BOM → propuesta de palillería)
+
+> **Commit de referencia:** `7da37c7` (post Fase 15C).  
+> **Herramienta:** `npm run validate:auto-takeoff-business-rules`  
+> **Informe completo:** [auto-takeoff-business-rules.md](./auto-takeoff-business-rules.md)  
+> **Helper:** `lib/drawings/auto-takeoff-business-rules.ts`
+
+Capa experimental que clasifica cada sugerencia BOM con `businessCategory`, `businessAction` (`include` / `exclude` / `review`), `businessReason` y `businessConfidence`.
+
+### Reglas iniciales
+
+| Patrón | Categoría | Acción |
+|--------|-----------|--------|
+| FIGURA 8, ESPACIADOR, PADDLE SPACER | exclusion | exclude |
+| SOPORTE, STD-PS, SUP- | support | review |
+| DISCO CIEGO / BRIDA CIEGA sin SAP | blind | review |
+| DISCO CIEGO / BRIDA CIEGA con SAP | blind | include |
+| TUBERIA, PIPE | pipe | include |
+| VALVULA | valve | include |
+| BRIDA | flange | include |
+| CODO, TE, REDUCCION, CAP, COUPLING… | fitting | include |
+| ESPARRAGO, TORNILLO, TUERCA | bolt | include |
+| JUNTA | gasket | include |
+| Desconocido | unknown | review |
+
+### Resultados (primera validación sobre business set 15C)
+
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Utilidad (definición 15C / pureza include) | 53,2 % filas útiles / total extraído | **100 %** filas útiles / propuesta include |
+| include / review / exclude | — | **57 / 1 / 4** (62 sugerencias) |
+| Falsos include | — | **0** |
+| Falsos exclude | — | **0** |
+| Aciertos de acción (subset etiquetado) | — | **36/37** |
+
+Las 4 `exclude` corresponden a FIGURA 8 (DMS/HL). La 1 `review` es disco ciego sin SAP (DMS-703). La propuesta `include` queda alineada con palillería de negocio extraíble del BOM.
+
+### Conclusión
+
+La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni importación. Sigue faltando lo **fuera del BOM** (soportes, DW manual).
+
+### Recomendación → Fase 15E
+
+Exponer `businessAction` y categoría en el preview experimental del asistente (sin autoimportar).
+
+**CI:** tests puros en `verify:auto-takeoff`; script `validate:auto-takeoff-business-rules` separado.
+
+---
+
 ## Comandos
 
 ```bash
@@ -626,6 +675,7 @@ npm run research:auto-takeoff -- ./ruta/plano.pdf
 npm run benchmark:auto-takeoff -- ./Ejemplos "./storage/.../job" --limit 30
 npm run validate:auto-takeoff-golden   # golden set precisión/recall (15B)
 npm run validate:auto-takeoff-business # precisión de negocio (15C)
+npm run validate:auto-takeoff-business-rules # reglas BOM → palillería (15D)
 npm run verify:auto-takeoff            # parser + golden set en CI
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
@@ -648,7 +698,10 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `lib/drawings/auto-takeoff-business-run.ts` | Ejecución business set (15C) |
 | `tests/fixtures/auto-takeoff-business/` | `business-set.json` (15C) |
 | `docs/auto-takeoff-business-validation.md` | Informe negocio 15C |
-| `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import + golden (14B–15B) |
+| `lib/drawings/auto-takeoff-business-rules.ts` | Reglas BOM → palillería (15D) |
+| `scripts/validate-auto-takeoff-business-rules.ts` | Validación reglas (15D) |
+| `docs/auto-takeoff-business-rules.md` | Informe reglas 15D |
+| `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import + golden + reglas (14B–15D) |
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
 | `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E–14F) |
@@ -683,3 +736,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15A | Benchmark 17 PDFs (Ejemplos + storage) | 15 con BOM, 134 filas, 0 errores; beta acotada viable en DMS/HL |
 | 2026-06-09 | 15B | Golden set 7 PDFs, 35 expected rows | Recall 100 %, precision estructural 100 %; gate en verify:auto-takeoff |
 | 2026-06-09 | 15C | Business set 5 PDFs, 40 required rows | Recall negocio 82,5 %, recall BOM 100 %, utilidad 53,2 %; script separado |
+| 2026-06-09 | 15D | Reglas include/exclude/review | 57 include, 4 exclude FIGURA 8, pureza propuesta 100 %; tests en verify |
