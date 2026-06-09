@@ -813,6 +813,24 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 **Conclusión breve:** bloque beta listo para demo interna supervisada; copy y docs dejan claro que no es automatización completa ni palillería final garantizada.
 
+### Fase 17B — Prueba beta con PDFs reales nuevos
+
+**Objetivo:** Validar la beta supervisada contra 2–3 PDFs no usados en golden/business/E2E.
+
+**Commit de referencia:** `fce8fc7` (post Fase 17A).
+
+**PDFs probados:** `HL-1291-01`, `HL-1294-01`, `DW-702-01-R1` (desde `./Ejemplos`; en benchmark 15A pero fuera de fixtures de regresión).
+
+**Informe:** [auto-takeoff-beta-internal-test-17B.md](./auto-takeoff-beta-internal-test-17B.md)
+
+| PDF | Incluir | Revisión | Excluir | Veredicto |
+|-----|---------|----------|---------|-----------|
+| HL-1291-01 | 9 | 0 | 1 (FIGURA 8) | Apto beta |
+| HL-1294-01 | 9 | 1 (SUP-002) | 1 | Apto beta |
+| DW-702-01 | 3 | 0 | 0 | Apto con revisión (BOM parcial) |
+
+**Conclusión breve:** sin bugs críticos; limitaciones conocidas en soportes multi-fila HL y DW manual. Beta apta para uso interno supervisado.
+
 ---
 
 ## Comandos
@@ -898,3 +916,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 16B | Business set + beta UI | Parser opt-in post-SOPORTES; support → review; recall negocio mejora |
 | 2026-06-09 | 16C | Beta supervisada | Checklist manual fuera BOM; no bloquea import; DW/BRIDA/SOPORTE suelto |
 | 2026-06-09 | 17A | Cierre beta interna | Guía demo + checklist QA + README; smoke:auto-takeoff-beta; sin motor nuevo |
+| 2026-06-09 | 17B | Prueba PDFs reales nuevos | HL-1291/1294 + DW-702; apto beta supervisada; informe 17B |
