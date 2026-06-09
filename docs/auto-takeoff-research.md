@@ -224,10 +224,76 @@ Detalle del plano → pestaña **Automatización** → bloque **«Palillería su
 
 ### Pendiente post-14B
 
-- Comparación automática sugerencias vs palillería existente (diff).
+- ~~Comparación automática sugerencias vs palillería existente (diff).~~ → Fase 14C
 - Import selectivo a palillería (fase posterior, con revisión).
 - E2E del panel experimental.
 - Ampliar benchmark de PDFs.
+
+---
+
+## Fase 14C — Comparación experimental con palillería existente (implementado)
+
+### Alcance
+
+| Incluido | Excluido |
+|----------|----------|
+| Helper `compareSuggestedTakeoffWithExisting` | Modificar palillería en BD |
+| Estados por sugerencia: matched / missing / differentQuantity / uncertain | Import o autoaplicar |
+| Resumen en action y UI con badges | Comparación fuzzy agresiva |
+| Match conservador por referencia SAP o descripción fuerte | OCR |
+
+### Estados de comparación
+
+| Estado | Badge UI | Criterio conservador |
+|--------|----------|-------------------|
+| `matched` | Ya existe | Misma referencia (o descripción fuerte) + cantidad ≈ + unidades compatibles |
+| `missing` | Falta | Sin coincidencia clara en palillería existente |
+| `differentQuantity` | Cantidad distinta | Referencia/descripción coinciden pero cantidad fuera de tolerancia (±0,02) |
+| `uncertain` | Dudoso | Baja confianza de sugerencia, múltiples candidatos o match débil |
+
+### Matching
+
+1. Prioridad **referencia SAP** normalizada (trim).
+2. Sin referencia → **descripción normalizada** (min. 16 caracteres, igualdad o inclusión fuerte).
+3. **Unidades** normalizadas (`M`→`m`, `UD`/`U`→`ud`).
+4. **Cantidades** con tolerancia 0,02; coma/punto equivalentes.
+5. Cada línea existente solo puede emparejarse una vez.
+
+### UI
+
+- Resumen: `21 sugeridas · X ya existen · Y faltan · Z distintas · W dudosas`
+- Columna **Estado** en tabla con badges
+- Aviso: «Comparación experimental. No guarda ni modifica la palillería.»
+- `data-testid`: `experimental-auto-takeoff-comparison-summary`
+
+### Resultado DMS-703 (entorno local, 2026-06-08)
+
+Plano `cmq5cxqwk000ho9i12qwjz667` — `1601GB16A-PL1-L-DMS-703-01-R03.pdf`:
+
+| Métrica | Valor |
+|---------|-------|
+| Sugerencias del PDF | **21** |
+| Líneas reales en palillería | **8** (datos manuales de demo: `a1`, `a2`, `pieza 1`, etc.) |
+| Ya existen (`matched`) | **0** |
+| Faltan (`missing`) | **21** |
+| Cantidad distinta | **0** |
+| Dudosas | **0** |
+
+**Interpretación:** la palillería manual del plano **no usa códigos SAP** de la relación de materiales; la comparación marca correctamente las 21 sugerencias como **Falta**. No indica que el PDF esté mal — indica que la palillería registrada no refleja el BOM embebido. Para validar matching positivo haría falta palillería cargada con referencias SAP o descripciones alineadas al PDF.
+
+### Límites 14C
+
+- No detecta duplicados dentro de la palillería existente.
+- No compara por posición/ítem del plano.
+- Descripciones parcialmente similares pero cortas → `missing` o `uncertain`, no `matched`.
+- BOM ≠ palillería de oficina: faltantes pueden ser esperables.
+
+### Pendiente post-14C
+
+- Import selectivo con revisión.
+- E2E del panel y comparación.
+- Diff visual sugerencia ↔ línea emparejada.
+- Benchmark con palillería cargada desde BOM de referencia.
 
 ---
 
@@ -248,7 +314,8 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
 | `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
 | `lib/actions/experimental-auto-takeoff.ts` | Server action (sin BD) |
-| `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview |
+| `lib/drawings/experimental-auto-takeoff-compare.ts` | Comparador puro (14C) |
+| `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview + comparación |
 | `docs/auto-takeoff-research.md` | Este documento |
 
 ## Referencias
@@ -265,3 +332,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 |-------|------|---------------|-----------|
 | 2026-06-08 | 14A | DMS-703, HL-1289-01, DMS-704 | Parcialmente viable; 49 filas totales en 3 PDFs |
 | 2026-06-08 | 14B | UI preview en Automatización | Sin persistencia; ~21 filas en DMS-703 |
+| 2026-06-08 | 14C | Comparación vs palillería existente | DMS-703: 0 matched, 21 missing (palillería manual sin SAP) |

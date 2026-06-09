@@ -1,11 +1,17 @@
 "use server";
 
 import {
+  compareSuggestedTakeoffWithExisting,
+  type TakeoffComparisonStatus,
+  type TakeoffComparisonSummary,
+} from "@/lib/drawings/experimental-auto-takeoff-compare";
+import {
   hasUsefulEmbeddedText,
   parseTakeoffRowsFromEmbeddedText,
 } from "@/lib/drawings/experimental-auto-takeoff-parse";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { extractDrawingPdfTextForDetection } from "@/lib/drawings/pdf-text-extract";
+import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { requireDrawingAccess } from "@/lib/permissions";
 
 function parseDrawingScopeFormData(formData: FormData) {
@@ -36,6 +42,7 @@ export type SerializedSuggestedTakeoffItem = {
   unit: string | null;
   confidence: number;
   warnings: string[];
+  comparisonStatus?: TakeoffComparisonStatus;
 };
 
 export type ExperimentalAutoTakeoffActionState = {
@@ -47,6 +54,8 @@ export type ExperimentalAutoTakeoffActionState = {
   suggestedItems?: SerializedSuggestedTakeoffItem[];
   warnings?: string[];
   averageConfidence?: number;
+  existingTakeoffCount?: number;
+  comparisonSummary?: TakeoffComparisonSummary;
 };
 
 export async function analyzeExperimentalAutoTakeoffAction(
@@ -73,10 +82,15 @@ export async function analyzeExperimentalAutoTakeoffAction(
   }
 
   try {
-    const extraction = await extractDrawingPdfTextForDetection({
-      storagePath: drawing.storagePath,
-      mimeType: drawing.mimeType,
-    });
+    const [extraction, existingTakeoffItems] = await Promise.all([
+      extractDrawingPdfTextForDetection({
+        storagePath: drawing.storagePath,
+        mimeType: drawing.mimeType,
+      }),
+      getDrawingTakeoffItems(companyId, jobId, drawingId),
+    ]);
+
+    const existingTakeoffCount = existingTakeoffItems.length;
 
     const textLength = extraction.characterCount;
     const hasEmbeddedText = extraction.hasEmbeddedText;
@@ -91,6 +105,7 @@ export async function analyzeExperimentalAutoTakeoffAction(
         textLength,
         sectionsFound: [],
         suggestedItems: [],
+        existingTakeoffCount,
         warnings: [
           "Sin texto embebido suficiente para analizar la relación de materiales.",
         ],
@@ -98,16 +113,38 @@ export async function analyzeExperimentalAutoTakeoffAction(
     }
 
     const parseResult = parseTakeoffRowsFromEmbeddedText(extraction.text);
-    const suggestedItems: SerializedSuggestedTakeoffItem[] =
-      parseResult.candidateRows.map((row) => ({
-        item: row.item,
-        reference: row.reference,
-        description: row.description,
-        quantity: row.quantity,
-        unit: row.unit,
-        confidence: row.confidence,
-        warnings: row.warnings,
-      }));
+    const parsedSuggestions = parseResult.candidateRows.map((row) => ({
+      item: row.item,
+      reference: row.reference,
+      description: row.description,
+      quantity: row.quantity,
+      unit: row.unit,
+      confidence: row.confidence,
+      warnings: row.warnings,
+    }));
+
+    const comparison = compareSuggestedTakeoffWithExisting(
+      parsedSuggestions,
+      existingTakeoffItems.map((item) => ({
+        reference: item.reference,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+      })),
+    );
+
+    const suggestedItems: SerializedSuggestedTakeoffItem[] = comparison.items.map(
+      (item, index) => ({
+        item: item.item,
+        reference: item.reference,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        confidence: item.confidence,
+        warnings: parsedSuggestions[index]?.warnings ?? [],
+        comparisonStatus: item.comparisonStatus,
+      }),
+    );
 
     const averageConfidence =
       suggestedItems.length > 0
@@ -138,6 +175,8 @@ export async function analyzeExperimentalAutoTakeoffAction(
       suggestedItems,
       warnings: parseResult.warnings,
       averageConfidence,
+      existingTakeoffCount,
+      comparisonSummary: comparison.summary,
     };
   } catch {
     return {

@@ -6,6 +6,12 @@ import {
   analyzeExperimentalAutoTakeoffAction,
   type ExperimentalAutoTakeoffActionState,
 } from "@/lib/actions/experimental-auto-takeoff";
+import {
+  TAKEOFF_COMPARISON_STATUS_BADGE_CLASS,
+  TAKEOFF_COMPARISON_STATUS_LABELS,
+} from "@/lib/drawings/experimental-auto-takeoff-compare-labels";
+import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type DrawingExperimentalAutoTakeoffProps = {
@@ -33,6 +39,42 @@ function formatConfidence(value: number | undefined): string {
   return value.toFixed(2);
 }
 
+function ComparisonStatusBadge({
+  status,
+}: {
+  status: TakeoffComparisonStatus | undefined;
+}) {
+  if (!status) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <Badge
+      variant="outline"
+      className={TAKEOFF_COMPARISON_STATUS_BADGE_CLASS[status]}
+    >
+      {TAKEOFF_COMPARISON_STATUS_LABELS[status]}
+    </Badge>
+  );
+}
+
+function formatComparisonSummary(
+  suggestedCount: number,
+  summary: ExperimentalAutoTakeoffActionState["comparisonSummary"],
+): string | null {
+  if (!summary) {
+    return null;
+  }
+
+  return [
+    `${suggestedCount} sugeridas`,
+    `${summary.matchedCount} ya existen`,
+    `${summary.missingCount} faltan`,
+    `${summary.differentQuantityCount} distintas`,
+    `${summary.uncertainCount} dudosas`,
+  ].join(" · ");
+}
+
 export function DrawingExperimentalAutoTakeoff({
   companyId,
   jobId,
@@ -47,6 +89,11 @@ export function DrawingExperimentalAutoTakeoff({
   const hasResult = state.success != null || state.error != null;
   const suggestedItems = state.suggestedItems ?? [];
   const hasSuggestions = suggestedItems.length > 0;
+  const existingCount = state.existingTakeoffCount ?? existingTakeoffLineCount;
+  const comparisonLine = formatComparisonSummary(
+    suggestedItems.length,
+    state.comparisonSummary,
+  );
   const noEmbeddedText =
     hasResult &&
     state.hasEmbeddedText === false &&
@@ -64,15 +111,28 @@ export function DrawingExperimentalAutoTakeoff({
       data-testid="experimental-auto-takeoff-section"
     >
       <p className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-950 dark:text-sky-100">
-        <strong>Extracción experimental.</strong> No guarda líneas ni sustituye
-        la revisión manual. Las sugerencias provienen del texto embebido del PDF
-        (relación de materiales); no se importan a la palillería real.
+        <strong>Extracción y comparación experimental.</strong> No guarda líneas
+        ni modifica la palillería. Las sugerencias provienen del texto embebido
+        del PDF (relación de materiales).
       </p>
 
       <p className="text-xs text-muted-foreground">
-        Palillería actual en este plano:{" "}
-        <strong>{existingTakeoffLineCount}</strong> línea(s). Estas sugerencias
-        no se han comparado automáticamente con la palillería existente.
+        Palillería actual en este plano: <strong>{existingCount}</strong>{" "}
+        línea(s).
+        {comparisonLine ? (
+          <>
+            {" "}
+            Comparación:{" "}
+            <span
+              className="font-medium text-foreground"
+              data-testid="experimental-auto-takeoff-comparison-summary"
+            >
+              {comparisonLine}
+            </span>
+          </>
+        ) : (
+          " Ejecuta el análisis para comparar con la palillería existente."
+        )}
       </p>
 
       {state.error ? (
@@ -109,6 +169,10 @@ export function DrawingExperimentalAutoTakeoff({
           className="space-y-3"
           data-testid="experimental-auto-takeoff-results"
         >
+          {comparisonLine ? (
+            <p className="text-sm font-medium text-foreground">{comparisonLine}</p>
+          ) : null}
+
           <dl className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
             <div>
               <dt className="font-medium text-foreground">Filas sugeridas</dt>
@@ -129,7 +193,7 @@ export function DrawingExperimentalAutoTakeoff({
           </dl>
 
           <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full min-w-[48rem] text-sm">
+            <table className="w-full min-w-[52rem] text-sm">
               <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 font-medium">Ítem</th>
@@ -138,6 +202,7 @@ export function DrawingExperimentalAutoTakeoff({
                   <th className="px-3 py-2 font-medium">Ud.</th>
                   <th className="px-3 py-2 font-medium">Descripción</th>
                   <th className="px-3 py-2 font-medium">Conf.</th>
+                  <th className="px-3 py-2 font-medium">Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,6 +222,9 @@ export function DrawingExperimentalAutoTakeoff({
                     </td>
                     <td className="px-3 py-2 align-top text-xs">
                       {formatConfidence(row.confidence)}
+                    </td>
+                    <td className="px-3 py-2 align-top">
+                      <ComparisonStatusBadge status={row.comparisonStatus} />
                     </td>
                   </tr>
                 ))}

@@ -1,7 +1,13 @@
 /**
- * Verificación pura del parser experimental de auto-takeoff (Fase 14B).
+ * Verificación pura del parser y comparador experimental de auto-takeoff (14B/14C).
  */
 
+import {
+  compareSuggestedTakeoffWithExisting,
+  normalizeTakeoffDescription,
+  normalizeTakeoffUnit,
+  quantitiesApproximatelyEqual,
+} from "../lib/drawings/experimental-auto-takeoff-compare";
 import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
@@ -65,6 +71,136 @@ function main(): void {
   const empty = parseTakeoffRowsFromEmbeddedText("solo texto sin tabla");
   assert(empty.candidateRows.length === 0, "Texto sin BOM no debe inventar filas");
   assert(empty.warnings.length > 0, "Texto sin BOM debe advertir");
+
+  assert(normalizeTakeoffUnit("M") === "m", "Unidad M normalizada");
+  assert(normalizeTakeoffUnit("UD") === "ud", "Unidad UD normalizada");
+  assert(
+    quantitiesApproximatelyEqual("2,0", "2.0"),
+    "Cantidades con coma/punto equivalentes",
+  );
+  assert(
+    !quantitiesApproximatelyEqual("2", "3"),
+    "Cantidades distintas no deben coincidir",
+  );
+  assert(
+    normalizeTakeoffDescription('  TUBERÍA  3/4"  ') ===
+      normalizeTakeoffDescription('tuberia 3/4"'),
+    "Descripción normalizada sin acentos/espacios",
+  );
+
+  const referenceMatch = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 1,
+        reference: "1000937601",
+        description: '1.1/2" TUBERIA',
+        quantity: "0.2",
+        unit: "M",
+        confidence: 1,
+      },
+    ],
+    [
+      {
+        reference: "1000937601",
+        description: "otra descripcion",
+        quantity: "0.2",
+        unit: "m",
+      },
+    ],
+  );
+  assert(
+    referenceMatch.summary.matchedCount === 1,
+    "Match por referencia SAP con misma cantidad",
+  );
+
+  const descriptionMatch = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 1,
+        reference: null,
+        description:
+          '4" SCH 40 TUBERIA AC EXT. BISEL. A-106 B C<=0,25% CE<=0,42%',
+        quantity: "2",
+        unit: "m",
+        confidence: 0.9,
+      },
+    ],
+    [
+      {
+        reference: null,
+        description:
+          '4" SCH 40 TUBERIA AC EXT. BISEL. A-106 B C<=0,25% CE<=0,42%',
+        quantity: "2",
+        unit: "m",
+      },
+    ],
+  );
+  assert(
+    descriptionMatch.summary.matchedCount === 1,
+    "Match por descripción sin referencia",
+  );
+
+  const differentQuantity = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 2,
+        reference: "1000937596",
+        description: '3/4" TUBERIA',
+        quantity: "2.4",
+        unit: "M",
+        confidence: 1,
+      },
+    ],
+    [
+      {
+        reference: "1000937596",
+        description: "cualquiera",
+        quantity: "1",
+        unit: "M",
+      },
+    ],
+  );
+  assert(
+    differentQuantity.summary.differentQuantityCount === 1,
+    "Misma referencia con cantidad distinta",
+  );
+
+  const uncertain = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 3,
+        reference: null,
+        description: "texto corto",
+        quantity: "1",
+        unit: null,
+        confidence: 0.4,
+      },
+    ],
+    [],
+  );
+  assert(uncertain.summary.uncertainCount === 1, "Baja confianza → dudoso");
+
+  const missing = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 4,
+        reference: "9999999999",
+        description: "material inexistente en palilleria",
+        quantity: "5",
+        unit: "ud",
+        confidence: 0.95,
+      },
+    ],
+    [
+      {
+        reference: "1000937601",
+        description: "otro material",
+        quantity: "1",
+        unit: "ud",
+      },
+    ],
+  );
+  assert(missing.summary.missingCount === 1, "Sin match → falta");
 
   console.log("verify-auto-takeoff-parse: all checks passed");
 }
