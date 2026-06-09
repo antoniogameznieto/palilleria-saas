@@ -900,8 +900,28 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `docs/out-of-bom-items-research.md` | Informe investigación 16A |
 | `docs/auto-takeoff-research.md` | Este documento |
 
+## Fase 18A — Trameado real vs beta BOM
+
+> **Jun 2026** — Investigación funcional a partir de ejemplos del cliente (`Hoja de palilleo.pdf`, `Isos trameados.pdf`). Sin cambios de código.
+
+La beta supervisada extrae **materiales** de la RELACIÓN DE MATERIALES (referencia SAP, descripción, cantidad en metros/unidades). El entregable real del cliente es distinto: una **hoja de palilleo por tramos fabricables** (`<1>`, `<2>`, …) con diámetro, schedule y **longitud de corte en mm**, agrupada por identificador ISO (`HL-1291-A012AA-N-01`, etc.).
+
+| Aspecto | Beta BOM (Fases 14–17) | Trameado real (cliente) |
+|---------|------------------------|-------------------------|
+| Granularidad | Ítem de material | Tramo de tubo a cortar |
+| Longitud | Cantidad BOM agregada | PALILLO por segmento |
+| Origen | Texto embebido BOM | Iso con marcas manuales + criterio ingeniero |
+| PDFs ejemplo hoja/isos | No viables (12–140 chars texto) | Raster + anotaciones azules |
+
+**Conclusión:** la beta BOM queda como **soporte** (materiales, checklist, import supervisado). El producto objetivo requiere **entidad y flujo de trameado** separados. Ver:
+
+- [trameado-functional-analysis.md](./trameado-functional-analysis.md) — análisis de ejemplos y modelo conceptual
+- [trameado-mvp-proposal.md](./trameado-mvp-proposal.md) — MVP manual asistido y fases 18B–18D
+
 ## Referencias
 
+- [trameado-functional-analysis.md](./trameado-functional-analysis.md) — Fase 18A: hoja de palilleo y isos trameados
+- [trameado-mvp-proposal.md](./trameado-mvp-proposal.md) — MVP trameado propuesto
 - [ocr-ai-research.md](./ocr-ai-research.md) — OCR cajetín cerrado como no productivo (distinto de este enfoque)
 - [post-demo-backlog.md](./post-demo-backlog.md) — priorización post-demo
 - Detección productiva actual: filename + texto embebido para **metadatos** (`lib/drawings/parse-pdf-text.ts`)
@@ -932,3 +952,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 17A | Cierre beta interna | Guía demo + checklist QA + README; smoke:auto-takeoff-beta; sin motor nuevo |
 | 2026-06-09 | 17B | Prueba PDFs reales nuevos | HL-1291/1294 + DW-702; apto beta supervisada; informe 17B |
 | 2026-06-09 | 17C | Demo interna guiada | Acta demo E2E DMS-703; aprobado; beta lista demo controlada |
+| 2026-06-09 | 18A | Hoja palilleo + isos trameados | Entregable real = tramos `<n>` + PALILLO; BOM = soporte; ver trameado-functional-analysis |
