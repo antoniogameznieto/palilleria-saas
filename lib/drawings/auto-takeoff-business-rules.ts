@@ -123,8 +123,14 @@ function matchExclusionRule(description: string): RuleMatch | null {
   return null;
 }
 
-function matchSupportRule(description: string): RuleMatch | null {
+function matchSupportRule(
+  description: string,
+  reference: string | null | undefined,
+): RuleMatch | null {
+  const normalizedReference = reference?.trim().toUpperCase() ?? "";
+
   if (
+    /^SUP-\d+/.test(normalizedReference) ||
     description.includes("SOPORTE") ||
     description.includes("STD-PS") ||
     description.includes("SUP-")
@@ -192,7 +198,7 @@ export function applyBusinessRulesToSuggestion(
     return exclusion;
   }
 
-  const support = matchSupportRule(description);
+  const support = matchSupportRule(description, suggestion.reference);
 
   if (support) {
     return support;

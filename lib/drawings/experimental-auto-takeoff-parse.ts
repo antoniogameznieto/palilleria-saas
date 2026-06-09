@@ -40,6 +40,11 @@ export type ExperimentalTakeoffCandidateRow = {
   lineNumber: number;
 };
 
+export type ExperimentalAutoTakeoffParseOptions = {
+  /** Opt-in: filas tabulares STD-PS / SUP-xxx tras cabecera SOPORTES (Fase 16B). */
+  includeSupportRows?: boolean;
+};
+
 export type ExperimentalAutoTakeoffParseResult = {
   sections: BomSectionMatch[];
   candidateRows: ExperimentalTakeoffCandidateRow[];
@@ -229,6 +234,97 @@ function tryParseMaterialLine(
   };
 }
 
+const SUPPORT_POST_SOPORTES_CONFIDENCE = 0.8;
+const SUPPORT_POST_SOPORTES_MAX_CONSECUTIVE_MISSES = 6;
+
+function tryParseTabularSupportRow(
+  line: string,
+  lineNumber: number,
+): ExperimentalTakeoffCandidateRow | null {
+  const trimmed = line.trim();
+
+  if (!trimmed || NOISE_LINE_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  const match = trimmed.match(SUPPORT_ROW_PATTERN);
+
+  if (!match) {
+    return null;
+  }
+
+  const item = Number(match[1]);
+  const description = match[2].trim();
+  const reference = match[3].trim();
+  const quantity = parseDecimalQuantity(match[4]);
+
+  if (!Number.isInteger(item) || item <= 0 || item > 999 || !quantity) {
+    return null;
+  }
+
+  if (!/^SUP-\d+/i.test(reference) || !/\bSTD-PS\b/i.test(description)) {
+    return null;
+  }
+
+  if (
+    description.length < MIN_DESCRIPTION_LENGTH ||
+    description.length > MAX_DESCRIPTION_LENGTH
+  ) {
+    return null;
+  }
+
+  return {
+    item,
+    reference,
+    description,
+    quantity,
+    unit: "ud",
+    confidence: SUPPORT_POST_SOPORTES_CONFIDENCE,
+    warnings: ["Fila de soporte post-SOPORTES (revisión manual recomendada)."],
+    rawLine: trimmed,
+    lineNumber,
+  };
+}
+
+function parsePostSoportesSupportRows(
+  lines: string[],
+  startLineIndex: number,
+  warnings: string[],
+): ExperimentalTakeoffCandidateRow[] {
+  const rows: ExperimentalTakeoffCandidateRow[] = [];
+  let consecutiveMisses = 0;
+
+  for (let index = startLineIndex; index < lines.length; index += 1) {
+    const parsed = tryParseTabularSupportRow(lines[index], index + 1);
+
+    if (parsed) {
+      rows.push(parsed);
+      consecutiveMisses = 0;
+      continue;
+    }
+
+    const trimmed = lines[index]?.trim() ?? "";
+
+    if (!trimmed) {
+      continue;
+    }
+
+    consecutiveMisses += 1;
+
+    if (consecutiveMisses >= SUPPORT_POST_SOPORTES_MAX_CONSECUTIVE_MISSES) {
+      break;
+    }
+  }
+
+  if (rows.length > 0) {
+    warnings.push(
+      `${rows.length} fila(s) de soporte tabular tras bloque SOPORTES (opt-in).`,
+    );
+  }
+
+  return rows;
+}
+
 export function findBomSections(text: string): BomSectionMatch[] {
   const normalized = normalizeEmbeddedPdfText(text);
   const matches: BomSectionMatch[] = [];
@@ -259,7 +355,9 @@ export function findBomSections(text: string): BomSectionMatch[] {
 
 export function parseTakeoffRowsFromEmbeddedText(
   text: string,
+  options: ExperimentalAutoTakeoffParseOptions = {},
 ): ExperimentalAutoTakeoffParseResult {
+  const includeSupportRows = options.includeSupportRows === true;
   const normalized = normalizeEmbeddedPdfText(text);
   const sections = findBomSections(normalized);
   const warnings: string[] = [];
@@ -299,6 +397,13 @@ export function parseTakeoffRowsFromEmbeddedText(
 
     if (/^SOPORTES\b/i.test(line.trim())) {
       warnings.push(`Fin de bloque de materiales detectado en línea ${index + 1} (SOPORTES).`);
+
+      if (includeSupportRows) {
+        candidateRows.push(
+          ...parsePostSoportesSupportRows(lines, index + 1, warnings),
+        );
+      }
+
       break;
     }
 

@@ -691,4 +691,11 @@ _Ninguno._
 2. **Partidas DW (brida/válvula/soporte sin SAP):** **checklist manual** en asistente; no parsear automáticamente desde texto suelto.
 3. **HL soporte genérico:** marcar como `review` manual si aparece solo como mención suelta tras SOPORTES.
 
+### Implementación 16B (post-investigación)
+
+- `parseTakeoffRowsFromEmbeddedText(..., { includeSupportRows: true })` en beta y validación de negocio.
+- Solo filas tabulares `item + STD-PS… + SUP-xxx + cantidad` tras cabecera `^SOPORTES`.
+- `NO NECESITA SOPORTES` y menciones sueltas **no** generan fila.
+- Beta supervisada: soportes en grupo «Requieren revisión»; bulk ready excluye support.
+
 _No modifica producto ni importación. Investigación con texto embebido únicamente._

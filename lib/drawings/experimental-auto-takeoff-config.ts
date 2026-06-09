@@ -9,3 +9,6 @@ import { canManageTakeoffItems } from "@/lib/permissions/drawing";
 export function canAccessExperimentalAutoTakeoff(role: CompanyRole): boolean {
   return canManageTakeoffItems(role);
 }
+
+/** Fase 16B: beta supervisada extrae soportes tabulares post-SOPORTES como revisión. */
+export const EXPERIMENTAL_AUTO_TAKEOFF_INCLUDE_SUPPORT_ROWS = true;

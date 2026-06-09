@@ -33,7 +33,7 @@ test.describe("importación experimental auto-takeoff", () => {
 
     const comparison = page.getByTestId("experimental-auto-takeoff-comparison-summary");
     await expect(comparison).toContainText("1 ya existen");
-    await expect(comparison).toContainText("20 faltan");
+    await expect(comparison).toContainText("21 faltan");
     await expect(page.getByTestId("experimental-auto-takeoff-discovery-copy")).toContainText(
       "No se importa nada automáticamente",
     );
@@ -43,11 +43,19 @@ test.describe("importación experimental auto-takeoff", () => {
 
     await expect(page.getByTestId("auto-takeoff-beta-proposal")).toBeVisible();
     await expect(page.getByTestId("auto-takeoff-beta-ready-count")).toHaveText("18");
-    await expect(page.getByTestId("auto-takeoff-beta-review-count")).toHaveText("1");
+    await expect(page.getByTestId("auto-takeoff-beta-review-count")).toHaveText("2");
     await expect(page.getByTestId("auto-takeoff-beta-excluded-count")).toHaveText("1");
     await expect(page.getByTestId("auto-takeoff-review-group")).toContainText(
       "necesitan revisión antes de importarlas",
     );
+    const supportRow = page
+      .getByTestId("experimental-auto-takeoff-result-row")
+      .filter({ hasText: "SUP-001" });
+    await expect(supportRow).toHaveCount(1);
+    await expect(supportRow).toHaveAttribute("data-business-action", "review");
+    await expect(
+      supportRow.getByTestId("experimental-auto-takeoff-business-category-badge"),
+    ).toContainText("Soporte");
     await expect(page.getByTestId("auto-takeoff-excluded-group")).toContainText(
       "no se importan porque las reglas",
     );
@@ -85,7 +93,7 @@ test.describe("importación experimental auto-takeoff", () => {
     await page.getByTestId("experimental-auto-takeoff-business-action-filter").selectOption("all");
     await page.getByTestId("experimental-auto-takeoff-status-filter").selectOption("missing");
     await expect(page.getByTestId("experimental-auto-takeoff-filtered-count")).toContainText(
-      "20",
+      "21",
     );
 
     await page.getByTestId("auto-takeoff-select-all-ready").click();
@@ -158,7 +166,7 @@ test.describe("importación experimental auto-takeoff", () => {
     await page.getByTestId("experimental-auto-takeoff-run").click();
     await expect(comparison).toBeVisible({ timeout: 30_000 });
     await expect(comparison).toContainText("2 ya existen");
-    await expect(comparison).toContainText("19 faltan");
+    await expect(comparison).toContainText("20 faltan");
 
     await page.getByTestId("experimental-auto-takeoff-status-filter").selectOption("matched");
     await expect(page.getByTestId("experimental-auto-takeoff-filtered-count")).toContainText(

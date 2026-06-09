@@ -5,7 +5,7 @@
 | Campo | Valor |
 | --- | --- |
 | Fecha | 2026-06-09 |
-| Commit probado | `a646a65` |
+| Commit probado | `94a2b5c` |
 | Comando | `npm run validate:auto-takeoff-business-rules` |
 | Business set | `tests/fixtures/auto-takeoff-business/business-set.json` |
 | PDFs evaluados | 5 |
@@ -30,27 +30,27 @@ Orden de evaluación: exclusiones → soportes → ciegos → tubería → válv
 
 | Métrica | Valor |
 | --- | --- |
-| Total sugerencias | 62 |
+| Total sugerencias | 64 |
 | **include** | **57** |
-| **review** | **1** |
+| **review** | **3** |
 | **exclude** | **4** |
-| Utilidad antes (útiles / total extraído) | 53.2% |
+| Utilidad antes (útiles / total extraído) | 51.6% |
 | Utilidad después (útiles / propuesta include) | 100.0% |
 | Acciones etiquetadas (subset business) | 37 |
 | Aciertos de acción | 36 |
 | Falsos include | 0 |
 | Falsos exclude | 0 |
-| Ratio propuesta (include/total) | 91.9% |
+| Ratio propuesta (include/total) | 89.1% |
 
 ## Tabla por PDF
 
 | ID | Sugeridas | include | review | exclude | Utilidad antes | Utilidad después | FP include | FP exclude |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| dms-703 | 21 | 19 | 1 | 1 | 42.9% | 100.0% | 0 | 0 |
+| dms-703 | 22 | 19 | 2 | 1 | 40.9% | 100.0% | 0 | 0 |
 | dms-704 | 17 | 16 | 0 | 1 | 47.1% | 100.0% | 0 | 0 |
 | hl-1289-01 | 11 | 10 | 0 | 1 | 63.6% | 100.0% | 0 | 0 |
 | hl-1293-01 | 11 | 10 | 0 | 1 | 63.6% | 100.0% | 0 | 0 |
-| dw-701 | 2 | 2 | 0 | 0 | 100.0% | 100.0% | 0 | 0 |
+| dw-701 | 3 | 2 | 1 | 0 | 66.7% | 100.0% | 0 | 0 |
 
 ## Categorías detectadas
 
@@ -61,6 +61,7 @@ Orden de evaluación: exclusiones → soportes → ciegos → tubería → válv
 - **bolt**: 8
 - **gasket**: 6
 - **blind**: 5
+- **support**: 2
 - **exclusion**: 4
 
 ## Ejemplos include
@@ -76,9 +77,11 @@ Orden de evaluación: exclusiones → soportes → ciegos → tubería → válv
 
 - **exclude** / exclusion / high: 3/4" FIGURA 8 1500# RF AA A-387 GR11 CL1 ESP-1300-3 T>45 — Elemento BOM no requerido como palillería final según business set
 - **review** / blind / medium: DISCO CIEGO TALADRADO — Disco o brida ciega sin referencia SAP; revisar antes de incluir
+- **review** / support / medium: STD-PS-050 (PSL) — Soporte detectado; requiere revisión manual antes de palillería final
 - **exclude** / exclusion / high: 3/4" FIGURA 8 1500# RF AA A-387 GR11 CL1 ESP-1300-3 T>45 — Elemento BOM no requerido como palillería final según business set
 - **exclude** / exclusion / high: 4" FIGURA 8 150# RF AC A-516 60 — Elemento BOM no requerido como palillería final según business set
 - **exclude** / exclusion / high: 4" FIGURA 8 150# RF AC A-516 60 — Elemento BOM no requerido como palillería final según business set
+- **review** / support / medium: STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012)  — Soporte detectado; requiere revisión manual antes de palillería final
 
 ## Falsos positivos / negativos
 

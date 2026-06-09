@@ -6,7 +6,7 @@
       "id": "dms-703",
       "pdf": "dms-703.pdf",
       "notes": "Palillería de montaje DMS alta temperatura; referencia 14C/14D.",
-      "comments": "BOM embebido cubre materiales principales; soportes quedan fuera del parser.",
+      "comments": "BOM embebido cubre materiales principales; soporte tabular post-SOPORTES con includeSupportRows.",
       "expectedBusinessRows": [
         {
           "reference": "1000937601",
@@ -363,12 +363,13 @@
           "notes": "Partida manual típica en DW"
         },
         {
-          "reference": null,
+          "reference": "SUP-001",
           "quantity": "1",
-          "descriptionContains": "SOPORTE",
+          "descriptionContains": "STD-PS",
           "category": "support",
           "businessRequired": true,
-          "bomExtractable": false
+          "bomExtractable": false,
+          "notes": "Bloque SOPORTES tabular; no es fila SAP del BOM"
         }
       ]
     }

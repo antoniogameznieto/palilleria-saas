@@ -38,7 +38,9 @@ export async function runAutoTakeoffBusinessValidation(params: {
 
   for (const caseDef of definition.cases) {
     const pdfPath = path.join(pdfBaseDir, caseDef.pdf);
-    const extraction = await extractSuggestionsFromPdf(pdfPath);
+    const extraction = await extractSuggestionsFromPdf(pdfPath, {
+      includeSupportRows: true,
+    });
 
     cases.push(
       validateBusinessCaseResult({

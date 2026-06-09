@@ -18,6 +18,7 @@ import {
 import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
+  type ExperimentalAutoTakeoffParseOptions,
 } from "@/lib/drawings/experimental-auto-takeoff-parse";
 
 const DEFAULT_GOLDEN_SET_FILE = "golden-set.json";
@@ -28,6 +29,7 @@ function isPdfBuffer(buffer: Buffer): boolean {
 
 export async function extractSuggestionsFromPdf(
   absolutePdfPath: string,
+  options: ExperimentalAutoTakeoffParseOptions = {},
 ): Promise<{
   suggestions: ReturnType<typeof parseTakeoffRowsFromEmbeddedText>["candidateRows"];
   hasBomDetected: boolean;
@@ -50,7 +52,7 @@ export async function extractSuggestionsFromPdf(
       const textResult = await parser.getText();
       const text = textResult.text.trim();
       const sections = findBomSections(text);
-      const parseResult = parseTakeoffRowsFromEmbeddedText(text);
+      const parseResult = parseTakeoffRowsFromEmbeddedText(text, options);
 
       return {
         suggestions: parseResult.candidateRows,

@@ -220,7 +220,9 @@ async function main(): Promise<void> {
 
   for (const caseDef of definition.cases) {
     const pdfPath = path.join(pdfBaseDir, caseDef.pdf);
-    const extraction = await extractSuggestionsFromPdf(pdfPath);
+    const extraction = await extractSuggestionsFromPdf(pdfPath, {
+      includeSupportRows: true,
+    });
 
     if (extraction.error) {
       console.warn(`${caseDef.id}: error extracción — ${extraction.error}`);

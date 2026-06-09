@@ -763,6 +763,24 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 ---
 
+### Fase 16B — Parser opt-in soportes tabulares post-SOPORTES
+
+**Objetivo:** Extraer filas `STD-PS` + `SUP-xxx` tras cabecera `SOPORTES` como sugerencias de **revisión**, sin autoimport ni include automático.
+
+**Commit de referencia:** `94a2b5c` (post Fase 16A).
+
+**Parser:** `parseTakeoffRowsFromEmbeddedText(text, { includeSupportRows?: boolean })` — por defecto `false`; beta activa vía `EXPERIMENTAL_AUTO_TAKEOFF_INCLUDE_SUPPORT_ROWS`.
+
+**Criterios de fila válida:** bloque `^SOPORTES`, patrón tabular, referencia `SUP-nnn`, descripción con `STD-PS`, confianza 0.8, unidad `ud`.
+
+**Reglas:** `businessCategory: support`, `businessAction: review`, `businessConfidence: medium`. No entra en «Listas para incluir» ni en bulk ready.
+
+**Validación negocio:** `validate:auto-takeoff-business` y `validate:auto-takeoff-business-rules` activan `includeSupportRows: true`. Golden set mantiene solo BOM (`false`).
+
+**Conclusión breve:** mejora recall de soportes tabulares (DMS-703, DW-701); menciones sueltas y DW manual siguen fuera; DMS-704 «NO NECESITA SOPORTES» no genera fila.
+
+---
+
 ## Comandos
 
 ```bash
@@ -842,3 +860,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15F | Propuesta beta supervisada | Tres grupos UI; CTA propuesta revisada; select all ready; copy beta |
 | 2026-06-09 | 15G | Hardening beta supervisada | Seguridad import; permisos; edge cases; guía demo; E2E sin BOM |
 | 2026-06-09 | 16A | Business + golden/Ejemplos | Soportes tabulares parseables; DW manual checklist; informe out-of-bom |
+| 2026-06-09 | 16B | Business set + beta UI | Parser opt-in post-SOPORTES; support → review; recall negocio mejora |

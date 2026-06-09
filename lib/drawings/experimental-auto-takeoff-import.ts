@@ -18,6 +18,7 @@ import {
   hasUsefulEmbeddedText,
   parseTakeoffRowsFromEmbeddedText,
 } from "@/lib/drawings/experimental-auto-takeoff-parse";
+import { EXPERIMENTAL_AUTO_TAKEOFF_INCLUDE_SUPPORT_ROWS } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { extractDrawingPdfTextForDetection } from "@/lib/drawings/pdf-text-extract";
 import {
   takeoffCsvImportRowSchema,
@@ -146,7 +147,9 @@ export async function extractVerifiedExperimentalSuggestions(params: {
     };
   }
 
-  const parseResult = parseTakeoffRowsFromEmbeddedText(extraction.text);
+  const parseResult = parseTakeoffRowsFromEmbeddedText(extraction.text, {
+    includeSupportRows: EXPERIMENTAL_AUTO_TAKEOFF_INCLUDE_SUPPORT_ROWS,
+  });
   const parsedSuggestions: SuggestedTakeoffCompareInput[] =
     parseResult.candidateRows.map((row) => ({
       item: row.item,

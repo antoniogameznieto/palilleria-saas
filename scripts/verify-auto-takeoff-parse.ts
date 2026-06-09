@@ -120,6 +120,53 @@ async function main(): Promise<void> {
     "Debe avisar fin en SOPORTES",
   );
 
+  const dmsRowsWithSupport = parseTakeoffRowsFromEmbeddedText(DMS_703_SAMPLE, {
+    includeSupportRows: true,
+  });
+  assert(
+    dmsRowsWithSupport.candidateRows.length === 5,
+    "DMS-703 con soporte opt-in parsea 5 filas",
+  );
+  const dmsSupportRow = dmsRowsWithSupport.candidateRows.find(
+    (row) => row.reference === "SUP-001",
+  );
+  assert(dmsSupportRow != null, "DMS-703 extrae SUP-001");
+  assert(
+    dmsSupportRow?.description?.includes("STD-PS-050") === true,
+    "DMS-703 soporte con STD-PS en descripción",
+  );
+  assert(dmsSupportRow?.unit === "ud", "DMS-703 soporte unidad ud");
+  assert(
+    dmsSupportRow?.confidence === 0.8,
+    "DMS-703 soporte confianza media",
+  );
+
+  const noSupportSample = `
+RELACION DE MATERIALES
+1 TUBERIA EXT\t1000937596\t1.0 M
+NOTAS : NO NECESITA SOPORTES
+`;
+  const noSupportRows = parseTakeoffRowsFromEmbeddedText(noSupportSample, {
+    includeSupportRows: true,
+  });
+  assert(
+    !noSupportRows.candidateRows.some((row) => row.reference?.startsWith("SUP-")),
+    "NO NECESITA SOPORTES no genera fila de soporte",
+  );
+
+  const looseSupportSample = `
+RELACION DE MATERIALES
+1 TUBERIA AC EXT\t1000027194\t2.0 M
+SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)
+`;
+  const looseSupportRows = parseTakeoffRowsFromEmbeddedText(looseSupportSample, {
+    includeSupportRows: true,
+  });
+  assert(
+    !looseSupportRows.candidateRows.some((row) => row.reference === "SUP-001"),
+    "Mención suelta de soporte no genera fila automática",
+  );
+
   const hlSections = findBomSections(HL_1289_SAMPLE);
   assert(
     hlSections.some((section) => section.id === "RELACION_DE_MATERIALES"),
@@ -1137,6 +1184,75 @@ SOPORTE TIPO A 1 UD
       (candidate) => candidate.parseability === "loose_text",
     ),
     "DW manual es texto suelto",
+  );
+
+  const tabularSupportRule = applyBusinessRulesToSuggestion({
+    item: 22,
+    reference: "SUP-001",
+    description: "STD-PS-050 (PSL)",
+    quantity: "1",
+    unit: "ud",
+    confidence: 0.8,
+    warnings: [],
+    rawLine: "",
+    lineNumber: 1,
+  });
+  assert(
+    tabularSupportRule.businessCategory === "support",
+    "Soporte tabular → support",
+  );
+  assert(tabularSupportRule.businessAction === "review", "Soporte tabular → review");
+  assert(
+    tabularSupportRule.businessConfidence === "medium",
+    "Soporte tabular confianza media",
+  );
+
+  const supportCompare = compareSuggestedTakeoffWithExisting(
+    [
+      {
+        item: 22,
+        reference: "SUP-001",
+        description: "STD-PS-050 (PSL)",
+        quantity: "1",
+        unit: "ud",
+        confidence: 0.8,
+      },
+    ],
+    [
+      {
+        reference: "SUP-001",
+        description: "Soporte tipo STD-PS-050",
+        quantity: "1",
+        unit: "ud",
+      },
+    ],
+  );
+  assert(
+    supportCompare.items[0]?.comparisonStatus === "matched",
+    "Soporte matched por referencia SUP-xxx",
+  );
+
+  const supportUiItem = withBusinessRuleFields({
+    item: 22,
+    reference: "SUP-001",
+    description: "STD-PS-050 (PSL)",
+    quantity: "1",
+    unit: "ud",
+    confidence: 0.8,
+    comparisonStatus: "missing" as const,
+    suggestionKey: "k-support",
+  });
+  assert(
+    !isBetaReadyProposalItem(supportUiItem),
+    "Soporte no entra en listas para incluir",
+  );
+  assert(
+    isBetaReviewProposalItem(supportUiItem),
+    "Soporte entra en requieren revisión",
+  );
+  assert(
+    !getAllReadyProposalKeys([supportUiItem, ...uiItems]).includes("k-support"),
+    "Bulk ready no incluye soporte",
   );
 
   const goldenReport = await runAutoTakeoffGoldenValidation({
