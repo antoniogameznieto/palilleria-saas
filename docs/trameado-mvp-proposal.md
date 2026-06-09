@@ -144,14 +144,22 @@ Columnas:
 - Botón «Exportar CSV» en UI; no exige revisión (aviso si pendiente).
 - Excel formateado / PDF plantilla: fase posterior.
 
-### 18E — Semiautomático asistido
+### 18E — Entrada rápida de tramos (completado)
+
+- Formulario mantiene Ø, SCH. y COLADA entre altas consecutivas.
+- Autoincremento de Nº (`max + 1`); Enter para guardar.
+- Acción «Duplicar tramo» en tabla (server action, invalida revisión).
+- Resumen «N tramos · X mm» en tabla.
+- Sin cambios de modelo ni export CSV.
+
+### 18F — Semiautomático asistido
 
 - Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
 - Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
 - Sugerencia de longitudes desde cotas extraídas (si texto embebido).
 - Alertas de discrepancia; sin autoaplicar.
 
-### 18F — Iso trameado y export PDF
+### 18G — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.

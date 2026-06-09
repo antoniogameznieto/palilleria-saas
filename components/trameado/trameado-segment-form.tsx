@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
@@ -14,6 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export type TrameadoStickySegmentValues = {
+  diameter: string;
+  schedule: string;
+  heatNumber: string;
+};
+
 type TrameadoSegmentFormProps = {
   companyId: string;
   jobId: string;
@@ -22,7 +28,9 @@ type TrameadoSegmentFormProps = {
   mode: "create" | "edit";
   segment?: SerializedTrameadoSegment;
   nextSegmentNumber?: string;
+  stickyValues?: TrameadoStickySegmentValues;
   onCancel?: () => void;
+  onSubmitCapture?: (sticky: TrameadoStickySegmentValues) => void;
   onSuccess?: () => void;
 };
 
@@ -31,6 +39,7 @@ const initialState: AuthActionState = {};
 function resolveInitialValues(
   segment: SerializedTrameadoSegment | undefined,
   nextSegmentNumber: string | undefined,
+  stickyValues: TrameadoStickySegmentValues | undefined,
 ) {
   if (segment) {
     return {
@@ -47,10 +56,10 @@ function resolveInitialValues(
     segmentNumber: nextSegmentNumber
       ? formatSegmentLabel(nextSegmentNumber)
       : "",
-    diameter: "",
-    schedule: "",
+    diameter: stickyValues?.diameter ?? "",
+    schedule: stickyValues?.schedule ?? "",
     palilloLength: "",
-    heatNumber: "",
+    heatNumber: stickyValues?.heatNumber ?? "",
     notes: "",
   };
 }
@@ -63,24 +72,64 @@ export function TrameadoSegmentForm({
   mode,
   segment,
   nextSegmentNumber,
+  stickyValues,
   onCancel,
+  onSubmitCapture,
   onSuccess,
 }: TrameadoSegmentFormProps) {
   const router = useRouter();
   const formKey = segment?.id ?? `new-${nextSegmentNumber ?? "segment"}`;
+  const palilloInputRef = useRef<HTMLInputElement>(null);
+  const handledSuccessRef = useRef(false);
   const [values, setValues] = useState(() =>
-    resolveInitialValues(segment, nextSegmentNumber),
+    resolveInitialValues(segment, nextSegmentNumber, stickyValues),
   );
   const action =
     mode === "edit" ? updateTrameadoSegmentAction : createTrameadoSegmentAction;
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   useEffect(() => {
-    if (state.success) {
-      router.refresh();
-      onSuccess?.();
+    if (mode === "create") {
+      palilloInputRef.current?.focus();
     }
-  }, [onSuccess, router, state.success]);
+  }, [mode]);
+
+  useEffect(() => {
+    if (!state.success) {
+      handledSuccessRef.current = false;
+      return;
+    }
+
+    if (handledSuccessRef.current) {
+      return;
+    }
+
+    handledSuccessRef.current = true;
+    router.refresh();
+    onSuccess?.();
+  }, [mode, onSuccess, router, state.success]);
+
+  const handleSubmit = () => {
+    if (mode !== "create") {
+      return;
+    }
+
+    onSubmitCapture?.({
+      diameter: values.diameter,
+      schedule: values.schedule,
+      heatNumber: values.heatNumber,
+    });
+  };
+
+  const handleFormKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+    if (event.key !== "Enter" || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    event.preventDefault();
+    handleSubmit();
+    event.currentTarget.requestSubmit();
+  };
 
   return (
     <form
@@ -88,6 +137,8 @@ export function TrameadoSegmentForm({
       action={formAction}
       className="space-y-4 rounded-lg border bg-muted/15 p-4"
       data-testid="trameado-segment-form"
+      onSubmit={handleSubmit}
+      onKeyDown={handleFormKeyDown}
     >
       <input type="hidden" name="companyId" value={companyId} />
       <input type="hidden" name="jobId" value={jobId} />
@@ -97,6 +148,13 @@ export function TrameadoSegmentForm({
         <input type="hidden" name="segmentId" value={segment.id} />
       ) : null}
       <input type="hidden" name="lengthUnit" value="mm" />
+
+      {mode === "create" ? (
+        <p className="text-xs text-muted-foreground">
+          Entrada rápida: tras añadir un tramo se mantienen Ø, SCH. y COLADA para
+          el siguiente. Pulsa Enter para guardar.
+        </p>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
@@ -113,6 +171,7 @@ export function TrameadoSegmentForm({
               }))
             }
             placeholder="<1>"
+            data-testid="trameado-segment-number-input"
           />
           {state.fieldErrors?.segmentNumber ? (
             <p className="text-xs text-destructive">
@@ -135,6 +194,7 @@ export function TrameadoSegmentForm({
               }))
             }
             placeholder='4"'
+            data-testid="trameado-diameter-input"
           />
           {state.fieldErrors?.diameter ? (
             <p className="text-xs text-destructive">
@@ -157,6 +217,7 @@ export function TrameadoSegmentForm({
               }))
             }
             placeholder="40"
+            data-testid="trameado-schedule-input"
           />
           {state.fieldErrors?.schedule ? (
             <p className="text-xs text-destructive">
@@ -170,6 +231,7 @@ export function TrameadoSegmentForm({
             PALILLO (longitud de corte mm)
           </Label>
           <Input
+            ref={palilloInputRef}
             id={`trameado-palillo-${formKey}`}
             name="palilloLength"
             required
@@ -182,6 +244,7 @@ export function TrameadoSegmentForm({
               }))
             }
             placeholder="363"
+            data-testid="trameado-palillo-input"
           />
           {state.fieldErrors?.palilloLength ? (
             <p className="text-xs text-destructive">
@@ -202,6 +265,7 @@ export function TrameadoSegmentForm({
                 heatNumber: event.target.value,
               }))
             }
+            data-testid="trameado-heat-input"
           />
         </div>
 
@@ -222,8 +286,17 @@ export function TrameadoSegmentForm({
       </div>
 
       {state.error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          data-testid="trameado-segment-form-error"
+        >
           {state.error}
+        </p>
+      ) : null}
+
+      {state.success ? (
+        <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
+          {state.success}
         </p>
       ) : null}
 

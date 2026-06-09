@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
 import { TrameadoSegmentForm } from "@/components/trameado/trameado-segment-form";
+import type { TrameadoStickySegmentValues } from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
+import { getNextSegmentNumber } from "@/lib/trameado/segment-helpers";
 import { cn } from "@/lib/utils";
 
 type TrameadoSectionProps = {
@@ -29,18 +31,6 @@ type TrameadoSectionProps = {
   suggestedLineIdentifier: string | null;
   variant?: "page" | "workspace";
 };
-
-function resolveNextSegmentNumber(segments: SerializedTrameadoSheet["segments"]) {
-  const numericValues = segments
-    .map((segment) => Number.parseInt(segment.segmentNumber, 10))
-    .filter((value) => Number.isFinite(value));
-
-  if (numericValues.length === 0) {
-    return "1";
-  }
-
-  return String(Math.max(...numericValues) + 1);
-}
 
 function getSheetStatusLabel(sheet: SerializedTrameadoSheet): string {
   if (sheet.reviewedAt) {
@@ -69,6 +59,16 @@ export function TrameadoSection({
   const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [showAddSegment, setShowAddSegment] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
+  const [stickyCreateValues, setStickyCreateValues] =
+    useState<TrameadoStickySegmentValues | undefined>();
+  const stickyCreateValuesRef = useRef<TrameadoStickySegmentValues | undefined>(
+    undefined,
+  );
+
+  const handleSegmentStickyCapture = (sticky: TrameadoStickySegmentValues) => {
+    stickyCreateValuesRef.current = sticky;
+    setStickyCreateValues(sticky);
+  };
 
   const selectedSheetId = useMemo(() => {
     if (sheets.length === 0) {
@@ -97,7 +97,7 @@ export function TrameadoSection({
     null;
 
   const nextSegmentNumber = selectedSheet
-    ? resolveNextSegmentNumber(selectedSheet.segments)
+    ? getNextSegmentNumber(selectedSheet.segments)
     : "1";
 
   return (
@@ -220,6 +220,8 @@ export function TrameadoSection({
                     setUserSheetId(event.target.value);
                     setShowAddSegment(false);
                     setEditingSegmentId(null);
+                    stickyCreateValuesRef.current = undefined;
+                    setStickyCreateValues(undefined);
                   }}
                 >
                   {sheets.map((sheet) => (
@@ -309,14 +311,18 @@ export function TrameadoSection({
 
                 {canManage && showAddSegment ? (
                   <TrameadoSegmentForm
+                    key={`create-${selectedSheet.id}-${selectedSheet.segments.length}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
                     sheetId={selectedSheet.id}
                     mode="create"
                     nextSegmentNumber={nextSegmentNumber}
+                    stickyValues={
+                      stickyCreateValuesRef.current ?? stickyCreateValues
+                    }
                     onCancel={() => setShowAddSegment(false)}
-                    onSuccess={() => setShowAddSegment(false)}
+                    onSubmitCapture={handleSegmentStickyCapture}
                   />
                 ) : null}
 
@@ -337,6 +343,7 @@ export function TrameadoSection({
                   companyId={companyId}
                   jobId={jobId}
                   drawingId={drawingId}
+                  sheetId={selectedSheet.id}
                   segments={selectedSheet.segments}
                   canManage={canManage}
                   editingSegmentId={editingSegmentId}

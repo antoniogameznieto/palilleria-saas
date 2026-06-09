@@ -46,6 +46,31 @@ test.describe("trameado manual", () => {
     await page.getByTestId("trameado-add-segment-submit").click();
     await expect(page.getByTestId("trameado-segments-table")).toBeVisible();
     await expect(page.getByTestId("trameado-segment-row")).toContainText("363");
+    await expect(page.getByTestId("trameado-segment-form")).toBeVisible();
+    await expect(page.getByTestId("trameado-segment-number-input")).toHaveValue(
+      "<2>",
+    );
+    await expect(page.getByTestId("trameado-diameter-input")).toHaveValue('4"');
+    await expect(page.getByTestId("trameado-schedule-input")).toHaveValue("40");
+    await expect(page.getByTestId("trameado-palillo-input")).toHaveValue("");
+
+    await page.getByTestId("trameado-palillo-input").fill("120");
+    await page.getByTestId("trameado-add-segment-submit").click();
+    await expect(page.getByTestId("trameado-segment-summary")).toContainText(
+      "2 tramos",
+    );
+    await expect(page.getByTestId("trameado-segment-summary")).toContainText(
+      "483 mm",
+    );
+
+    await page.getByTestId("trameado-duplicate-segment").first().click();
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(3);
+    await expect(page.getByTestId("trameado-segment-summary")).toContainText(
+      "3 tramos",
+    );
+    await expect(page.getByTestId("trameado-segment-summary")).toContainText(
+      "846 mm",
+    );
 
     const exportLink = page.getByTestId("trameado-export-csv");
     await expect(exportLink).toBeVisible();
@@ -59,10 +84,13 @@ test.describe("trameado manual", () => {
     expect(exportBody).toContain("HL-E2E-A012AA-N-01");
     expect(exportBody).toContain("363");
 
-    await page.getByTestId("trameado-edit-segment").click();
+    await page.getByTestId("trameado-edit-segment").first().click();
     await page.getByTestId("trameado-segment-form").getByLabel(/PALILLO/).fill("370");
     await page.getByTestId("trameado-update-segment-submit").click();
-    await expect(page.getByTestId("trameado-segment-row")).toContainText("370");
+    await expect(page.getByTestId("trameado-segment-form")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-segment-row").first()).toContainText(
+      "370",
+    );
 
     await page.getByTestId("trameado-mark-reviewed").click();
     await expect(page.getByTestId("trameado-sheet-reviewed-status")).toBeVisible({
@@ -70,8 +98,8 @@ test.describe("trameado manual", () => {
     });
 
     page.once("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("trameado-delete-segment").click();
-    await expect(page.getByTestId("trameado-segments-empty")).toBeVisible();
+    await page.getByTestId("trameado-delete-segment").first().click();
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(2);
     await expect(page.getByTestId("trameado-sheet-reviewed-status")).toHaveCount(
       0,
     );
@@ -112,10 +140,14 @@ test.describe("trameado manual", () => {
       "HL-E2E-VIEWER-01",
     );
     await expect(page.getByTestId("trameado-segment-row")).toContainText("120");
+    await expect(page.getByTestId("trameado-segment-summary")).toContainText(
+      "1 tramo",
+    );
     await expect(page.getByTestId("trameado-export-csv")).toBeVisible();
     await expect(page.getByTestId("trameado-create-sheet")).toHaveCount(0);
     await expect(page.getByTestId("trameado-add-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-edit-segment")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-duplicate-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-mark-reviewed")).toHaveCount(0);
     await viewerContext.close();
   });

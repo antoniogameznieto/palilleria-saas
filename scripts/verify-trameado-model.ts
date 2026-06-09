@@ -8,6 +8,13 @@ import {
   TRAMEADO_CSV_HEADERS,
 } from "../lib/trameado/export-csv";
 import {
+  calculateTrameadoTotals,
+  formatTrameadoSegmentDisplayLabel,
+  formatTrameadoSheetSummary,
+  getNextSegmentNumber,
+  sortTrameadoSegmentsForDisplay,
+} from "../lib/trameado/segment-helpers";
+import {
   formatPalilloLength,
   formatSegmentLabel,
   normalizeDiameter,
@@ -126,6 +133,37 @@ function verifyExportLabels(): void {
   );
 }
 
+function verifySegmentHelpers(): void {
+  const segments = [
+    { segmentNumber: "3", segmentLabel: null, sortOrder: 3, palilloLength: "100" },
+    { segmentNumber: "1", segmentLabel: "Tramo A", sortOrder: 1, palilloLength: "363" },
+    { segmentNumber: "2", segmentLabel: null, sortOrder: 2, palilloLength: "120" },
+  ];
+
+  assert(getNextSegmentNumber(segments) === "4", "Next segment should be max + 1");
+
+  const sorted = sortTrameadoSegmentsForDisplay(segments);
+  assert(sorted[0]?.segmentNumber === "1", "Display order should use sortOrder");
+
+  assert(
+    formatTrameadoSegmentDisplayLabel(segments[1]!) === "Tramo A",
+    "Custom segment labels should be preserved",
+  );
+  assert(
+    formatTrameadoSegmentDisplayLabel(segments[2]!) === "<2>",
+    "Numeric segments should render with angle brackets",
+  );
+
+  const totals = calculateTrameadoTotals(segments);
+  assert(totals.segmentCount === 3, "Totals should count all segments");
+  assert(totals.totalPalilloMm === 583, "Totals should sum valid palillo lengths");
+
+  assert(
+    formatTrameadoSheetSummary(segments) === "3 tramos · 583 mm",
+    "Sheet summary should format count and mm total",
+  );
+}
+
 function verifyCsvExport(): void {
   const sheet = {
     lineIdentifier: "HL-1291-A012AA-N-01",
@@ -208,6 +246,7 @@ function main(): void {
   verifySheetValidation();
   verifySegmentValidation();
   verifyExportLabels();
+  verifySegmentHelpers();
   verifyCsvExport();
   console.log("verify-trameado-model: all checks passed");
 }
