@@ -1,4 +1,13 @@
 import {
+  buildTrameadoCsv,
+  buildTrameadoCsvDownloadBuffer,
+  buildTrameadoCsvExportPath,
+  buildTrameadoCsvFileName,
+  formatTrameadoExportSegmentNumber,
+  sortTrameadoExportSegments,
+  TRAMEADO_CSV_HEADERS,
+} from "../lib/trameado/export-csv";
+import {
   formatPalilloLength,
   formatSegmentLabel,
   normalizeDiameter,
@@ -110,6 +119,88 @@ function verifyExportLabels(): void {
     TRAMEADO_SHEET_EXPORT_COLUMNS.some((column) => column.label === "PALILLO"),
     "PALILLO column should be present",
   );
+  assert(
+    TRAMEADO_CSV_HEADERS.join(",") ===
+      "ISO,CLASE,Nº,Ø,SCH.,PALILLO,COLADA",
+    "CSV headers should match client column order",
+  );
+}
+
+function verifyCsvExport(): void {
+  const sheet = {
+    lineIdentifier: "HL-1291-A012AA-N-01",
+    lineClass: "A012AA",
+    segments: [
+      {
+        segmentNumber: "2",
+        segmentLabel: null,
+        diameter: '4"',
+        schedule: "40",
+        palilloLength: "363",
+        lengthUnit: "mm",
+        heatNumber: "-C-123",
+        sortOrder: 2,
+      },
+      {
+        segmentNumber: "1",
+        segmentLabel: "<1>",
+        diameter: '3/4"',
+        schedule: "80",
+        palilloLength: "120.000",
+        lengthUnit: "mm",
+        heatNumber: "",
+        sortOrder: 1,
+      },
+    ],
+  };
+
+  const csv = buildTrameadoCsv(sheet);
+  const lines = csv.split("\r\n");
+
+  assert(lines.length === 3, "CSV should contain header and two rows");
+  assert(
+    lines[0] === "ISO,CLASE,Nº,Ø,SCH.,PALILLO,COLADA",
+    "CSV header should match client columns",
+  );
+
+  const sorted = sortTrameadoExportSegments(sheet.segments);
+  assert(sorted[0]?.segmentNumber === "1", "Segments should sort by sortOrder");
+
+  const firstRow = lines[1] ?? "";
+  assert(firstRow.includes("<1>"), "First row should use visible segment label");
+  assert(firstRow.includes("120"), "First row should include palillo length");
+
+  const secondRow = lines[2] ?? "";
+  assert(
+    secondRow.includes("'-C-123") || secondRow.includes("\"'-C-123\""),
+    "Formula-risk COLADA values should be escaped for Excel",
+  );
+
+  assert(
+    formatTrameadoExportSegmentNumber({
+      segmentNumber: "3",
+      segmentLabel: null,
+    }) === "<3>",
+    "Export segment number should use angle brackets when no label",
+  );
+
+  assert(
+    buildTrameadoCsvFileName("HL-1291-A012AA-N-01", "DWG-001") ===
+      "trameado-DWG-001-HL-1291-A012AA-N-01.csv",
+    "CSV file name should include drawing and line identifiers",
+  );
+
+  assert(
+    buildTrameadoCsvExportPath("sheet-123") ===
+      "/api/files/trameado/sheet-123/csv",
+    "CSV export path should match API route",
+  );
+
+  const buffer = buildTrameadoCsvDownloadBuffer(csv);
+  assert(
+    buffer.subarray(0, 3).equals(Buffer.from("\uFEFF", "utf-8")),
+    "CSV download buffer should include UTF-8 BOM for Excel",
+  );
 }
 
 function main(): void {
@@ -117,6 +208,7 @@ function main(): void {
   verifySheetValidation();
   verifySegmentValidation();
   verifyExportLabels();
+  verifyCsvExport();
   console.log("verify-trameado-model: all checks passed");
 }
 

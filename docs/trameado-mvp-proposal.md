@@ -105,10 +105,11 @@ Columnas:
 - Nº con formato `<n>`.
 - COLADA vacía por defecto.
 
-### Stretch (18D)
+### Stretch (post-18D)
 
 - PDF con rejilla similar a plantilla cliente.
 - PDF «iso trameado» con anotaciones vectoriales (líneas, círculos, etiquetas).
+- Export Excel formateado (no solo CSV).
 
 ## 8. Limitaciones del MVP
 
@@ -129,20 +130,28 @@ Columnas:
 - Script `npm run verify:trameado`.
 - **Sin UI** en esta fase.
 
-### 18C — MVP manual con UI
+### 18C — MVP manual con UI (completado)
 
-- UI: tabla manual + visor PDF en detalle de plano.
-- Export CSV/Excel hoja de palilleo.
-- E2E: crear tramos, exportar, permisos viewer.
+- UI: pestaña Trameado en detalle de plano; crear hoja, tramos, revisión.
+- Viewer solo lectura.
+- E2E: `tests/e2e/trameado-manual.spec.ts`.
 
-### 18D — Semiautomático asistido
+### 18D — Export CSV hoja cliente (completado)
+
+- Endpoint `GET /api/files/trameado/[sheetId]/csv`.
+- Columnas: ISO, CLASE, Nº, Ø, SCH., PALILLO, COLADA.
+- UTF-8 + BOM; separador `,`; anti formula-injection.
+- Botón «Exportar CSV» en UI; no exige revisión (aviso si pendiente).
+- Excel formateado / PDF plantilla: fase posterior.
+
+### 18E — Semiautomático asistido
 
 - Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
 - Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
 - Sugerencia de longitudes desde cotas extraídas (si texto embebido).
 - Alertas de discrepancia; sin autoaplicar.
 
-### 18E — Iso trameado y export PDF
+### 18F — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.

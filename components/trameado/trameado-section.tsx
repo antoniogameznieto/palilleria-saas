@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
+import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
 import { TrameadoSegmentForm } from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
@@ -283,6 +284,12 @@ export function TrameadoSection({
                   reviewedAt={selectedSheet.reviewedAt}
                   reviewedByLabel={selectedSheet.reviewedByLabel}
                   canManage={canManage}
+                />
+
+                <ExportTrameadoCsvButton
+                  sheetId={selectedSheet.id}
+                  segmentCount={selectedSheet.segments.length}
+                  reviewedAt={selectedSheet.reviewedAt}
                 />
 
                 {canManage ? (

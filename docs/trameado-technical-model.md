@@ -115,7 +115,7 @@ Archivo: `lib/actions/trameado.ts`
 npm run verify:trameado
 ```
 
-Script: `scripts/verify-trameado-model.ts` — validaciones Zod + helpers de formato + columnas export.
+Script: `scripts/verify-trameado-model.ts` — validaciones Zod + helpers de formato + export CSV.
 
 ## Migración
 
@@ -126,10 +126,38 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 
 | Pantalla | Fase |
 |----------|------|
-| Paso Trameado en detalle de plano (PDF + tabla) | 18C |
-| Export Excel/CSV hoja cliente | 18C |
-| Hints desde BOM (Ø, SCH.) | 18D |
-| Anotaciones iso trameado | 18E |
+| Paso Trameado en detalle de plano (PDF + tabla) | 18C ✅ |
+| Export CSV hoja cliente | 18D ✅ |
+| Export Excel formateado / PDF plantilla | posterior |
+| Hints desde BOM (Ø, SCH.) | 18E |
+| Anotaciones iso trameado | 18F |
+
+## Export CSV (18D)
+
+**Ruta:** `GET /api/files/trameado/[sheetId]/csv`  
+**Helper:** `lib/trameado/export-csv.ts`
+
+| Columna CSV | Origen |
+|-------------|--------|
+| ISO | `sheet.lineIdentifier` |
+| CLASE | `sheet.lineClass` |
+| Nº | `segment.segmentLabel` o `<n>` desde `segmentNumber` |
+| Ø | `segment.diameter` |
+| SCH. | `segment.schedule` |
+| PALILLO | `segment.palilloLength` (mm, sin ceros finales) |
+| COLADA | `segment.heatNumber` |
+
+- UTF-8 con BOM (`\uFEFF`) para Excel.
+- Separador `,` (mismo criterio que exports takeoff).
+- Escape de celdas + `protectCsvExportCell` anti formula-injection.
+- Orden: `sortOrder`, luego `segmentNumber`.
+- Nombre archivo: `trameado-{drawingNumber}-{lineIdentifier}.csv` (sanitizado).
+- Permisos: cualquier rol con acceso de lectura al plano (owner/admin/engineer/viewer); 401 sin sesión; 403 cross-tenant.
+- No exige hoja revisada; UI muestra aviso «Hoja pendiente de revisión» si aplica.
+
+**UI:** botón «Exportar CSV» en pestaña Trameado (`ExportTrameadoCsvButton`); visible con ≥1 tramo; viewer puede descargar.
+
+**Verificación:** `verifyCsvExport()` en `scripts/verify-trameado-model.ts`.
 
 ## Archivos tocados en 18B
 
