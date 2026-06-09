@@ -145,19 +145,57 @@ Para **HL-1291-01** con la app actual:
 | 1 | HL-1289-01 | 5 | Misma estructura que 1291-01 |
 | 2 | HL-1289-02 | 3 | Panel producto = golden completo |
 
-## 11. Fase siguiente recomendada
+## 11. Fase 18M-A — Scoring y ranking de cotas candidatas
 
-### → **18M-A: mejorar filtro y ranking de cotas candidatas**
+**Implementado (jun 2026).** Sin cambios en modelo BD, exports ni auto-PALILLO.
 
-**Justificación:**
+### Scoring (`candidate-dimensions.ts`)
 
-1. Es el gap de **mayor impacto inmediato** con **menor riesgo** (helper puro + UI panel, sin motor geométrico).
-2. Los planos **-01** concentran el problema (15–17 cotas, 0 golden literal); un ranking por zona de dibujo, deduplicación y penalización de refs plano (1290, 1289…) reduciría ruido.
-3. **18M-B** (plantilla cliente) aporta poco si el ingeniero aún no sabe qué PALILLO poner en -01.
-4. **18M-C** (anotaciones PDF) y **18M-D** (vector engine) son más costosas y dependen de posición/geometría; conviene después de mejorar señal en el panel.
-5. Validación 1289-02 demuestra que con **6 cotas bien filtradas** el flujo actual ya es casi suficiente para -02.
+| Señal | Efecto |
+|-------|--------|
+| Cota en rango dibujo 16–5000 mm | +30 base |
+| Rango típico PALILLO 60–2500 mm | +35 |
+| Longitud habitual en isos -02 (68, 85, 100, 120, 193, 361…) | +20 |
+| Contexto zona dibujo (sin BOM/cajetín) | +25 |
+| Contexto textual cota (COTA, mm, LONG…) | +12 |
+| Cerca BOM/P&ID | −40 |
+| Bloque presión/temperatura | −35 |
+| Cota muy larga (>2500) | −15 |
+| Valor corto (<60 mm) | −20 |
+| Cota corta (<80 mm) | −12 |
+| Cerca elevación EL= | −10 |
 
-**Alternativas descartadas por ahora:**
+**Confidence:** high ≥70 · medium ≥40 · low &lt;40 · excluida si score &lt;15.
+
+### Filtros nuevos (ruido -01)
+
+- Orientación **45 / 44.99** (solo esos valores, no todo el bloque ORIENTACION).
+- Presión/temperatura diseño: 13, 17.6, 51, 79.
+- Ref. línea/plano HL 1289–1294, KP/plano Nº.
+- Rating brida 150#/300# (FIGURA 8, BRIDA).
+- Espárragos x90mm/x110mm… (solo la longitud del perno).
+- DN fraccionario 5/8, 3/4 en contexto tubería.
+- Coordenadas E/N/EL y UTM.
+
+### UI panel
+
+- **Cotas más probables** (10 por defecto) + botón **Ver más cotas** (resto hasta 24).
+- Tooltip con `reason` + contexto corto.
+- **Preparar tramo (18K-B)** sin cambios de contrato.
+
+### Comparativa 18L → 18M-A (`validate:trameado-functional`)
+
+| Plano | Antes (18L) | Después (18M-A) |
+|-------|-------------|-----------------|
+| HL-1291-01 | 17 cotas sin ranking; 45, 17, 1290 mezclados | 10 primary + 4 additional (14 ranked); sin 45/17/1290; golden literal sigue 0/5 |
+| HL-1291-02 | 7 cotas | 7 ranked; 100, 120 en primary high; golden 2/3 |
+| HL-1289-02 | 6 cotas, golden 3/3 | 6 ranked; golden 3/3 en primary |
+
+**Siguiente recomendado:** 18M-B export/plantilla cliente o 18M-D vector engine (según prioridad negocio).
+
+## 12. Fase siguiente (backlog)
+
+### Alternativas descartadas por ahora:
 
 | Fase | Motivo de postponer |
 |------|---------------------|
@@ -165,7 +203,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 12. Criterios MVP — estado tras 18L
+## 12. Criterios MVP — estado tras 18M-A
 
 | Criterio | Estado |
 |----------|--------|
@@ -184,4 +222,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L — jun 2026. Datos generados con `validate-trameado-functional.ts` y `research-trameado-vector`.*
+*Validación Fase 18L; scoring 18M-A — jun 2026. Datos con `validate-trameado-functional.ts` y `research-trameado-vector`.*

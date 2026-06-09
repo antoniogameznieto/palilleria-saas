@@ -27,6 +27,7 @@ import {
 } from "../lib/trameado/suggestions";
 import {
   DEFAULT_MAX_CANDIDATE_DIMENSIONS,
+  DEFAULT_PRIMARY_CANDIDATE_DIMENSIONS,
   extractCandidateDimensionsFromText,
 } from "../lib/trameado/candidate-dimensions";
 import {
@@ -370,9 +371,12 @@ A012AA
 RELACIÓN DE MATERIALES
 1 3/4" SCH 80 TUBERIA AC EXT. PLANOS A-106 B	1000027194	0.4 M
 2 3/4" CODO 90 AC SW 3000# A-105	1000039880	1
+4" FIGURA 8 150# RF AC A-516 60
 PARA CONT. VER LINEA NUM.
 2301GB47G-C1-4"-HL-1291-A012AA-N
 PLANO Nº: 2301GB47G-C1-L-HL-1291-01
+ORIENTACION 45
+44.99
 120
 85
 193
@@ -385,6 +389,25 @@ EL=+101500
 5/8"x90mm ESPARRAGO+2 TUERCAS A.AL. B7/2H
 `.trim();
 
+const SAMPLE_HL_1291_01_NOISE_TEXT = `
+2301GB47G-C1-L-HL-1291-01
+PRESIÓN DISEÑO kg/cm g
+13.00
+17.60
+51.0
+79.0
+ORIENTACION 45
+44.99
+PLANO Nº: 2301GB47G-C1-L-KP-1290-01
+1290
+1291
+297
+235
+129
+150
+4" FIGURA 8 150# RF AC A-516 60
+`.trim();
+
 function verifyCandidateDimensions(): void {
   const result = extractCandidateDimensionsFromText(SAMPLE_HL_1291_02_TEXT, {
     fileName: "2301GB47G-C1-L-HL-1291-02.pdf",
@@ -393,40 +416,81 @@ function verifyCandidateDimensions(): void {
   });
 
   const values = result.candidates.map((candidate) => candidate.value);
+  const allVisible = [...result.candidates, ...result.additionalCandidates].map(
+    (candidate) => candidate.value,
+  );
 
   assert(result.hasEmbeddedText, "Sample HL-1291-02 text should be embedded");
-  assert(values.includes(120), "Should detect 120 as candidate dimension");
-  assert(values.includes(193), "Should detect 193 as candidate dimension");
-  assert(values.includes(361), "Should detect 361 as candidate dimension");
-  assert(values.includes(100), "Should detect 100 as candidate dimension");
-  assert(!values.includes(1000027194), "Should exclude SAP codes");
-  assert(!values.includes(2025), "Should exclude revision year noise");
-  assert(!values.includes(51), "Should exclude design pressure 51");
-  assert(!values.includes(79), "Should exclude design temperature 79");
-  assert(!values.includes(1179904), "Should exclude UTM coordinate values");
-  assert(!values.includes(1291), "Should exclude HL line number as noise");
-  assert(!values.includes(3000), "Should exclude 3000# accessory rating");
-  assert(!values.includes(90), "Should exclude bolt length from espárrago line");
+  assert(values.includes(120), "Should detect 120 as primary candidate");
+  assert(allVisible.includes(193), "Should detect 193 as ranked candidate");
+  assert(allVisible.includes(361), "Should detect 361 as ranked candidate");
+  assert(allVisible.includes(100), "Should detect 100 as ranked candidate");
+  assert(result.candidates[0]?.score >= (result.candidates[1]?.score ?? 0), "Primary list should be score-sorted");
+  assert(
+    values.indexOf(120) < values.indexOf(68),
+    "120 should rank before shorter/atypical 68 in primary list",
+  );
+  assert(
+    result.candidates.every((candidate) => candidate.score >= 15),
+    "Primary candidates should meet minimum score threshold",
+  );
+  assert(
+    result.candidates.every((candidate) => candidate.reasons.length > 0),
+    "Candidates should include scoring reasons",
+  );
+  assert(!allVisible.includes(1000027194), "Should exclude SAP codes");
+  assert(!allVisible.includes(2025), "Should exclude revision year noise");
+  assert(!allVisible.includes(13), "Should exclude design pressure 13");
+  assert(!allVisible.includes(17.6), "Should exclude design block 17.6");
+  assert(!allVisible.includes(51), "Should exclude design pressure 51");
+  assert(!allVisible.includes(79), "Should exclude design temperature 79");
+  assert(!allVisible.includes(1179904), "Should exclude UTM coordinate values");
+  assert(!allVisible.includes(1291), "Should exclude HL line number as noise");
+  assert(!allVisible.includes(3000), "Should exclude 3000# accessory rating");
+  assert(!allVisible.includes(90), "Should exclude bolt length from espárrago line");
+  assert(!allVisible.includes(45), "Should exclude orientation 45");
+  assert(!allVisible.includes(44.99), "Should exclude orientation 44.99");
+  assert(!allVisible.includes(150), "Should exclude 150# flange rating context");
+
+  const longPlan = extractCandidateDimensionsFromText(SAMPLE_HL_1291_01_NOISE_TEXT, {
+    fileName: "2301GB47G-C1-L-HL-1291-01.pdf",
+    drawingNumber: "2301GB47G-C1-L-HL-1291-01",
+    lineNumber: "HL-1291-A012AA-N-01",
+  });
+  const longValues = [...longPlan.candidates, ...longPlan.additionalCandidates].map(
+    (candidate) => candidate.value,
+  );
+
+  assert(!longValues.includes(1290), "Should exclude KP/plan reference 1290");
+  assert(!longValues.includes(1291), "Should exclude HL line reference 1291");
+  assert(!longValues.includes(45), "Should exclude orientation on long iso");
+  assert(longValues.includes(297) || longValues.includes(235), "Should keep drawing dimensions on long iso");
 
   const limited = extractCandidateDimensionsFromText(SAMPLE_HL_1291_02_TEXT, {
     maxCandidates: 3,
+    primaryCandidateLimit: 3,
   });
   assert(
-    limited.candidates.length === 3,
-    "maxCandidates should cap visible candidate dimensions",
+    limited.candidates.length + limited.additionalCandidates.length <= 3,
+    "maxCandidates should cap ranked candidate dimensions",
   );
   assert(
-    limited.warnings.some((warning) => warning.includes("primeras 3")),
+    limited.warnings.some((warning) => warning.includes("3 cotas mejor puntuadas")),
     "maxCandidates cap should add a warning",
   );
 
   const empty = extractCandidateDimensionsFromText("");
   assert(empty.candidates.length === 0, "Empty text should yield no candidates");
+  assert(empty.additionalCandidates.length === 0, "Empty text should yield no overflow");
   assert(empty.insufficientText, "Empty text should flag insufficient text");
 
   assert(
     DEFAULT_MAX_CANDIDATE_DIMENSIONS >= 10,
     "Default candidate limit should allow a useful panel size",
+  );
+  assert(
+    DEFAULT_PRIMARY_CANDIDATE_DIMENSIONS >= 8,
+    "Default primary candidate limit should keep panel focused",
   );
 }
 

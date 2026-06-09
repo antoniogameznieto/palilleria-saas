@@ -120,11 +120,13 @@ En **todos** los PDFs vectoriales:
 
 ## 6. Heurísticas de cotas candidatas
 
-### Incluir (rango 16–5000 mm, entero)
+> **18M-A (implementado):** scoring numérico + ranking high/medium/low en `lib/trameado/candidate-dimensions.ts`. Panel muestra top 10 + «Ver más cotas» (hasta 24). No genera PALILLO automáticamente.
 
-Números aislados en zona de dibujo: 16, 68, 80, 85, 100, 120, 129, 150, 170, 179, 232, 235, 279, 295, 297, 361, 424, 577, 629, 738, 938, 1059, 1127, 1362, 1840, etc.
+### Incluir (rango 16–5000 mm, entero, score ≥15)
 
-### Excluir (implementado en script)
+Números aislados en zona de dibujo, priorizados 60–2500 mm y longitudes habituales -02: 68, 85, 100, 120, 129, 170, 193, 235, 279, 295, 297, 361, etc.
+
+### Excluir o degradar (18M-A)
 
 | Categoría | Ejemplos | Heurística |
 |-----------|----------|------------|
@@ -134,9 +136,18 @@ Números aislados en zona de dibujo: 16, 68, 80, 85, 100, 120, 129, 150, 170, 17
 | Cantidades BOM | 1.8, 2, 32 | Fila BOM + contexto TUBERIA/UD |
 | Coordenadas | E/N/EL, UTM 651658… | Token `E=`/`N=`/`EL=` o valor en set coordenadas |
 | Schedule | 40, 80 | Contexto `SCH 40` |
-| Rating accesorio | 3000 | Contexto `3000#` |
-| Espárragos | 90, 110 | Contexto `5/8"x90mm` |
-| Ref. línea/plano | 1289, 1291, 1290 | Contexto `HL-1291`, `PLANO Nº` |
+| Rating accesorio | 150#, 3000# | Contexto FIGURA 8 / BRIDA / 3000# |
+| Espárragos | 90, 110, 120, 140 | Solo longitud en `5/8"x90mm` |
+| Orientación | 45, 44.99 | Solo valores ángulo cerca ORIENTACION |
+| Ref. línea/plano | 1289–1294, 1290 | Contexto `HL-1291`, `PLANO Nº`, KP |
+| DN fraccionario | 5/8, 3/4 | Contexto tubería/accesorio, no como cota mm |
+
+### Ranking (18M-A)
+
+- **Primary:** top 10 por score (utilidad probable PALILLO).
+- **Additional:** resto hasta `maxCandidates` 24.
+- **Confidence:** high ≥70 · medium ≥40 · low &lt;40.
+- **Límites abiertos:** sin X/Y, sin agrupación por tramo, sin suma automática.
 
 ### Falsos positivos residuales
 
@@ -208,7 +219,7 @@ Para **prepropuesta con revisión obligatoria** en subconjunto `-02`: **marginal
 | Nivel | Descripción | Estado |
 |-------|-------------|--------|
 | **1** | Precrear hojas + Ø/SCH desde BOM/metadatos | ✅ 18I-A |
-| **2** | Panel de **cotas candidatas** filtradas junto al PDF/hoja | ✅ 18K-A |
+| **2** | Panel de **cotas candidatas** filtradas y rankeadas junto al PDF/hoja | ✅ 18K-A + 18M-A |
 | **3** | Prepropuesta de palillos desde cotas + revisión obligatoria | ⚠️ solo plausible en `-02`; experimental |
 | **4** | Interpretación geométrica vectorial (paths, topología iso) | Research; requiere motor nuevo |
 | **5** | Iso trameado automático completo + marcas `<n>` | No viable MVP; OCR/visión alto riesgo |

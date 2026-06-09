@@ -247,9 +247,13 @@ Columnas:
 - **Conclusión:** flujo manual asistido **viable**; gaps principales en ranking cotas (-01) y ausencia de X/Y/suma automática.
 - **Siguiente recomendado:** 18M-A filtro/ranking cotas candidatas.
 
-### 18M-A — Filtro/ranking cotas candidatas (recomendado)
+### 18M-A — Filtro/ranking cotas candidatas (completado)
 
-- Reducir ruido en planos -01; priorizar cotas de zona dibujo; mejorar match -02.
+- Helper: `lib/trameado/candidate-dimensions.ts` — scoring numérico, `confidence` high/medium/low, `reasons[]`, filtros de ruido ampliados.
+- UI: panel con **Cotas más probables** (top 10) + **Ver más cotas** (hasta 24).
+- **No** crea tramos ni infiere PALILLO definitivo; **18K-B** intacto (Preparar tramo + confirmación).
+- **Límites:** sin X/Y, sin agrupación por tramo, sin suma automática.
+- Validación: `verify:trameado` + `validate:trameado-functional` — mejora ruido en -01 (17→14 ranked, sin 45/17/1290 en top); -02 mantiene 100/120 en primary; 1289-02 golden 3/3.
 
 ### 18M-B — Export/plantilla cliente (backlog)
 

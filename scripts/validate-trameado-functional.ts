@@ -93,27 +93,33 @@ async function main() {
         {
           reference: "1000000001",
           description: spec.takeoffPipeDescription,
-          quantity: spec.takeoffPipeQty,
           unit: "M",
         },
       ],
       existingLineIdentifiers: [],
     });
 
-    const candidateValues = candidates.candidates.map(
+    const allRanked = [...candidates.candidates, ...candidates.additionalCandidates].map(
       (candidate) => Number(candidate.displayValue),
     );
     const goldenHits = spec.goldenPalilloMm.filter((value) =>
-      candidateValues.includes(value),
+      allRanked.includes(value),
     );
 
     console.log(`\n=== ${spec.label} ===`);
     console.log(`embeddedTextLength: ${candidates.embeddedTextLength}`);
     console.log(
-      `candidates (${candidates.candidates.length}): ${candidates.candidates
-        .map((c) => `${c.displayValue}[${c.confidence}]`)
+      `primary (${candidates.candidates.length}/${candidates.totalRankedCount} ranked): ${candidates.candidates
+        .map((c) => `${c.displayValue}[${c.confidence},${c.score}]`)
         .join(", ")}`,
     );
+    if (candidates.additionalCandidates.length > 0) {
+      console.log(
+        `additional (${candidates.additionalCandidates.length}): ${candidates.additionalCandidates
+          .map((c) => `${c.displayValue}[${c.confidence},${c.score}]`)
+          .join(", ")}`,
+      );
+    }
     console.log(`overallConfidence: ${candidates.overallConfidence}`);
     if (candidates.warnings.length > 0) {
       console.log(`warnings: ${candidates.warnings.join(" | ")}`);

@@ -18,6 +18,8 @@ export async function loadCandidateDimensionsForDrawing(
   if (!input.storagePath) {
     return {
       candidates: [],
+      additionalCandidates: [],
+      totalRankedCount: 0,
       embeddedTextLength: 0,
       hasEmbeddedText: false,
       insufficientText: true,
@@ -43,6 +45,8 @@ export async function loadCandidateDimensionsForDrawing(
   } catch {
     return {
       candidates: [],
+      additionalCandidates: [],
+      totalRankedCount: 0,
       embeddedTextLength: 0,
       hasEmbeddedText: false,
       insufficientText: true,

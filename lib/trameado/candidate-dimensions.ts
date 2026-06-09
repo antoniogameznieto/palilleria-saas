@@ -10,8 +10,10 @@ export type CandidateDimension = {
   value: number;
   displayValue: string;
   raw: string;
+  score: number;
   category: CandidateDimensionCategory;
   reason: string;
+  reasons: string[];
   confidence: CandidateDimensionConfidence;
   contextSnippet: string | null;
   warnings: string[];
@@ -19,6 +21,8 @@ export type CandidateDimension = {
 
 export type CandidateDimensionsExtractionResult = {
   candidates: CandidateDimension[];
+  additionalCandidates: CandidateDimension[];
+  totalRankedCount: number;
   embeddedTextLength: number;
   hasEmbeddedText: boolean;
   insufficientText: boolean;
@@ -31,12 +35,27 @@ export type ExtractCandidateDimensionsOptions = {
   lineNumber?: string | null;
   fileName?: string | null;
   maxCandidates?: number;
+  primaryCandidateLimit?: number;
 };
 
 export const DEFAULT_MAX_CANDIDATE_DIMENSIONS = 24;
+export const DEFAULT_PRIMARY_CANDIDATE_DIMENSIONS = 10;
 
 const MIN_DRAWING_DIMENSION_MM = 16;
 const MAX_DRAWING_DIMENSION_MM = 5000;
+const OPTIMAL_PALILLO_MIN_MM = 60;
+const OPTIMAL_PALILLO_MAX_MM = 2500;
+const MIN_RANKED_SCORE = 15;
+
+const PROJECT_LINE_REFERENCE_NUMBERS = new Set([
+  1289, 1290, 1291, 1292, 1293, 1294,
+]);
+
+const COMMON_SHORT_PALILLO_MM = new Set([
+  68, 85, 100, 120, 129, 139, 150, 170, 179, 193, 231, 235, 279, 295, 361,
+]);
+
+const DESIGN_BLOCK_VALUES = [13, 17, 17.6, 26.4, 51, 79];
 
 type InternalClassification = {
   value: number;
@@ -44,6 +63,13 @@ type InternalClassification = {
   category: CandidateDimensionCategory;
   reason: string;
   contextSnippet: string;
+};
+
+type CandidateScoreResult = {
+  score: number;
+  confidence: CandidateDimensionConfidence;
+  reasons: string[];
+  exclude: boolean;
 };
 
 type BomSummaryItem = {
@@ -63,6 +89,14 @@ const PATTERNS = {
   boltSize: /\d+(?:\/\d+)?"x\d+mm\s+ESPARRAGO/i,
   standaloneNumber: /\b(\d+(?:\.\d+)?)\b/g,
   hlNumber: /\bHL-(\d{3,4})\b/gi,
+  orientation:
+    /\bORIENT|ORIENTACI[ÓO]N|GRAD|°|º|\bN\s*45\b|\b45°|\b44\.99\b/i,
+  drawingDimensionHint:
+    /\b(COTA|DIM|mm\b|LONG|TUBERIA|TUBO|SPAN|RUN|LENGTH|DIST)/i,
+  bomPidHint:
+    /RELACI[ÓO]N DE MATERIALES|P&ID|C[ÓO]DIGO SAP|DESCRIPCI[ÓO]N|ITEM\b|TUBERIA\s+AC|BRIDA|VALVULA|JUNTA|CODO|FIGURA\s*8|150#\s*RF|3000#/i,
+  dnFraction:
+    /\b\d+(?:\/\d+)?"\s*(?:DN|SCH|TUBERIA|COUPLING|CODO|CAP|VALVULA|BRIDA|HALF)/i,
 };
 
 export function normalizeEmbeddedPdfTextForDimensions(text: string): string {
@@ -137,17 +171,15 @@ function extractHlReferenceNumbers(
 }
 
 function isDesignBlockValue(value: number, context: string): boolean {
-  const designContext =
+  const nearDesignBlock =
     /PRESI[ÓO]N|PRESION|TEMPERATURA|CLASE|PINCHAZO|ESPESOR|kg\/cm|ºC/i.test(
       context,
     );
 
-  if (!designContext && ![51, 79].includes(value)) {
-    return false;
-  }
-
-  return [13, 17, 17.6, 26.4, 51, 79].some(
-    (known) => Math.abs(known - value) < 0.01 || Math.abs(known - value) < 0.6,
+  return DESIGN_BLOCK_VALUES.some(
+    (known) =>
+      Math.abs(known - value) < 0.01 ||
+      (nearDesignBlock && Math.abs(known - value) < 0.6),
   );
 }
 
@@ -169,6 +201,10 @@ function isDrawingReferenceNumber(
     return true;
   }
 
+  if (PROJECT_LINE_REFERENCE_NUMBERS.has(value)) {
+    return /HL-\d+|PLANO N|PID-|2301GB47G|KP-/i.test(context);
+  }
+
   if (value < 1000 || value > 9999) {
     return false;
   }
@@ -177,6 +213,62 @@ function isDrawingReferenceNumber(
     /HL-\d+|PLANO N|PID-|2301GB47G/i.test(context) &&
     !/^\s*\d+\s*$/m.test(context)
   );
+}
+
+function isOrientationNoise(value: number, context: string): boolean {
+  const isAngleValue =
+    Math.abs(value - 45) < 0.02 || Math.abs(value - 44.99) < 0.02;
+
+  if (!isAngleValue) {
+    return false;
+  }
+
+  return (
+    PATTERNS.orientation.test(context) ||
+    /NOTAS|ORIENT|GRAD/i.test(context)
+  );
+}
+
+function isFlangeOrAccessoryRatingNoise(
+  value: number,
+  context: string,
+): boolean {
+  if (value === 150 && /FIGURA\s*8|150#\s*RF|BRIDA|FLANGE|JUNTA ESPIROM/i.test(context)) {
+    return true;
+  }
+
+  if (value === 300 && /300#|SW 3000/i.test(context)) {
+    return true;
+  }
+
+  return false;
+}
+
+function isBoltLengthInContext(value: number, context: string): boolean {
+  if (!PATTERNS.boltSize.test(context)) {
+    return false;
+  }
+
+  const boltMatch = context.match(PATTERNS.boltSize);
+  if (!boltMatch) {
+    return false;
+  }
+
+  const boltLength = Number.parseInt(boltMatch[0].match(/x(\d+)mm/i)?.[1] ?? "", 10);
+
+  return Number.isFinite(boltLength) && boltLength === value;
+}
+
+function isLikelyDiameterFractionNoise(value: number, context: string): boolean {
+  if (!Number.isInteger(value)) {
+    return false;
+  }
+
+  if (PATTERNS.dnFraction.test(context)) {
+    return value <= 12;
+  }
+
+  return false;
 }
 
 function classifyEmbeddedNumbers(
@@ -299,6 +391,50 @@ function classifyEmbeddedNumbers(
       continue;
     }
 
+    if (isOrientationNoise(value, context)) {
+      classified.push({
+        value,
+        raw,
+        category: "noise_filtered",
+        reason: "Orientación / ángulo de dibujo",
+        contextSnippet,
+      });
+      continue;
+    }
+
+    if (isFlangeOrAccessoryRatingNoise(value, context)) {
+      classified.push({
+        value,
+        raw,
+        category: "noise_filtered",
+        reason: "Rating brida/accesorio (150#/300#)",
+        contextSnippet,
+      });
+      continue;
+    }
+
+    if (isBoltLengthInContext(value, context)) {
+      classified.push({
+        value,
+        raw,
+        category: "noise_filtered",
+        reason: "Longitud espárrago/perno",
+        contextSnippet,
+      });
+      continue;
+    }
+
+    if (isLikelyDiameterFractionNoise(value, context)) {
+      classified.push({
+        value,
+        raw,
+        category: "noise_filtered",
+        reason: "Diámetro nominal (DN) en BOM",
+        contextSnippet,
+      });
+      continue;
+    }
+
     if (isDrawingReferenceNumber(value, context, hlReferenceNumbers)) {
       classified.push({
         value,
@@ -338,12 +474,15 @@ function classifyEmbeddedNumbers(
       continue;
     }
 
-    if (PATTERNS.boltSize.test(context)) {
+    if (
+      (value === 17 || value === 20 || value === 42 || value === 94) &&
+      PATTERNS.bomPidHint.test(context)
+    ) {
       classified.push({
         value,
         raw,
         category: "noise_filtered",
-        reason: "Espárrago/perno",
+        reason: "Valor de cajetín/BOM/P&ID",
         contextSnippet,
       });
       continue;
@@ -366,22 +505,6 @@ function classifyEmbeddedNumbers(
         raw,
         category: "noise_filtered",
         reason: "Ítem BOM / revisión",
-        contextSnippet,
-      });
-      continue;
-    }
-
-    if (
-      Number.isInteger(value) &&
-      value >= MIN_DRAWING_DIMENSION_MM &&
-      value <= MAX_DRAWING_DIMENSION_MM &&
-      /EL=\s*[+-]?\d/.test(context)
-    ) {
-      classified.push({
-        value,
-        raw,
-        category: "possible_offset",
-        reason: "Cerca de elevación EL=",
         contextSnippet,
       });
       continue;
@@ -424,27 +547,87 @@ function classifyEmbeddedNumbers(
   return classified;
 }
 
-function scoreDimensionConfidence(
-  value: number,
-  category: CandidateDimensionCategory,
-): CandidateDimensionConfidence {
-  if (category === "possible_offset") {
-    return "medium";
+function scoreCandidateDimension(
+  entry: InternalClassification,
+): CandidateScoreResult {
+  const { value, category, contextSnippet } = entry;
+  const reasons: string[] = [];
+  let score = 0;
+
+  if (category === "drawing_dimension") {
+    score += 30;
+    reasons.push("Cota en rango de dibujo");
+  } else {
+    return {
+      score: 0,
+      confidence: "low",
+      reasons: ["Filtrada como ruido"],
+      exclude: true,
+    };
   }
 
-  if (category !== "drawing_dimension") {
-    return "low";
+  if (value >= OPTIMAL_PALILLO_MIN_MM && value <= OPTIMAL_PALILLO_MAX_MM) {
+    score += 35;
+    reasons.push("Rango típico de PALILLO (60–2500 mm)");
+  } else if (value >= MIN_DRAWING_DIMENSION_MM && value <= MAX_DRAWING_DIMENSION_MM) {
+    score += 10;
+    reasons.push("Fuera del rango óptimo pero plausible");
   }
 
-  if (value >= 50 && value <= 3000) {
-    return "high";
+  if (COMMON_SHORT_PALILLO_MM.has(value)) {
+    score += 20;
+    reasons.push("Longitud habitual en isos -02 del paquete");
   }
 
-  if (value >= MIN_DRAWING_DIMENSION_MM && value <= MAX_DRAWING_DIMENSION_MM) {
-    return "medium";
+  const isolatedDrawingContext =
+    !PATTERNS.bomPidHint.test(contextSnippet) &&
+    !/PRESI[ÓO]N|TEMPERATURA|APROBADO|FECHA|SAP|1000\d{6}/i.test(contextSnippet);
+
+  if (isolatedDrawingContext) {
+    score += 25;
+    reasons.push("Contexto de zona de dibujo (sin BOM/cajetín)");
+  } else if (PATTERNS.drawingDimensionHint.test(contextSnippet)) {
+    score += 12;
+    reasons.push("Contexto textual de cota");
   }
 
-  return "low";
+  if (PATTERNS.bomPidHint.test(contextSnippet)) {
+    score -= 40;
+    reasons.push("Penalizada: cerca de BOM/P&ID");
+  }
+
+  if (/PRESI[ÓO]N|TEMPERATURA|kg\/cm|ºC/i.test(contextSnippet)) {
+    score -= 35;
+    reasons.push("Penalizada: bloque de diseño");
+  }
+
+  if (value > OPTIMAL_PALILLO_MAX_MM) {
+    score -= 15;
+    reasons.push("Penalizada: cota muy larga");
+  }
+
+  if (value < OPTIMAL_PALILLO_MIN_MM) {
+    score -= 20;
+    reasons.push("Penalizada: valor corto/atípico");
+  } else if (value < 80) {
+    score -= 12;
+    reasons.push("Penalizada: cota corta (<80 mm)");
+  }
+
+  if (/EL=\s*[+-]?\d/.test(contextSnippet)) {
+    score -= 10;
+    reasons.push("Penalizada: cerca de elevación EL=");
+  }
+
+  const confidence: CandidateDimensionConfidence =
+    score >= 70 ? "high" : score >= 40 ? "medium" : "low";
+
+  return {
+    score,
+    confidence,
+    reasons,
+    exclude: score < MIN_RANKED_SCORE,
+  };
 }
 
 function formatDisplayValue(value: number): string {
@@ -476,11 +659,15 @@ export function extractCandidateDimensionsFromText(
   const insufficientText = embeddedTextLength < 200;
   const maxCandidates =
     options.maxCandidates ?? DEFAULT_MAX_CANDIDATE_DIMENSIONS;
+  const primaryCandidateLimit =
+    options.primaryCandidateLimit ?? DEFAULT_PRIMARY_CANDIDATE_DIMENSIONS;
   const warnings: string[] = [];
 
   if (!hasEmbeddedText) {
     return {
       candidates: [],
+      additionalCandidates: [],
+      totalRankedCount: 0,
       embeddedTextLength: 0,
       hasEmbeddedText: false,
       insufficientText: true,
@@ -499,67 +686,96 @@ export function extractCandidateDimensionsFromText(
   warnings.push("Las cotas pueden incluir ruido residual del cajetín o BOM.");
 
   const classified = classifyEmbeddedNumbers(normalized, options);
-  const drawingCandidates = classified
-    .filter(
-      (entry) =>
-        entry.category === "drawing_dimension" ||
-        entry.category === "possible_offset",
-    )
-    .map((entry) => {
-      const confidence = scoreDimensionConfidence(
-        entry.value,
-        entry.category,
-      );
-      const itemWarnings: string[] = [];
+  const rankedCandidates: CandidateDimension[] = [];
 
-      if (entry.category === "possible_offset") {
-        itemWarnings.push("Cerca de una elevación; verificar en el plano.");
-      }
+  for (const entry of classified) {
+    if (entry.category !== "drawing_dimension") {
+      continue;
+    }
 
-      if (confidence === "medium") {
-        itemWarnings.push("Confianza media; confirmar visualmente.");
-      }
+    const scored = scoreCandidateDimension(entry);
 
-      return {
-        value: entry.value,
-        displayValue: formatDisplayValue(entry.value),
-        raw: entry.raw,
-        category: entry.category,
-        reason: entry.reason,
-        confidence,
-        contextSnippet: entry.contextSnippet || null,
-        warnings: itemWarnings,
-      } satisfies CandidateDimension;
-    })
-    .sort((left, right) => left.value - right.value);
+    if (scored.exclude) {
+      continue;
+    }
+
+    const itemWarnings: string[] = [];
+
+    if (entry.category === "drawing_dimension" && /EL=\s*[+-]?\d/.test(entry.contextSnippet)) {
+      itemWarnings.push("Cerca de una elevación; verificar en el plano.");
+    }
+
+    if (scored.confidence === "medium") {
+      itemWarnings.push("Confianza media; confirmar visualmente.");
+    }
+
+    if (scored.confidence === "low") {
+      itemWarnings.push("Confianza baja; revisar antes de usar.");
+    }
+
+    rankedCandidates.push({
+      value: entry.value,
+      displayValue: formatDisplayValue(entry.value),
+      raw: entry.raw,
+      score: scored.score,
+      category: entry.category,
+      reason: entry.reason,
+      reasons: scored.reasons,
+      confidence: scored.confidence,
+      contextSnippet: entry.contextSnippet || null,
+      warnings: itemWarnings,
+    });
+  }
+
+  rankedCandidates.sort((left, right) => {
+    if (right.score !== left.score) {
+      return right.score - left.score;
+    }
+
+    return left.value - right.value;
+  });
 
   const deduped: CandidateDimension[] = [];
   const seenValues = new Set<number>();
 
-  for (const candidate of drawingCandidates) {
+  for (const candidate of rankedCandidates) {
     if (seenValues.has(candidate.value)) {
       continue;
     }
 
     seenValues.add(candidate.value);
     deduped.push(candidate);
+  }
 
-    if (deduped.length >= maxCandidates) {
-      warnings.push(
-        `Se muestran las primeras ${maxCandidates} cotas candidatas.`,
-      );
-      break;
-    }
+  const totalRankedCount = deduped.length;
+  const capped = deduped.slice(0, maxCandidates);
+
+  if (totalRankedCount > maxCandidates) {
+    warnings.push(
+      `Se muestran las ${maxCandidates} cotas mejor puntuadas (de ${totalRankedCount} detectadas).`,
+    );
+  }
+
+  const primaryCount = Math.min(primaryCandidateLimit, capped.length);
+  const candidates = capped.slice(0, primaryCount);
+  const additionalCandidates = capped.slice(primaryCount);
+
+  if (additionalCandidates.length > 0) {
+    warnings.push(
+      `${additionalCandidates.length} cotas adicionales disponibles bajo «Ver más cotas».`,
+    );
   }
 
   return {
-    candidates: deduped,
+    candidates,
+    additionalCandidates,
+    totalRankedCount,
     embeddedTextLength,
     hasEmbeddedText,
     insufficientText,
     overallConfidence: buildOverallConfidence(
       embeddedTextLength,
-      deduped.length,
+      capped.length,
     ),
     warnings,
   };
