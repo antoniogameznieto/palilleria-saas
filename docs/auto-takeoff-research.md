@@ -831,6 +831,20 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 **Conclusión breve:** sin bugs críticos; limitaciones conocidas en soportes multi-fila HL y DW manual. Beta apta para uso interno supervisado.
 
+### Fase 17C — Demo interna guiada
+
+**Objetivo:** Ejecutar demo controlada del flujo beta supervisado y dejar acta.
+
+**Commit de referencia:** `cb6c7bb` (post Fase 17B).
+
+**Acta:** [auto-takeoff-beta-demo-run-17C.md](./auto-takeoff-beta-demo-run-17C.md)
+
+**Ejecución:** checklist vía E2E (`smoke:auto-takeoff-beta` + suite 14/14); DMS-703 seed con conteos esperados; PDF negativo sin CTA peligroso; viewer sin acceso.
+
+**Resultado:** **Aprobado** — beta interna lista para demo controlada. Sin blockers; sin cambios de código/copy.
+
+**Siguiente:** investigar soportes multi-fila HL; reforzar DW en demos; staging si demo externa.
+
 ---
 
 ## Comandos
@@ -917,3 +931,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 16C | Beta supervisada | Checklist manual fuera BOM; no bloquea import; DW/BRIDA/SOPORTE suelto |
 | 2026-06-09 | 17A | Cierre beta interna | Guía demo + checklist QA + README; smoke:auto-takeoff-beta; sin motor nuevo |
 | 2026-06-09 | 17B | Prueba PDFs reales nuevos | HL-1291/1294 + DW-702; apto beta supervisada; informe 17B |
+| 2026-06-09 | 17C | Demo interna guiada | Acta demo E2E DMS-703; aprobado; beta lista demo controlada |
