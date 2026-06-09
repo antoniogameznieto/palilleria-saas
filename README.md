@@ -1,6 +1,35 @@
 # Palillería SaaS
 
-SaaS multiempresa para ingenieros que generan **hoja de palillería** e **isos trameados** a partir de planos isométricos de tuberías.
+SaaS multiempresa para ingenieros que generan **hoja de palillería** a partir de planos isométricos de tuberías (PDF).
+
+## Qué incluye el MVP
+
+Flujo productivo actual:
+
+1. **Subida protegida de PDFs** por trabajo (solo `owner`, `admin`, `engineer`).
+2. **Detección de metadatos** por nombre de archivo y texto embebido del PDF (sin OCR).
+3. **Revisión manual** de nº de plano, línea y revisión antes de dar por buenos los metadatos.
+4. **Palillería / takeoff** manual por plano (crear, editar, duplicar, importar CSV).
+5. **Revisión de palillería** por plano y estados de progreso hasta **Listo**.
+6. **Consolidado por trabajo** (agrupación por referencia, descripción y unidad).
+7. **Export CSV** (plano y trabajo, client-side) y **export Excel** (trabajo, vía API).
+
+Otros aspectos:
+
+- **Autenticación** con email/contraseña (Auth.js) y onboarding de empresa.
+- **Roles y permisos** por empresa: `owner`, `admin`, `engineer`, `viewer` (lectura y export sin edición).
+- **Visualización y descarga protegida** de PDFs (sin exponer rutas de storage al cliente).
+- **OCR del cajetín** como herramienta **experimental de diagnóstico** (`EXPERIMENTAL_TITLE_BLOCK_OCR`); no forma parte del flujo productivo ni sustituye la revisión manual.
+
+## Estado actual
+
+| | |
+|---|---|
+| **Demo interna guiada** | Apta |
+| **Último commit base** | `a6d8d12` |
+| **Release interno** | OK — observaciones menores cerradas (Fases 11A–11C) |
+
+Informe de la última demo: [docs/internal-demo-run-2026-06-09.md](docs/internal-demo-run-2026-06-09.md).
 
 ## Requisitos
 
@@ -8,23 +37,24 @@ SaaS multiempresa para ingenieros que generan **hoja de palillería** e **isos t
 - **npm** 10 o superior
 - **PostgreSQL** 15+
 
-## Instalación
+## Arranque local
 
 ```bash
 git clone https://github.com/antoniogameznieto/palilleria-saas.git
 cd palilleria-saas
 npm install
 cp .env.example .env
+# Opcional: overrides locales (puerto, flags) sin tocar .env
+cp .env.example .env.local   # y edita solo lo que necesites
 ```
 
-## Configuración de `.env`
+### 1. Configurar entorno
 
-Edita `.env` con estos valores mínimos:
+Edita `.env` (o `.env.local` para overrides) con al menos:
 
 ```env
-# macOS/Homebrew: suele funcionar con tu usuario del sistema, sin contraseña
 DATABASE_URL="postgresql://TU_USUARIO@localhost:5432/palilleria?schema=public"
-AUTH_SECRET="tu-secreto-aleatorio"
+AUTH_SECRET="tu-secreto-aleatorio"          # openssl rand -base64 32
 NEXTAUTH_SECRET="tu-secreto-aleatorio"
 NEXTAUTH_URL="http://localhost:3000"
 ```
@@ -33,56 +63,45 @@ Crea la base de datos si no existe:
 
 ```bash
 createdb palilleria
-# o: psql -d postgres -c "CREATE DATABASE palilleria"
 ```
 
-Generar secreto de sesión:
+**Puerto y `NEXTAUTH_URL`:** por defecto el dev server usa el puerto **3000**. Si arrancas en otro puerto (p. ej. `npm run dev -- -p 3010` porque 3000 está ocupado), define en `.env.local`:
+
+```env
+NEXTAUTH_URL="http://localhost:3010"
+```
+
+Los redirects del middleware usan el `Host` de la petición; Auth.js sigue usando `NEXTAUTH_URL` en callbacks de la API de sesión.
+
+### 2. Base de datos
 
 ```bash
-openssl rand -base64 32
+npm run db:generate   # genera el cliente Prisma
+npm run db:migrate      # aplica migraciones en desarrollo
 ```
 
-Auth.js usa `AUTH_SECRET` (preferido) o `NEXTAUTH_SECRET`. Sin `.env`, en desarrollo la app arranca con un secreto temporal y muestra un aviso en consola.
-
-Si arrancas en un puerto distinto de 3000 (p. ej. `npm run dev -- -p 3010`), actualiza `NEXTAUTH_URL` en `.env` o usa siempre el mismo puerto. El logout ya redirige con la URL relativa del servidor actual.
-
-## Base de datos (Prisma)
-
-```bash
-# Generar cliente Prisma
-npm run db:generate
-
-# Crear base de datos y aplicar migraciones
-npm run db:migrate
-```
-
-### Seed opcional (desarrollo)
+### 3. Seed opcional (desarrollo)
 
 ```bash
 npm run db:seed
 ```
 
-| Recurso | Valor |
-|---------|-------|
-| Usuario | `demo@palilleria.local` |
-| Contraseña | `demo1234` |
-| Empresa | Empresa Demo |
-| Trabajo | Trabajo Demo |
+Crea usuario, empresa y trabajo de ejemplo (ver [Usuarios demo](#usuarios-demo)).
 
-## Arranque en desarrollo
+### 4. Servidor de desarrollo
 
 ```bash
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000).
+Abre [http://localhost:3000](http://localhost:3000) (o el puerto que uses).
 
 ### Flujo de autenticación
 
 1. **Registro** en `/register` → crea usuario y abre sesión.
-2. Si no tiene empresa → redirección a `/onboarding/company`.
-3. Crea empresa → queda como `owner` → redirección a `/dashboard`.
-4. **Login** en `/login` → redirección a `/dashboard` o onboarding según empresas.
+2. Sin empresa → redirección a `/onboarding/company`.
+3. Crear empresa → queda como `owner` → `/dashboard`.
+4. **Login** en `/login` → `/dashboard` u onboarding según empresas.
 5. **Logout** desde el header del panel.
 
 ### Rutas principales
@@ -92,20 +111,85 @@ Abre [http://localhost:3000](http://localhost:3000).
 | `/` | Público |
 | `/login`, `/register` | Público (redirige si hay sesión) |
 | `/onboarding/company` | Requiere sesión |
-| `/dashboard`, `/jobs`, `/settings`, `/users` | Requiere sesión y empresa |
+| `/companies/[id]/jobs`, `/dashboard`, `/settings`, `/users` | Requiere sesión y empresa |
+
+## Usuarios demo
+
+### Seed (`npm run db:seed`)
+
+| Campo | Valor |
+|-------|-------|
+| Usuario | `demo@palilleria.local` |
+| Contraseña | `demo1234` |
+| Empresa | Empresa Demo |
+| Trabajo | Trabajo Demo |
+
+### Solo en BD local (creados en sesiones de demo 11B/11C)
+
+No forman parte del seed ni deben usarse en producción. Solo existen si se crearon manualmente en tu PostgreSQL local:
+
+| Usuario | Contraseña | Rol | Notas |
+|---------|------------|-----|-------|
+| `viewer-demo@palilleria.local` | `demo1234` | `viewer` | Lectura y export; sin edición |
+| `engineer-demo@palilleria.local` | `demo1234` | `engineer` | Palillería y metadatos |
+
+Para una demo guiada con datos reales de palillería, puedes usar tu cuenta local o el plano de referencia documentado en el [informe de demo](docs/internal-demo-run-2026-06-09.md) (p. ej. DMS-703 en estado **Listo**).
+
+## Comandos de verificación
+
+Ejecutar antes de una demo o release interno:
+
+```bash
+npm run lint
+npm run build
+npm run verify:takeoff
+npm run verify:title-block-crop   # funciones puras OCR experimental
+```
+
+Opcional (solo si vas a probar OCR experimental en local):
+
+```bash
+npm run check:tesseract
+```
 
 ## Scripts disponibles
 
 | Comando | Descripción |
 |---------|-------------|
 | `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Genera Prisma Client y build de producción |
+| `npm run build` | Prisma Client + build de producción |
 | `npm run start` | Servidor de producción |
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Genera el cliente Prisma |
 | `npm run db:migrate` | Aplica migraciones en desarrollo |
-| `npm run db:studio` | Abre Prisma Studio |
-| `npm run db:seed` | Ejecuta el seed de desarrollo |
+| `npm run db:studio` | Prisma Studio |
+| `npm run db:seed` | Seed de desarrollo |
+| `npm run verify:takeoff` | Verificación pura de lógica takeoff |
+| `npm run verify:title-block-crop` | Verificación recorte cajetín (OCR exp.) |
+| `npm run check:tesseract` | Comprueba Tesseract CLI (OCR exp.) |
+| `npm run benchmark:ocr` | Benchmark OCR experimental |
+
+## Documentación útil
+
+| Documento | Contenido |
+|-----------|-----------|
+| [docs/internal-release-checklist.md](docs/internal-release-checklist.md) | Checklist de release y demo interna |
+| [docs/internal-demo-run-2026-06-09.md](docs/internal-demo-run-2026-06-09.md) | Informe de demo manual (11B) y seguimiento 11C |
+| [docs/takeoff-hardening-checklist.md](docs/takeoff-hardening-checklist.md) | Palillería, permisos, exports |
+| [docs/ocr-ai-research.md](docs/ocr-ai-research.md) | Investigación OCR (experimental, no productivo) |
+| [docs/ocr-benchmark-results.md](docs/ocr-benchmark-results.md) | Resultados benchmark OCR |
+| [docs/tesseract-ocr-setup.md](docs/tesseract-ocr-setup.md) | Instalación Tesseract (solo OCR exp.) |
+| `cursor-palilleria-docs/` | Especificación funcional del producto |
+
+## Limitaciones conocidas
+
+- **OCR no productivo:** la detección de metadatos usa filename + texto PDF; el OCR del cajetín es solo diagnóstico detrás de `EXPERIMENTAL_TITLE_BLOCK_OCR`.
+- **Revisión manual obligatoria** de metadatos y palillería (por diseño).
+- **Export CSV client-side:** se genera en el navegador desde el snapshot de la página; refrescar tras editar si necesitas datos al día. Excel usa API servidor (datos frescos).
+- **Storage local** (`STORAGE_DRIVER=local`): adecuado para dev; no listo para producción multi-nodo (S3 previsto en configuración).
+- **Sin E2E automatizado** de roles y flujo completo (checklist manual + scripts `verify:*`).
+- **Middleware deprecated (Next.js 16):** convención `middleware` pendiente de migrar a `proxy`; no bloquea demo interna.
+- **README:** actualizado en Fase 11D (`a6d8d12`).
 
 ## Stack
 
@@ -123,29 +207,24 @@ app/
   (auth)/             # Login y registro
   (main)/             # Panel con sidebar (protegido)
   onboarding/         # Creación de primera empresa
-  api/auth/           # Rutas Auth.js
+  api/                # Auth, archivos PDF, export Excel
 lib/
-  auth/               # Configuración Auth.js y helpers de sesión
-  actions/            # Server actions (auth, empresa)
-  db/                 # Cliente Prisma
+  auth/               # Auth.js y sesión
+  actions/            # Server actions
+  drawings/           # Metadatos, takeoff, exports, OCR exp.
+  permissions/        # Roles por empresa
 prisma/               # Schema, migraciones y seed
+docs/                 # Checklists, demo, OCR
 ```
 
 ## Variables de entorno
 
-Ver `.env.example`:
+Ver [.env.example](.env.example):
 
-- `DATABASE_URL` — conexión PostgreSQL (**requerida**)
-- `NEXTAUTH_SECRET` — secreto de sesión (**requerida**)
-- `NEXTAUTH_URL` — URL base de la app
-- `STORAGE_DRIVER`, `LOCAL_STORAGE_PATH`, `MAX_UPLOAD_SIZE_MB` — almacenamiento (fases posteriores)
-
-## Documentación del producto
-
-Especificación funcional en `cursor-palilleria-docs/`.
-
-## Estado actual
-
-**Fase 3 completada:** autenticación con email/contraseña, rutas protegidas y onboarding de empresa.
-
-Próximo paso: **Fase 4** — helpers multiempresa, permisos por rol y CRUD de trabajos.
+| Variable | Uso |
+|----------|-----|
+| `DATABASE_URL` | PostgreSQL (**requerida**) |
+| `AUTH_SECRET` / `NEXTAUTH_SECRET` | Secreto de sesión (**requerida**) |
+| `NEXTAUTH_URL` | URL base de la app |
+| `STORAGE_DRIVER`, `LOCAL_STORAGE_PATH`, `MAX_UPLOAD_SIZE_MB` | Almacenamiento de PDFs |
+| `EXPERIMENTAL_TITLE_BLOCK_OCR` | `true` = muestra OCR experimental en Automatización |
