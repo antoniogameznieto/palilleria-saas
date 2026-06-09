@@ -33,22 +33,11 @@ export const E2E_USERS = {
   other: "demo@palilleria.local",
 } as const;
 
-const MINIMAL_PDF = Buffer.from(
-  `%PDF-1.4
-1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-3 0 obj<</Type/Page/MediaBox[0 0 300 144]/Parent 2 0 R>>endobj
-xref
-0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-trailer<</Size 4/Root 1 0 R>>
-startxref
-190
-%%EOF`,
-);
+export async function resetE2eTrameadoData(client: PrismaClient = prisma) {
+  await client.drawingTrameadoSheet.deleteMany({
+    where: { drawingId: E2E_IDS.drawingPending },
+  });
+}
 
 async function upsertUser(
   id: string,
@@ -191,9 +180,7 @@ async function main() {
     },
   });
 
-  await prisma.drawingTrameadoSheet.deleteMany({
-    where: { drawingId: E2E_IDS.drawingPending },
-  });
+  await resetE2eTrameadoData();
 
   await prisma.drawingTakeoffItem.deleteMany({
     where: { drawingId: E2E_IDS.drawingPending },
@@ -378,11 +365,13 @@ async function main() {
   console.log(`- Viewer: ${E2E_USERS.viewer}`);
 }
 
-main()
-  .catch((error) => {
-    console.error("Error en seed E2E:", error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error("Error en seed E2E:", error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

@@ -1,6 +1,16 @@
+import { execSync } from "node:child_process";
+
 import { expect, test } from "@playwright/test";
 
 import { drawingPath, E2E_USERS, login } from "./fixtures";
+
+function resetTrameadoE2EData() {
+  execSync("npx tsx scripts/reset-e2e-trameado.ts", {
+    cwd: process.cwd(),
+    stdio: "pipe",
+    env: process.env,
+  });
+}
 
 async function fillSegmentForm(
   page: import("@playwright/test").Page,
@@ -19,6 +29,10 @@ async function fillSegmentForm(
 }
 
 test.describe("trameado manual", () => {
+  test.beforeEach(() => {
+    resetTrameadoE2EData();
+  });
+
   test("engineer usa asistente para precrear hoja sugerida sin segmentos", async ({
     page,
   }) => {
@@ -76,11 +90,11 @@ test.describe("trameado manual", () => {
     await expect(page.getByTestId("trameado-candidate-dimensions-panel")).toBeVisible();
 
     await page.getByTestId("trameado-create-sheet").click();
-    await page.locator("#trameado-line-identifier").fill("HL-E2E-A012AA-N-01");
+    await page.locator("#trameado-line-identifier").fill("HL-E2E-MANUAL-01");
     await page.locator("#trameado-line-class").fill("A012AA");
     await page.getByTestId("trameado-create-sheet-submit").click();
     await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
-      "HL-E2E-A012AA-N-01",
+      "HL-E2E-MANUAL-01",
     );
 
     await page.getByTestId("trameado-add-segment").click();
@@ -128,7 +142,7 @@ test.describe("trameado manual", () => {
     expect(exportResponse.headers()["content-type"]).toContain("text/csv");
     const exportBody = await exportResponse.text();
     expect(exportBody).toContain("ISO,CLASE,Nº,Ø,SCH.,PALILLO,COLADA");
-    expect(exportBody).toContain("HL-E2E-A012AA-N-01");
+    expect(exportBody).toContain("HL-E2E-MANUAL-01");
     expect(exportBody).toContain("363");
 
     const xlsxLink = page.getByTestId("trameado-export-xlsx");
