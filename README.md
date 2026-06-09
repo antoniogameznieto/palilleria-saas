@@ -20,14 +20,24 @@ Otros aspectos:
 - **Roles y permisos** por empresa: `owner`, `admin`, `engineer`, `viewer` (lectura y export sin edición).
 - **Visualización y descarga protegida** de PDFs (sin exponer rutas de storage al cliente).
 - **OCR del cajetín** como herramienta **experimental de diagnóstico** (`EXPERIMENTAL_TITLE_BLOCK_OCR`); no forma parte del flujo productivo ni sustituye la revisión manual.
-- **Preview e importación experimental de palillería** desde relación de materiales del PDF embebido (pestaña Automatización); análisis/comparación sin guardar; importación solo con selección explícita y confirmación. Ver [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md).
+- **Auto-palillería supervisada (beta)** desde relación de materiales del PDF embebido (pestaña Automatización): propuesta clasificada (incluir / revisar / excluir), checklist manual y importación solo con selección explícita. No es palillería final automática. Ver [docs/auto-takeoff-beta-demo.md](docs/auto-takeoff-beta-demo.md) y [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md).
+
+## Auto-palillería supervisada beta
+
+Flujo experimental en **Automatización** para ingenieros (`owner` / `admin` / `engineer`):
+
+1. Analizar BOM embebido en el PDF (sin OCR).
+2. Revisar propuesta en tres grupos + checklist manual.
+3. Importar solo las líneas seleccionadas.
+
+Requisitos: PDF con texto embebido y relación de materiales tabular. Guía de demo: [docs/auto-takeoff-beta-demo.md](docs/auto-takeoff-beta-demo.md). Checklist QA: [docs/auto-takeoff-beta-validation-checklist.md](docs/auto-takeoff-beta-validation-checklist.md).
 
 ## Estado actual
 
 | | |
 |---|---|
 | **Demo interna guiada** | Apta |
-| **Último commit base** | `9cefef5` |
+| **Último commit base** | `9414ce8` |
 | **Release interno** | OK — observaciones menores cerradas (Fases 11A–11C) |
 
 Informe de la última demo: [docs/internal-demo-run-2026-06-09.md](docs/internal-demo-run-2026-06-09.md).

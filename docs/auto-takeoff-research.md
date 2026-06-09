@@ -795,6 +795,24 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 **Conclusión breve:** complementa 16B; soportes tabulares siguen como sugerencias review; lo no parseable queda como checklist con ejemplos (máx. 3) y `shouldBlockImport: false`.
 
+### Fase 17A — Cierre beta interna
+
+**Objetivo:** Paquete demostrable y documentado del flujo de auto-palillería supervisada, sin motor nuevo.
+
+**Commit de referencia:** `9414ce8` (post Fase 16C).
+
+**Entregables:**
+
+| Documento | Contenido |
+|-----------|-----------|
+| [auto-takeoff-beta-demo.md](./auto-takeoff-beta-demo.md) | Guía de demo: requisitos PDF, qué extrae/clasifica, qué no hace, flujo paso a paso |
+| [auto-takeoff-beta-validation-checklist.md](./auto-takeoff-beta-validation-checklist.md) | Checklist manual QA (DMS-703 seed, conteos, SUP-001, FIGURA 8, import, viewer) |
+| [auto-takeoff-beta-supervisada.md](./auto-takeoff-beta-supervisada.md) | Actualizado: estado post 16C, límites, criterio de uso recomendado |
+
+**Script opcional:** `npm run smoke:auto-takeoff-beta` (`verify:auto-takeoff` + E2E `experimental-auto-takeoff-import.spec.ts`).
+
+**Conclusión breve:** bloque beta listo para demo interna supervisada; copy y docs dejan claro que no es automatización completa ni palillería final garantizada.
+
 ---
 
 ## Comandos
@@ -806,6 +824,7 @@ npm run validate:auto-takeoff-golden   # golden set precisión/recall (15B)
 npm run validate:auto-takeoff-business # precisión de negocio (15C)
 npm run validate:auto-takeoff-business-rules # reglas BOM → palillería (15D)
 npm run verify:auto-takeoff            # parser + golden set en CI
+npm run smoke:auto-takeoff-beta        # verify + E2E auto-takeoff (17A)
 npm run research:out-of-bom -- ./tests/fixtures/auto-takeoff-business  # soportes/fuera BOM (16A)
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
@@ -878,3 +897,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 16A | Business + golden/Ejemplos | Soportes tabulares parseables; DW manual checklist; informe out-of-bom |
 | 2026-06-09 | 16B | Business set + beta UI | Parser opt-in post-SOPORTES; support → review; recall negocio mejora |
 | 2026-06-09 | 16C | Beta supervisada | Checklist manual fuera BOM; no bloquea import; DW/BRIDA/SOPORTE suelto |
+| 2026-06-09 | 17A | Cierre beta interna | Guía demo + checklist QA + README; smoke:auto-takeoff-beta; sin motor nuevo |

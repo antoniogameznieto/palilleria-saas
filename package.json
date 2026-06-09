@@ -20,6 +20,7 @@
     "validate:auto-takeoff-business": "tsx scripts/validate-auto-takeoff-business.ts",
     "validate:auto-takeoff-business-rules": "tsx scripts/validate-auto-takeoff-business-rules.ts",
     "verify:auto-takeoff": "tsx scripts/verify-auto-takeoff-parse.ts",
+    "smoke:auto-takeoff-beta": "npm run verify:auto-takeoff && playwright test tests/e2e/experimental-auto-takeoff-import.spec.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
