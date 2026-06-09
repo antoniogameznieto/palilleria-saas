@@ -9,6 +9,16 @@
 
 Determinar qué parte del **trameado / hoja de palilleo** puede automatizarse de forma realista a partir de PDFs de isométricos y ejemplos del cliente, **sin vender automático total** si no es técnicamente viable.
 
+### Input real vs golden output (aclaración 18J)
+
+| Fuente | Rol |
+|--------|-----|
+| PDFs vectoriales `HL-xxxx-01/-02` originales | **Input productivo** — metadatos, BOM, cotas |
+| `Isos trameados.pdf` | **Golden output / referencia visual** — escaneo RICOH; **no** input |
+| `Hoja de palilleo.pdf` | **Golden output** — hoja manuscrita escaneada |
+
+La fase **18H** analizó principalmente escaneos y descartó leer marcas azules / golden como fuente automática. La fase **18J** ([trameado-vector-research.md](./trameado-vector-research.md)) investiga el **input real vectorial** para cotas candidatas y viabilidad de palillos.
+
 Preguntas clave:
 
 1. ¿Podemos generar propuestas automáticas de tramos (`<1>`, `<2>`, …) y longitudes PALILLO?
@@ -277,7 +287,8 @@ Opciones evaluadas:
 
 ## 9. Referencias cruzadas
 
-- Benchmark previo: [auto-takeoff-benchmark-results.md](./auto-takeoff-benchmark-results.md) — mismos 12/140 chars para estos PDFs.
+- **Research vectorial (input real):** [trameado-vector-research.md](./trameado-vector-research.md) — Fase 18J; cotas candidatas desde PDFs HL originales.
+- Benchmark previo: [auto-takeoff-benchmark-results.md](./auto-takeoff-benchmark-results.md) — mismos 12/140 chars para escaneos.
 - Análisis funcional 18A: [trameado-functional-analysis.md](./trameado-functional-analysis.md) — estructura hoja, bloques ISO, longitudes de ejemplo.
 - Producto actual: pestaña Trameado 18C–18G, manual asistido.
 

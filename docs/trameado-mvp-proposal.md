@@ -8,7 +8,15 @@
 
 Permitir que un ingeniero **digitalice la hoja de palilleo** que hoy rellena a mano: por cada plano/ISO, definir tramos numerados (`<1>`, `<2>`, …) con diámetro, schedule y longitud de corte, y **exportar** una tabla equivalente a `Hoja de palilleo.pdf`.
 
-El MVP **no** intenta leer marcas azules ni automatizar el trameado visual. El BOM (beta actual) actúa como **consulta auxiliar**, no como output final.
+### Input / output del flujo real
+
+| Etapa | Artefacto |
+|-------|-----------|
+| **Input** | PDF isométrico vectorial original (`2301GB47G-C1-L-HL-xxxx-01/-02`) |
+| **Output** | Hoja de palilleo (CSV/XLSX) + iso trameado (marcas `<n>` — futuro) |
+| **Referencia (no input)** | `Isos trameados.pdf`, `Hoja de palilleo.pdf` escaneados |
+
+El MVP **no** intenta leer marcas azules del golden escaneado ni automatizar el trameado visual completo. El BOM (beta actual) actúa como **consulta auxiliar**, no como output final.
 
 ## 2. Enfoque recomendado
 
@@ -195,12 +203,30 @@ Columnas:
 - OCR no productivo sobre isos escaneados / marcas azules.
 - Requiere golden set y precisión medida antes de UI.
 
-### 18J — Iso trameado y export PDF
+### 18J — Research vectorial cotas / palillos (completado)
 
-- Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
-- Export PDF iso marcado.
-- Export PDF hoja con plantilla visual del cliente.
-- Opcional: renumeración automática al mover anotaciones.
+- Documento: [trameado-vector-research.md](./trameado-vector-research.md).
+- Script: `npm run research:trameado-vector`.
+- **Input analizado:** 9 PDFs vectoriales HL originales (`Ejemplos/Ejemplo 1/`).
+- **Golden:** `Isos trameados.pdf` solo como referencia visual (no input).
+- **Conclusión:** cotas candidatas **sí** extraíbles; PALILLO automático **no** (parcial en `-02`, no en `-01` sin geometría).
+- Posición X/Y **no** disponible con API pública `pdf-parse`.
+- **Recomendación:** 18K-A panel de cotas candidatas.
+
+### 18K-A — Panel cotas candidatas (recomendado)
+
+- Listar cotas filtradas junto al visor PDF + hoja de palilleo.
+- Ingeniero selecciona/introduce longitudes; sin auto-PALILLO.
+
+### 18K-B — Prepropuesta experimental palillos (condicional)
+
+- Solo tras validar reglas en golden set; prioritario para planos `-02`.
+
+### 18K-C — Geometría vectorial experimental (backlog)
+
+- Paths/lines del PDF; motor geométrico dedicado.
+
+### 18L — Iso trameado y export PDF anotado (futuro)
 
 ## 10. Criterios de éxito (MVP)
 
@@ -215,7 +241,8 @@ Columnas:
 - Análisis funcional: [trameado-functional-analysis.md](./trameado-functional-analysis.md)
 - Modelo técnico 18B: [trameado-technical-model.md](./trameado-technical-model.md)
 - Beta BOM: [auto-takeoff-research.md](./auto-takeoff-research.md)
-- Research automático: [trameado-auto-research.md](./trameado-auto-research.md)
+- Research automático (escaneos): [trameado-auto-research.md](./trameado-auto-research.md)
+- Research vectorial (input real): [trameado-vector-research.md](./trameado-vector-research.md)
 
 ---
 
