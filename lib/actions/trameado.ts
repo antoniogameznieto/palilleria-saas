@@ -159,7 +159,7 @@ export async function createTrameadoSheetAction(
     };
   }
 
-  await prisma.drawingTrameadoSheet.create({
+  const sheet = await prisma.drawingTrameadoSheet.create({
     data: {
       companyId,
       jobId,
@@ -169,7 +169,10 @@ export async function createTrameadoSheetAction(
   });
 
   revalidateDrawingPage(companyId, jobId, drawingId);
-  return { success: "Hoja de trameado creada." };
+  return {
+    success: "Hoja de trameado creada.",
+    trameadoSheetId: sheet.id,
+  };
 }
 
 export async function updateTrameadoSheetAction(

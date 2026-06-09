@@ -24,6 +24,7 @@ type TabOption = {
 type DrawingDetailWorkspaceProps = {
   pdf: ReactNode;
   palilleria: ReactNode;
+  trameado: ReactNode;
   propuestaBeta: ReactNode | null;
   metadatos: ReactNode;
   actividad: ReactNode;
@@ -35,6 +36,7 @@ type DrawingDetailWorkspaceProps = {
 export function DrawingDetailWorkspace({
   pdf,
   palilleria,
+  trameado,
   propuestaBeta,
   metadatos,
   actividad,
@@ -57,6 +59,7 @@ export function DrawingDetailWorkspace({
         emphasis: true,
       },
       { id: "palilleria", label: "Palillería", visible: true },
+      { id: "trameado", label: "Trameado", visible: true },
       { id: "pdf", label: "Plano PDF", visible: true },
       { id: "metadatos", label: "Metadatos", visible: true },
       { id: "actividad", label: "Actividad", visible: true },
@@ -69,6 +72,7 @@ export function DrawingDetailWorkspace({
   const tabPanels: Record<DrawingWorkspaceTab, ReactNode> = {
     "propuesta-beta": propuestaBeta,
     palilleria,
+    trameado,
     pdf,
     metadatos,
     actividad,

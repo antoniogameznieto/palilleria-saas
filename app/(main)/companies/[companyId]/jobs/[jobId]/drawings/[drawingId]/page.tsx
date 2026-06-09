@@ -13,6 +13,9 @@ import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestio
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-title-block-ocr-config";
+import { TrameadoSection } from "@/components/trameado/trameado-section";
+import { getDrawingTrameadoSheets } from "@/lib/trameado/db";
+import { buildSuggestedLineIdentifier } from "@/lib/trameado/suggest-line-identifier";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
@@ -20,6 +23,7 @@ import {
   canEditDrawingStatus,
   canExtractDrawingPdfText,
   canManageTakeoffItems,
+  canManageTrameado,
   canStartDrawingDetection,
   requireDrawingAccess,
   requireJobAccess,
@@ -43,7 +47,8 @@ export default async function DrawingDetailPage({
     drawingId,
   );
   const canEditTakeoff = canManageTakeoffItems(membership.role);
-  const [{ job }, activities, takeoffItems, jobTakeoffItems] =
+  const canEditTrameado = canManageTrameado(membership.role);
+  const [{ job }, activities, takeoffItems, jobTakeoffItems, trameadoSheets] =
     await Promise.all([
       requireJobAccess(companyId, jobId),
       getDrawingRecentActivity(companyId, jobId, drawingId),
@@ -51,6 +56,7 @@ export default async function DrawingDetailPage({
       canEditTakeoff
         ? getJobTakeoffExportItems(companyId, jobId)
         : Promise.resolve([]),
+      getDrawingTrameadoSheets(companyId, jobId, drawingId),
     ]);
 
   const canEditMetadata = canEditDrawingMetadata(membership.role);
@@ -79,6 +85,11 @@ export default async function DrawingDetailPage({
   );
   const lastDetectionFeedback =
     getLatestDetectionFeedbackFromActivities(activities);
+  const suggestedLineIdentifier = buildSuggestedLineIdentifier({
+    drawingNumber: drawing.drawingNumber,
+    lineNumber: drawing.lineNumber,
+    revision: drawing.revision,
+  });
   const drawingProgress = getDrawingProgress({
     status: drawing.status,
     drawingNumber: drawing.drawingNumber,
@@ -99,6 +110,19 @@ export default async function DrawingDetailPage({
       canEdit={canEditTakeoff}
       takeoffReviewedAt={drawing.takeoffReviewedAt?.toISOString() ?? null}
       takeoffReviewedByLabel={takeoffReviewedByLabel}
+      variant="workspace"
+    />
+  );
+
+  const trameadoSection = (
+    <TrameadoSection
+      companyId={companyId}
+      jobId={jobId}
+      drawingId={drawing.id}
+      drawingFileName={drawing.originalFileName}
+      sheets={trameadoSheets}
+      canManage={canEditTrameado}
+      suggestedLineIdentifier={suggestedLineIdentifier}
       variant="workspace"
     />
   );
@@ -134,6 +158,7 @@ export default async function DrawingDetailPage({
           />
         }
         palilleria={takeoffSection}
+        trameado={trameadoSection}
         progress={drawingProgress}
         showBetaProposal={showExperimentalAutoTakeoff}
         takeoffLineCount={takeoffItems.length}

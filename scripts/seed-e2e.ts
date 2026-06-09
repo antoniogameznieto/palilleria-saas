@@ -186,6 +186,10 @@ async function main() {
     },
   });
 
+  await prisma.drawingTrameadoSheet.deleteMany({
+    where: { drawingId: E2E_IDS.drawingPending },
+  });
+
   await prisma.drawingTakeoffItem.deleteMany({
     where: { drawingId: E2E_IDS.drawingPending },
   });

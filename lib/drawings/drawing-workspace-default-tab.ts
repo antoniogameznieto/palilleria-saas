@@ -3,6 +3,7 @@ import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
 export type DrawingWorkspaceTab =
   | "propuesta-beta"
   | "palilleria"
+  | "trameado"
   | "pdf"
   | "metadatos"
   | "actividad";
