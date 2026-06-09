@@ -698,4 +698,10 @@ _Ninguno._
 - `NO NECESITA SOPORTES` y menciones sueltas **no** generan fila.
 - Beta supervisada: soportes en grupo «Requieren revisión»; bulk ready excluye support.
 
+### Checklist manual 16C
+
+- Helper `buildManualTakeoffChecklist()` convierte señales no importables en avisos UI.
+- No crea líneas; `shouldBlockImport` siempre `false`.
+- Cubre menciones sueltas, DW/continuación, brida/válvula en notas y PDF sin BOM/texto.
+
 _No modifica producto ni importación. Investigación con texto embebido únicamente._

@@ -8,6 +8,7 @@ import type {
 } from "@/lib/drawings/experimental-auto-takeoff-compare";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import type { AppliedBusinessRule } from "@/lib/drawings/auto-takeoff-business-rules";
+import type { ManualTakeoffChecklistResult } from "@/lib/drawings/auto-takeoff-manual-checklist-types";
 import {
   extractVerifiedExperimentalSuggestions,
   resolveSelectedSuggestionsForImport,
@@ -101,6 +102,7 @@ export type ExperimentalAutoTakeoffActionState = {
   averageConfidence?: number;
   existingTakeoffCount?: number;
   comparisonSummary?: TakeoffComparisonSummary;
+  manualChecklist?: ManualTakeoffChecklistResult;
 };
 
 export type ExperimentalAutoTakeoffImportActionState = {
@@ -162,6 +164,7 @@ export async function analyzeExperimentalAutoTakeoffAction(
         suggestedItems: [],
         existingTakeoffCount,
         warnings: [analysis.error],
+        manualChecklist: analysis.manualChecklist,
       };
     }
 
@@ -210,6 +213,7 @@ export async function analyzeExperimentalAutoTakeoffAction(
       averageConfidence,
       existingTakeoffCount,
       comparisonSummary: analysis.comparisonSummary,
+      manualChecklist: analysis.manualChecklist,
     };
   } catch {
     return {

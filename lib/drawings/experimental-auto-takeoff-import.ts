@@ -18,6 +18,8 @@ import {
   hasUsefulEmbeddedText,
   parseTakeoffRowsFromEmbeddedText,
 } from "@/lib/drawings/experimental-auto-takeoff-parse";
+import { buildManualTakeoffChecklist } from "@/lib/drawings/auto-takeoff-manual-checklist";
+import type { ManualTakeoffChecklistResult } from "@/lib/drawings/auto-takeoff-manual-checklist";
 import { EXPERIMENTAL_AUTO_TAKEOFF_INCLUDE_SUPPORT_ROWS } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { extractDrawingPdfTextForDetection } from "@/lib/drawings/pdf-text-extract";
 import {
@@ -118,6 +120,7 @@ export async function extractVerifiedExperimentalSuggestions(params: {
       error: string;
       hasEmbeddedText: boolean;
       textLength: number;
+      manualChecklist: ManualTakeoffChecklistResult;
     }
   | {
       ok: true;
@@ -126,6 +129,7 @@ export async function extractVerifiedExperimentalSuggestions(params: {
       warnings: string[];
       items: VerifiedExperimentalSuggestion[];
       comparisonSummary: TakeoffComparisonSummary;
+      manualChecklist: ManualTakeoffChecklistResult;
     }
 > {
   const extraction = await extractDrawingPdfTextForDetection({
@@ -144,6 +148,11 @@ export async function extractVerifiedExperimentalSuggestions(params: {
         "No se encontró texto embebido útil en el PDF para validar sugerencias.",
       hasEmbeddedText,
       textLength,
+      manualChecklist: buildManualTakeoffChecklist({
+        text: extraction.text,
+        textLength,
+        hasEmbeddedText,
+      }),
     };
   }
 
@@ -195,6 +204,11 @@ export async function extractVerifiedExperimentalSuggestions(params: {
     warnings: parseResult.warnings,
     items,
     comparisonSummary: comparison.summary,
+    manualChecklist: buildManualTakeoffChecklist({
+      text: extraction.text,
+      textLength,
+      hasEmbeddedText,
+    }),
   };
 }
 

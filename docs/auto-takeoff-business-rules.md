@@ -5,7 +5,7 @@
 | Campo | Valor |
 | --- | --- |
 | Fecha | 2026-06-09 |
-| Commit probado | `94a2b5c` |
+| Commit probado | `065bbae` |
 | Comando | `npm run validate:auto-takeoff-business-rules` |
 | Business set | `tests/fixtures/auto-takeoff-business/business-set.json` |
 | PDFs evaluados | 5 |

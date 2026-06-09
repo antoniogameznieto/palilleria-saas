@@ -73,6 +73,10 @@ import {
   assessOutOfBomLineParseability,
   resolveOutOfBomTextRegion,
 } from "../lib/drawings/out-of-bom-research";
+import {
+  buildManualTakeoffChecklist,
+  shouldManualChecklistBlockImport,
+} from "../lib/drawings/auto-takeoff-manual-checklist";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -1254,6 +1258,127 @@ SOPORTE TIPO A 1 UD
     !getAllReadyProposalKeys([supportUiItem, ...uiItems]).includes("k-support"),
     "Bulk ready no incluye soporte",
   );
+
+  const looseSupportChecklist = buildManualTakeoffChecklist({
+    text: `
+RELACION DE MATERIALES
+1 TUBERIA AC EXT\t1000027194\t2.0 M
+SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)
+`,
+    textLength: 220,
+    hasEmbeddedText: true,
+  });
+  assert(
+    looseSupportChecklist.items.some((item) => item.type === "looseSupportMention"),
+    "Checklist detecta SOPORTE COMÚN",
+  );
+
+  const dwChecklist = buildManualTakeoffChecklist({
+    text: `
+RELACION DE MATERIALES
+1 TUBERIA EXT\t1000026994\t8.4 M
+PARA CONT. VER LINEA NUM.
+1601GB16A-PL1-1.1/2"-DW-701-A010AA-N
+PLANO Nº: 1601GB16A-PL1-L-DW-702-01
+`,
+    textLength: 280,
+    hasEmbeddedText: true,
+  });
+  assert(
+    dwChecklist.items.some((item) => item.type === "dwContinuationOrManual"),
+    "Checklist detecta señales DW/continuación",
+  );
+
+  const looseFlangeChecklist = buildManualTakeoffChecklist({
+    text: `
+RELACION DE MATERIALES
+1 TUBERIA EXT\t1000026994\t8.4 M
+NOTA 29
+1.1/2" BRIDA CIEGA RF 1500 #
+VALVULA COMPUERTA MANUAL 1 UD
+`,
+    textLength: 260,
+    hasEmbeddedText: true,
+  });
+  assert(
+    looseFlangeChecklist.items.some(
+      (item) => item.type === "looseFlangeOrValveMention",
+    ),
+    "Checklist detecta BRIDA/VÁLVULA sueltas",
+  );
+
+  const bomOnlyChecklist = buildManualTakeoffChecklist({
+    text: HL_1289_SAMPLE,
+    textLength: 400,
+    hasEmbeddedText: true,
+  });
+  assert(
+    !bomOnlyChecklist.items.some(
+      (item) => item.type === "looseFlangeOrValveMention",
+    ),
+    "Checklist no alerta por filas BOM normales",
+  );
+
+  const manyBridaLines = buildManualTakeoffChecklist({
+    text: `
+RELACION DE MATERIALES
+1 TUBERIA EXT\t1000026994\t8.4 M
+NOTA A: 1" BRIDA SW 150 #
+NOTA B: 2" BRIDA WN 150 #
+NOTA C: 3" BRIDA CIEGA RF #
+NOTA D: 4" BRIDA LAP #
+NOTA E: 5" BRIDA BLIND #
+`,
+    textLength: 320,
+    hasEmbeddedText: true,
+  });
+  const flangeItem = manyBridaLines.items.find(
+    (item) => item.type === "looseFlangeOrValveMention",
+  );
+  assert(flangeItem != null, "Checklist agrupa BRIDAS sueltas");
+  assert(
+    (flangeItem?.examples.length ?? 0) <= 3,
+    "Checklist limita ejemplos a 3",
+  );
+
+  assert(
+    !shouldManualChecklistBlockImport(looseFlangeChecklist),
+    "Checklist no bloquea importación",
+  );
+
+  const noTextChecklist = buildManualTakeoffChecklist({
+    text: "x",
+    textLength: 12,
+    hasEmbeddedText: false,
+  });
+  assert(
+    noTextChecklist.items.some((item) => item.type === "noUsefulText"),
+    "Checklist avisa PDF sin texto útil",
+  );
+
+  const { readFile } = await import("node:fs/promises");
+  const { PDFParse } = await import("pdf-parse");
+  const dw701Path = path.join(
+    import.meta.dirname,
+    "../tests/fixtures/auto-takeoff-golden/dw-701.pdf",
+  );
+  const dw701Buffer = await readFile(dw701Path);
+  const dw701Parser = new PDFParse({ data: dw701Buffer });
+
+  try {
+    const dw701Text = (await dw701Parser.getText()).text;
+    const dw701Checklist = buildManualTakeoffChecklist({
+      text: dw701Text,
+      textLength: dw701Text.length,
+      hasEmbeddedText: true,
+    });
+    assert(
+      dw701Checklist.items.some((item) => item.type === "dwContinuationOrManual"),
+      "DW-701 fixture detecta señales DW/continuación",
+    );
+  } finally {
+    await dw701Parser.destroy();
+  }
 
   const goldenReport = await runAutoTakeoffGoldenValidation({
     goldenSetDir: path.join(

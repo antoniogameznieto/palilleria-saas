@@ -35,16 +35,27 @@ Ubicación: plano → **Automatización** → **Palillería sugerida (beta super
 - `review`: checkbox manual permitido; aviso en preview. Los **soportes tabulares** (`SUP-001`, etc.) siempre entran aquí, nunca en bulk ready.
 - `exclude`: sin checkbox; servidor rechaza importación.
 
+## Revisión manual recomendada (16C)
+
+Bloque `auto-takeoff-manual-checklist` con avisos que **no crean líneas**:
+
+- Menciones sueltas de soporte (`SOPORTE COMÚN`, `SUP-xxx` fuera de fila tabular).
+- Señales DW (`DW-xxx`, `PLANO Nº`, `PARA CONT. VER LINEA NUM.`).
+- Brida/válvula en notas o leyendas (no fila BOM).
+- PDF sin texto útil o sin BOM detectado.
+
+La importación de la propuesta **no se bloquea** por estos avisos.
+
 ## Límites conocidos
 
 - Sin OCR: requiere texto embebido útil en el PDF.
-- Soportes **tabulares** post-SOPORTES sí aparecen como revisión (16B). Menciones sueltas y partidas DW manuales siguen fuera.
+- Soportes **tabulares** post-SOPORTES sí aparecen como revisión (16B). Menciones sueltas y partidas DW manuales van al checklist (16C).
 - Máximo **200** líneas por importación.
 - Re-extracción en servidor al importar: claves obsoletas o `matched` se rechazan.
 
 ## Demo recomendada (DMS-703 E2E)
 
-Plano `seed-drawing-e2e-bom`: 18 listas para incluir, 2 revisiones (disco ciego + soporte SUP-001), 1 exclusión, 1 ya existente.
+Plano `seed-drawing-e2e-bom`: 18 listas para incluir, 2 revisiones (disco ciego + soporte SUP-001), 1 exclusión, 1 ya existente, checklist manual si hay señales en el PDF.
 
 ## Comandos de validación
 

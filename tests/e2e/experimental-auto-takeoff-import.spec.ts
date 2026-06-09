@@ -45,6 +45,13 @@ test.describe("importación experimental auto-takeoff", () => {
     await expect(page.getByTestId("auto-takeoff-beta-ready-count")).toHaveText("18");
     await expect(page.getByTestId("auto-takeoff-beta-review-count")).toHaveText("2");
     await expect(page.getByTestId("auto-takeoff-beta-excluded-count")).toHaveText("1");
+    await expect(page.getByTestId("auto-takeoff-manual-checklist")).toBeVisible();
+    await expect(page.getByTestId("auto-takeoff-manual-checklist")).toContainText(
+      "Revisión manual recomendada",
+    );
+    await expect(page.getByTestId("auto-takeoff-manual-checklist")).toContainText(
+      "no crean líneas automáticamente",
+    );
     await expect(page.getByTestId("auto-takeoff-review-group")).toContainText(
       "necesitan revisión antes de importarlas",
     );
@@ -185,6 +192,10 @@ test.describe("importación experimental auto-takeoff", () => {
     await expect(page.getByTestId("auto-takeoff-beta-no-embedded-text")).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByTestId("auto-takeoff-manual-checklist")).toBeVisible();
+    await expect(
+      page.getByTestId("auto-takeoff-manual-checklist-item-noUsefulText"),
+    ).toBeVisible();
     await expect(page.getByTestId("auto-takeoff-beta-proposal")).toHaveCount(0);
     await expect(page.getByTestId("auto-takeoff-import-reviewed-proposal")).toHaveCount(0);
   });

@@ -1,11 +1,11 @@
-# Validación de negocio auto-takeoff — Fase 15C / 16B
+# Validación de negocio auto-takeoff — Fase 15C
 
 ## Metadatos
 
 | Campo | Valor |
 | --- | --- |
 | Fecha | 2026-06-09 |
-| Commit probado | `94a2b5c` |
+| Commit probado | `065bbae` |
 | Comando | `npm run validate:auto-takeoff-business` |
 | Business set | `tests/fixtures/auto-takeoff-business/business-set.json` |
 | PDFs evaluados | 5 |
@@ -24,18 +24,6 @@
 | **Recall de negocio (overall)** | **87.5%** |
 | Recall desde BOM extraíble | 100.0% |
 | **Utilidad de extracción** | **51.6%** |
-
-### Delta Fase 16B (`includeSupportRows: true`)
-
-| Métrica | 15C (solo BOM) | 16B (+ soportes tabulares) |
-| --- | ---: | ---: |
-| Recall negocio overall | 82.5% | **87.5%** |
-| Matches businessRequired | 33/40 | **35/40** |
-| support (categoría) | 0/5 | **2/5** |
-| dms-703 recall negocio | 90.0% | **100.0%** |
-| dw-701 recall negocio | 40.0% | **60.0%** |
-
-Soportes recuperados: **SUP-001** en dms-703 y dw-701. Pendientes: menciones sueltas HL, DMS-704 sin bloque SOPORTES.
 
 ## Tabla por PDF
 
@@ -82,9 +70,9 @@ _Ninguno._
 
 ## Conclusión
 
-**Sirve como lista de materiales útil** y base de palillería asistida. Con **16B** los soportes tabulares post-SOPORTES entran como revisión; siguen fuera las **menciones sueltas**, **partidas DW manuales** y **exclusiones de oficina** (p. ej. FIGURA 8).
+**Sirve como lista de materiales útil** y base de palillería asistida, pero **requiere reglas adicionales** (soportes, partidas manuales, exclusiones de oficina) antes de considerarse palillería final.
 
-El golden estructural (15B) mide parsing BOM; esta fase mide **utilidad para palillería** con `includeSupportRows` activado en validación de negocio.
+El golden estructural (15B) mide parsing; esta fase mide **utilidad para palillería**. La brecha principal está en **soportes**, **partidas manuales DW** y **exclusiones de oficina** (p. ej. FIGURA 8).
 
 ## Recomendación para Fase 15D
 

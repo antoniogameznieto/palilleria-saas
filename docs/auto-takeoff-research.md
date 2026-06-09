@@ -781,6 +781,22 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 ---
 
+### Fase 16C — Checklist manual fuera del BOM
+
+**Objetivo:** Mostrar avisos de revisión manual para partidas no fiables de parsear (menciones sueltas, DW, brida/válvula en notas) sin crear líneas ni bloquear importación.
+
+**Commit de referencia:** `065bbae` (post Fase 16B).
+
+**Helper:** `lib/drawings/auto-takeoff-manual-checklist.ts` · `buildManualTakeoffChecklist()`
+
+**UI:** bloque «Revisión manual recomendada» (`auto-takeoff-manual-checklist`) en propuesta beta.
+
+**Tipos de aviso:** `looseSupportMention`, `dwContinuationOrManual`, `looseFlangeOrValveMention`, `noUsefulText`, `noBomDetected`.
+
+**Conclusión breve:** complementa 16B; soportes tabulares siguen como sugerencias review; lo no parseable queda como checklist con ejemplos (máx. 3) y `shouldBlockImport: false`.
+
+---
+
 ## Comandos
 
 ```bash
@@ -861,3 +877,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15G | Hardening beta supervisada | Seguridad import; permisos; edge cases; guía demo; E2E sin BOM |
 | 2026-06-09 | 16A | Business + golden/Ejemplos | Soportes tabulares parseables; DW manual checklist; informe out-of-bom |
 | 2026-06-09 | 16B | Business set + beta UI | Parser opt-in post-SOPORTES; support → review; recall negocio mejora |
+| 2026-06-09 | 16C | Beta supervisada | Checklist manual fuera BOM; no bloquea import; DW/BRIDA/SOPORTE suelto |

@@ -18,6 +18,11 @@ import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-t
 import { hasUsefulEmbeddedText } from "@/lib/drawings/experimental-auto-takeoff-parse";
 import type { BusinessAction } from "@/lib/drawings/auto-takeoff-business-rules";
 import {
+  MANUAL_CHECKLIST_DISCLAIMER,
+  MANUAL_CHECKLIST_EMPTY_NOTE,
+  type ManualTakeoffChecklistResult,
+} from "@/lib/drawings/auto-takeoff-manual-checklist-types";
+import {
   BUSINESS_ACTION_BADGE_CLASS,
   BUSINESS_ACTION_LABELS,
   BUSINESS_CATEGORY_LABELS,
@@ -213,6 +218,62 @@ function ProposalGroupPreview({
         <li>… y {items.length - preview.length} más</li>
       ) : null}
     </ul>
+  );
+}
+
+function ManualChecklistPanel({
+  checklist,
+}: {
+  checklist: ManualTakeoffChecklistResult | undefined;
+}) {
+  if (!checklist) {
+    return null;
+  }
+
+  if (!checklist.hasSignals) {
+    return (
+      <p
+        className="text-xs text-muted-foreground"
+        data-testid="auto-takeoff-manual-checklist"
+      >
+        {MANUAL_CHECKLIST_EMPTY_NOTE}
+      </p>
+    );
+  }
+
+  return (
+    <section
+      className="space-y-3 rounded-md border border-amber-500/30 bg-amber-500/5 p-3"
+      data-testid="auto-takeoff-manual-checklist"
+    >
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium text-foreground">
+          Revisión manual recomendada
+        </h3>
+        <p className="text-xs text-muted-foreground">{MANUAL_CHECKLIST_DISCLAIMER}</p>
+      </div>
+
+      <ul className="space-y-3">
+        {checklist.items.map((item) => (
+          <li
+            key={item.type}
+            className="space-y-1 rounded-md border border-amber-500/20 bg-background p-3"
+            data-testid={`auto-takeoff-manual-checklist-item-${item.type}`}
+          >
+            <p className="text-xs font-medium text-foreground">{item.title}</p>
+            <p className="text-xs text-muted-foreground">{item.description}</p>
+            {item.examples.length > 0 ? (
+              <ul className="list-disc space-y-0.5 pl-4 text-[11px] text-muted-foreground">
+                {item.examples.map((example) => (
+                  <li key={example}>{example}</li>
+                ))}
+              </ul>
+            ) : null}
+            <p className="text-[11px] text-foreground">{item.recommendation}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -609,6 +670,8 @@ export function DrawingExperimentalAutoTakeoff({
               groups={betaProposalGroups}
             />
 
+            <ManualChecklistPanel checklist={analyzeState.manualChecklist} />
+
             {!hasImportableMissing ? (
               <p
                 className="rounded-md border border-muted-foreground/20 bg-muted/10 px-3 py-2 text-xs text-muted-foreground"
@@ -972,6 +1035,10 @@ export function DrawingExperimentalAutoTakeoff({
               </section>
             ) : null}
           </>
+        ) : null}
+
+        {hasResult && !hasSuggestions ? (
+          <ManualChecklistPanel checklist={analyzeState.manualChecklist} />
         ) : null}
 
         {importState.error ? (
