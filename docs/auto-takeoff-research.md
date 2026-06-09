@@ -357,7 +357,43 @@ Escenario: plano con 8 líneas manuales previas (`a1`, `a2`, …) y 21 sugerenci
 - Si el PDF cambia entre análisis e importación, claves pueden dejar de ser válidas (rechazo seguro).
 - Match post-import usa referencia SAP; palillería manual sin SAP no empareja con sugerencias importadas por descripción sola.
 - Sigue siendo experimental: revisión humana recomendada tras importar.
-- Sin E2E automatizado de importación en esta fase.
+- Sin E2E automatizado de importación en esta fase (añadido en 14E).
+
+---
+
+## Fase 14E — Hardening y E2E (implementado)
+
+### Límites de importación
+
+| Regla | Comportamiento |
+|-------|----------------|
+| Máximo por operación | **200** líneas (`EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX`) |
+| Selección vacía | Error: *No se seleccionó ninguna sugerencia para importar.* |
+| Claves duplicadas | **Rechazo explícito** (no deduplicación silenciosa) |
+| Clave inventada / matched / ya en palillería | Error `invalidKeys` tras re-extraer PDF |
+| Fila sin descripción o cantidad inválida | Error `invalidRow` (Zod `takeoffCsvImportRowSchema`) |
+| Payload del cliente | Solo `selectedSuggestionKeys`; campos desde servidor |
+
+Constantes: `EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS` en `experimental-auto-takeoff-import.ts`.
+
+### Cobertura automatizada
+
+| Capa | Qué cubre |
+|------|-----------|
+| `npm run verify:auto-takeoff` | Parser, comparador, keys, límites, clave inventada/duplicada/matched, fila inválida |
+| `tests/e2e/experimental-auto-takeoff-import.spec.ts` | Análisis BOM → import 1 missing → línea real → invalidación revisión → re-análisis matched; viewer sin bloque |
+| CI (`.github/workflows/ci.yml`) | `verify:auto-takeoff` + suite E2E completa |
+
+### Fixture E2E
+
+- PDF: `tests/fixtures/e2e-dms-703-bom.pdf` (texto embebido real, 21 sugerencias parseables).
+- Plano seed: `seed-drawing-e2e-bom` con 1 línea SAP `1000937601` y `takeoffReviewedAt` fijado.
+- Estado esperado tras análisis: **1 matched / 20 missing**; tras importar 1: **2 matched / 19 missing**.
+
+### Seguridad
+
+- **Viewer:** no ve `experimental-auto-takeoff-section` (permiso `canManageTakeoffItems`).
+- **Clave inventada:** cubierta en `verify:auto-takeoff` (servidor re-valida contra PDF).
 
 ---
 
@@ -374,7 +410,10 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | Archivo | Rol |
 |---------|-----|
 | `scripts/research-auto-takeoff-from-pdf.ts` | CLI de investigación (14A) |
-| `scripts/verify-auto-takeoff-parse.ts` | Verificación pura del parser (14B) |
+| `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import (14B–14E) |
+| `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
+| `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
+| `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E) |
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
 | `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
 | `lib/actions/experimental-auto-takeoff.ts` | Analyze + import experimental |
@@ -399,3 +438,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-08 | 14B | UI preview en Automatización | Sin persistencia; ~21 filas en DMS-703 |
 | 2026-06-08 | 14C | Comparación vs palillería existente | DMS-703: 0 matched, 21 missing (palillería manual sin SAP) |
 | 2026-06-08 | 14D | Importación seleccionada | DMS-703: 8→10 líneas; import 2 → 2 matched, 19 missing |
+| 2026-06-09 | 14E | Hardening + E2E | Límites 200/duplicados; E2E seed BOM; verify + CI |

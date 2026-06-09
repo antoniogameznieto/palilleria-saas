@@ -27,6 +27,17 @@ export const EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX = 200;
 export const EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_NOTE =
   "Importado desde extracción experimental de relación de materiales";
 
+export const EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS = {
+  emptySelection: "No se seleccionó ninguna sugerencia para importar.",
+  duplicateKeys:
+    "La selección contiene claves duplicadas. Cada sugerencia solo puede importarse una vez.",
+  maxExceeded: `Máximo ${EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX} líneas por importación experimental.`,
+  invalidKeys:
+    "Una o más sugerencias seleccionadas no son válidas, no existen en el PDF actual o ya están en la palillería.",
+  invalidRow:
+    "Una sugerencia seleccionada no cumple los requisitos mínimos de importación.",
+} as const;
+
 export type ExperimentalSuggestionKeyInput = {
   item: number | null;
   reference: string | null;
@@ -170,23 +181,46 @@ export async function extractVerifiedExperimentalSuggestions(params: {
   };
 }
 
+export function normalizeSelectedSuggestionKeys(
+  selectedSuggestionKeys: string[],
+):
+  | { ok: true; keys: string[] }
+  | { ok: false; error: string } {
+  if (selectedSuggestionKeys.length === 0) {
+    return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.emptySelection };
+  }
+
+  const keys = selectedSuggestionKeys
+    .map((key) => key.trim())
+    .filter((key) => key.length > 0);
+
+  if (keys.length === 0) {
+    return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.emptySelection };
+  }
+
+  const uniqueKeys = [...new Set(keys)];
+
+  if (uniqueKeys.length !== keys.length) {
+    return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.duplicateKeys };
+  }
+
+  if (uniqueKeys.length > EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX) {
+    return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.maxExceeded };
+  }
+
+  return { ok: true, keys: uniqueKeys };
+}
+
 export function resolveSelectedSuggestionsForImport(params: {
   verifiedItems: VerifiedExperimentalSuggestion[];
   selectedSuggestionKeys: string[];
 }):
   | { ok: true; rows: TakeoffCsvImportRow[] }
   | { ok: false; error: string } {
-  const uniqueKeys = [...new Set(params.selectedSuggestionKeys)];
+  const normalized = normalizeSelectedSuggestionKeys(params.selectedSuggestionKeys);
 
-  if (uniqueKeys.length === 0) {
-    return { ok: false, error: "No se seleccionó ninguna sugerencia para importar." };
-  }
-
-  if (uniqueKeys.length > EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX) {
-    return {
-      ok: false,
-      error: `Máximo ${EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX} líneas por importación experimental.`,
-    };
+  if (!normalized.ok) {
+    return normalized;
   }
 
   const missingByKey = new Map(
@@ -197,24 +231,17 @@ export function resolveSelectedSuggestionsForImport(params: {
 
   const rows: TakeoffCsvImportRow[] = [];
 
-  for (const key of uniqueKeys) {
+  for (const key of normalized.keys) {
     const suggestion = missingByKey.get(key);
 
     if (!suggestion) {
-      return {
-        ok: false,
-        error:
-          "Una o más sugerencias seleccionadas no son válidas, no existen en el PDF actual o ya están en la palillería.",
-      };
+      return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys };
     }
 
     const row = toImportableTakeoffRow(suggestion);
 
     if (!row) {
-      return {
-        ok: false,
-        error: "Una sugerencia seleccionada no cumple los requisitos mínimos de importación.",
-      };
+      return { ok: false, error: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidRow };
     }
 
     rows.push(row);

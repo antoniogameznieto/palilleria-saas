@@ -73,5 +73,8 @@ jobs:
       - name: Verify title block crop
         run: npm run verify:title-block-crop
 
+      - name: Verify auto-takeoff
+        run: npm run verify:auto-takeoff
+
       - name: E2E tests
         run: npm run test:e2e

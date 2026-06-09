@@ -149,7 +149,8 @@ GitHub Actions ejecuta en cada **push a `main`** y en **pull requests** el workf
 4. `npm run build`
 5. `npm run verify:takeoff`
 6. `npm run verify:title-block-crop`
-7. `npm run test:e2e` (seed E2E vía `global-setup` de Playwright)
+7. `npm run verify:auto-takeoff`
+8. `npm run test:e2e` (seed E2E vía `global-setup` de Playwright; incluye import experimental)
 
 Sin deploy. Ver [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md) para detalles y limitaciones en CI.
 
@@ -162,7 +163,8 @@ npm run lint
 npm run build
 npm run verify:takeoff
 npm run verify:title-block-crop   # funciones puras OCR experimental
-npm run test:e2e                  # Playwright (requiere BD + migraciones)
+npm run verify:auto-takeoff         # parser/comparador/import experimental
+npm run test:e2e                  # Playwright (requiere BD + migraciones; incluye import experimental)
 ```
 
 Opcional:
@@ -189,7 +191,7 @@ npm run test:e2e:ui               # Playwright modo UI
 | `npm run check:tesseract` | Comprueba Tesseract CLI (OCR exp.) |
 | `npm run benchmark:ocr` | Benchmark OCR experimental |
 | `npm run research:auto-takeoff` | Investigación materiales desde PDF embebido |
-| `npm run verify:auto-takeoff` | Verificación parser auto-takeoff experimental |
+| `npm run verify:auto-takeoff` | Verificación parser/comparador/import auto-takeoff experimental |
 | `npm run db:seed:e2e` | Seed datos fijos para E2E |
 | `npm run test:e2e` | Tests E2E Playwright |
 | `npm run test:e2e:ui` | Tests E2E (modo UI) |

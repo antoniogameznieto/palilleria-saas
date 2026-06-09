@@ -11,11 +11,18 @@ export function jobPath(companyId = E2E_IDS.company, jobId = E2E_IDS.job) {
 }
 
 export function drawingPath(
-  drawingId = E2E_IDS.drawingPending,
+  drawingId: string = E2E_IDS.drawingPending,
   companyId = E2E_IDS.company,
   jobId = E2E_IDS.job,
 ) {
   return `${jobPath(companyId, jobId)}/drawings/${drawingId}`;
+}
+
+export function drawingBomPath(
+  companyId = E2E_IDS.company,
+  jobId = E2E_IDS.job,
+) {
+  return drawingPath(E2E_IDS.drawingBom, companyId, jobId);
 }
 
 export async function login(

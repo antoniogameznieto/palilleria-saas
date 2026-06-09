@@ -31,7 +31,9 @@ async function getDrawingState() {
     },
   });
 
-  assert(drawing != null, "Plano DMS-703 no encontrado");
+  if (!drawing) {
+    throw new Error("Plano DMS-703 no encontrado");
+  }
 
   return drawing;
 }
@@ -67,7 +69,9 @@ async function resolveLoginUser() {
     select: { user: { select: { email: true } } },
   });
 
-  assert(anyMember != null, "No hay usuario owner/admin/engineer en la empresa DMS-703");
+  if (!anyMember) {
+    throw new Error("No hay usuario owner/admin/engineer en la empresa DMS-703");
+  }
 
   return anyMember.user.email;
 }

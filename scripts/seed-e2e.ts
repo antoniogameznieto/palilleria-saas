@@ -2,7 +2,7 @@
  * Seed estable para tests E2E (ids fijos, datos reproducibles).
  * Ejecutar antes de `npm run test:e2e` (también vía global-setup de Playwright).
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { PrismaClient } from "@prisma/client";
@@ -18,6 +18,7 @@ export const E2E_IDS = {
   company: "seed-company-e2e",
   job: "seed-job-e2e",
   drawingPending: "seed-drawing-e2e-pending",
+  drawingBom: "seed-drawing-e2e-bom",
   ownerUser: "seed-user-e2e-owner",
   engineerUser: "seed-user-e2e-engineer",
   viewerUser: "seed-user-e2e-viewer",
@@ -214,6 +215,79 @@ async function main() {
     ],
   });
 
+  const bomFixturePath = path.join(
+    process.cwd(),
+    "tests/fixtures/e2e-dms-703-bom.pdf",
+  );
+  const bomPdf = await readFile(bomFixturePath);
+  const bomFileName = "e2e-dms-703-bom.pdf";
+  const bomStoragePath = buildDrawingStoragePath(
+    company.id,
+    job.id,
+    E2E_IDS.drawingBom,
+    bomFileName,
+  );
+  const bomAbsolutePath = path.join(storageRoot, bomStoragePath);
+  await mkdir(path.dirname(bomAbsolutePath), { recursive: true });
+  await writeFile(bomAbsolutePath, bomPdf);
+
+  const bomReviewedAt = new Date("2026-06-09T12:00:00.000Z");
+
+  await prisma.drawing.upsert({
+    where: { id: E2E_IDS.drawingBom },
+    update: {
+      companyId: company.id,
+      jobId: job.id,
+      fileName: bomFileName,
+      originalFileName: bomFileName,
+      storagePath: bomStoragePath,
+      fileSize: BigInt(bomPdf.length),
+      mimeType: "application/pdf",
+      status: "reviewed",
+      drawingNumber: "E2E-BOM",
+      lineNumber: "PL1-L",
+      revision: "R03",
+      takeoffReviewedAt: bomReviewedAt,
+      takeoffReviewedById: engineer.id,
+      createdById: owner.id,
+    },
+    create: {
+      id: E2E_IDS.drawingBom,
+      companyId: company.id,
+      jobId: job.id,
+      fileName: bomFileName,
+      originalFileName: bomFileName,
+      storagePath: bomStoragePath,
+      fileSize: BigInt(bomPdf.length),
+      mimeType: "application/pdf",
+      status: "reviewed",
+      drawingNumber: "E2E-BOM",
+      lineNumber: "PL1-L",
+      revision: "R03",
+      takeoffReviewedAt: bomReviewedAt,
+      takeoffReviewedById: engineer.id,
+      createdById: owner.id,
+    },
+  });
+
+  await prisma.drawingTakeoffItem.deleteMany({
+    where: { drawingId: E2E_IDS.drawingBom },
+  });
+
+  await prisma.drawingTakeoffItem.create({
+    data: {
+      companyId: company.id,
+      jobId: job.id,
+      drawingId: E2E_IDS.drawingBom,
+      reference: "1000937601",
+      description:
+        '1.1/2" SCH 160 TUBERIA EXT. PLANOS A.AL. A-335 P11 ESP-1300-3 T>450ºC',
+      quantity: 0.2,
+      unit: "m",
+      createdById: engineer.id,
+    },
+  });
+
   // Empresa demo (cross-tenant): solo demo@ como owner
   const demoHash = await bcrypt.hash(E2E_PASSWORD, 12);
   const demoUser = await upsertUser(
@@ -271,6 +345,7 @@ async function main() {
   console.log(`- Empresa E2E: ${company.id}`);
   console.log(`- Trabajo E2E: ${job.id}`);
   console.log(`- Plano pendiente revisión takeoff: ${E2E_IDS.drawingPending}`);
+  console.log(`- Plano BOM experimental: ${E2E_IDS.drawingBom}`);
   console.log(`- Owner: ${E2E_USERS.owner}`);
   console.log(`- Engineer: ${E2E_USERS.engineer}`);
   console.log(`- Viewer: ${E2E_USERS.viewer}`);

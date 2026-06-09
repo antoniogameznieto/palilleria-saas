@@ -9,8 +9,12 @@ import {
   quantitiesApproximatelyEqual,
 } from "../lib/drawings/experimental-auto-takeoff-compare";
 import {
+  EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS,
+  EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX,
   buildExperimentalSuggestionKey,
+  normalizeSelectedSuggestionKeys,
   resolveSelectedSuggestionsForImport,
+  toImportableTakeoffRow,
 } from "../lib/drawings/experimental-auto-takeoff-import";
 import {
   findBomSections,
@@ -254,6 +258,82 @@ function main(): void {
     selectedSuggestionKeys: [key],
   });
   assert(!importMatchedRejected.ok, "No importa sugerencias matched");
+  assert(
+    !importMatchedRejected.ok &&
+      importMatchedRejected.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys,
+    "Matched devuelve error invalidKeys",
+  );
+
+  const emptySelection = normalizeSelectedSuggestionKeys([]);
+  assert(
+    !emptySelection.ok &&
+      emptySelection.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.emptySelection,
+    "Selección vacía rechazada",
+  );
+
+  const duplicateKeys = normalizeSelectedSuggestionKeys([key, key]);
+  assert(
+    !duplicateKeys.ok &&
+      duplicateKeys.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.duplicateKeys,
+    "Claves duplicadas rechazadas",
+  );
+
+  const maxKeys = Array.from(
+    { length: EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_MAX + 1 },
+    (_, index) => `key-${index}`,
+  );
+  const overMax = normalizeSelectedSuggestionKeys(maxKeys);
+  assert(
+    !overMax.ok &&
+      overMax.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.maxExceeded,
+    "Límite máximo protegido",
+  );
+
+  assert(
+    toImportableTakeoffRow({
+      item: 1,
+      reference: "1000937601",
+      description: "",
+      quantity: "1",
+      unit: "ud",
+    }) === null,
+    "Descripción vacía no importable",
+  );
+
+  assert(
+    toImportableTakeoffRow({
+      item: 1,
+      reference: "1000937601",
+      description: "Material válido con descripción",
+      quantity: "no-es-numero",
+      unit: "ud",
+    }) === null,
+    "Cantidad inválida no importable",
+  );
+
+  const invalidRowImport = resolveSelectedSuggestionsForImport({
+    verifiedItems: [
+      {
+        ...verifiedMissing[0],
+        quantity: "no-es-numero",
+        suggestionKey: buildExperimentalSuggestionKey({
+          ...verifiedMissing[0],
+          quantity: "no-es-numero",
+        }),
+      },
+    ],
+    selectedSuggestionKeys: [
+      buildExperimentalSuggestionKey({
+        ...verifiedMissing[0],
+        quantity: "no-es-numero",
+      }),
+    ],
+  });
+  assert(
+    !invalidRowImport.ok &&
+      invalidRowImport.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidRow,
+    "Fila inválida devuelve invalidRow",
+  );
 
   console.log("verify-auto-takeoff-parse: all checks passed");
 }
