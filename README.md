@@ -20,6 +20,7 @@ Otros aspectos:
 - **Roles y permisos** por empresa: `owner`, `admin`, `engineer`, `viewer` (lectura y export sin edición).
 - **Visualización y descarga protegida** de PDFs (sin exponer rutas de storage al cliente).
 - **OCR del cajetín** como herramienta **experimental de diagnóstico** (`EXPERIMENTAL_TITLE_BLOCK_OCR`); no forma parte del flujo productivo ni sustituye la revisión manual.
+- **Preview experimental de palillería** desde relación de materiales del PDF embebido (pestaña Automatización); no guarda líneas ni sustituye la revisión manual. Ver [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md).
 
 ## Estado actual
 
@@ -187,6 +188,8 @@ npm run test:e2e:ui               # Playwright modo UI
 | `npm run verify:title-block-crop` | Verificación recorte cajetín (OCR exp.) |
 | `npm run check:tesseract` | Comprueba Tesseract CLI (OCR exp.) |
 | `npm run benchmark:ocr` | Benchmark OCR experimental |
+| `npm run research:auto-takeoff` | Investigación materiales desde PDF embebido |
+| `npm run verify:auto-takeoff` | Verificación parser auto-takeoff experimental |
 | `npm run db:seed:e2e` | Seed datos fijos para E2E |
 | `npm run test:e2e` | Tests E2E Playwright |
 | `npm run test:e2e:ui` | Tests E2E (modo UI) |
@@ -203,6 +206,7 @@ npm run test:e2e:ui               # Playwright modo UI
 | [docs/tesseract-ocr-setup.md](docs/tesseract-ocr-setup.md) | Instalación Tesseract (solo OCR exp.) |
 | [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md) | Tests E2E Playwright (Fase 12A) |
 | [docs/post-demo-backlog.md](docs/post-demo-backlog.md) | Backlog priorizado post-demo interna |
+| [docs/auto-takeoff-research.md](docs/auto-takeoff-research.md) | Auto-takeoff desde PDF embebido (14A/14B) |
 | `cursor-palilleria-docs/` | Especificación funcional del producto |
 
 ## Limitaciones conocidas

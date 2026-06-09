@@ -188,10 +188,54 @@ No es viable **como palillería completa automática** todavía porque:
 
 ---
 
+## Fase 14B — Preview experimental en UI (implementado)
+
+### Alcance
+
+| Incluido | Excluido |
+|----------|----------|
+| Server action `analyzeExperimentalAutoTakeoffAction` | Guardar en BD |
+| Panel en pestaña **Automatización** del detalle de plano | Importar a palillería real |
+| Tabla de sugerencias (ítem, ref., cant., ud., desc., conf.) | OCR / Tesseract |
+| Avisos de preview y warnings del parser | Comparación automática con palillería existente |
+| Contador de líneas reales ya en el plano | Autoaplicar / botón guardar |
+
+### Permisos
+
+- **Visible:** `owner`, `admin`, `engineer` (misma gate que editar palillería).
+- **Oculto:** `viewer`.
+
+### Ubicación UI
+
+Detalle del plano → pestaña **Automatización** → bloque **«Palillería sugerida (experimental)»** (borde azul), encima del bloque OCR experimental si está habilitado.
+
+### `data-testid`
+
+- `experimental-auto-takeoff-section`
+- `experimental-auto-takeoff-run`
+- `experimental-auto-takeoff-results`
+
+### Validación esperada (DMS-703)
+
+- Engineer/owner ven el bloque y el botón «Analizar relación de materiales».
+- Tras analizar: ~21 filas sugeridas, confianza media ~1.00.
+- La palillería real en BD **no cambia** (solo lectura + preview).
+- Viewer no ve el bloque.
+
+### Pendiente post-14B
+
+- Comparación automática sugerencias vs palillería existente (diff).
+- Import selectivo a palillería (fase posterior, con revisión).
+- E2E del panel experimental.
+- Ampliar benchmark de PDFs.
+
+---
+
 ## Comandos
 
 ```bash
 npm run research:auto-takeoff -- ./ruta/plano.pdf
+npm run verify:auto-takeoff          # tests puros del parser
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
 
@@ -199,8 +243,12 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 
 | Archivo | Rol |
 |---------|-----|
-| `scripts/research-auto-takeoff-from-pdf.ts` | CLI de investigación |
+| `scripts/research-auto-takeoff-from-pdf.ts` | CLI de investigación (14A) |
+| `scripts/verify-auto-takeoff-parse.ts` | Verificación pura del parser (14B) |
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
+| `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
+| `lib/actions/experimental-auto-takeoff.ts` | Server action (sin BD) |
+| `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview |
 | `docs/auto-takeoff-research.md` | Este documento |
 
 ## Referencias
@@ -216,3 +264,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | Fecha | Fase | PDFs probados | Resultado |
 |-------|------|---------------|-----------|
 | 2026-06-08 | 14A | DMS-703, HL-1289-01, DMS-704 | Parcialmente viable; 49 filas totales en 3 PDFs |
+| 2026-06-08 | 14B | UI preview en Automatización | Sin persistencia; ~21 filas en DMS-703 |

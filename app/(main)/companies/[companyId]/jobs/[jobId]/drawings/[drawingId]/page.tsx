@@ -14,6 +14,7 @@ import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
 import { formatTakeoffReviewedByLabel } from "@/lib/drawings/takeoff-review";
 import { buildTakeoffSummary } from "@/lib/drawings/takeoff-summary";
+import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-title-block-ocr-config";
 import {
   canConfirmDetectedDrawingMetadata,
@@ -61,6 +62,9 @@ export default async function DrawingDetailPage({
   const canExtractPdfText = canExtractDrawingPdfText(membership.role);
   const canConfirmDetected = canConfirmDetectedDrawingMetadata(membership.role);
   const canDelete = canDeleteDrawings(membership.role);
+  const showExperimentalAutoTakeoff = canAccessExperimentalAutoTakeoff(
+    membership.role,
+  );
   const showExperimentalTitleBlockOcr = canAccessExperimentalTitleBlockOcr(
     membership.role,
   );
@@ -164,6 +168,8 @@ export default async function DrawingDetailPage({
             canStartDetection={canStartDetection}
             canExtractPdfText={canExtractPdfText}
             canConfirmDetected={canConfirmDetected}
+            showExperimentalAutoTakeoff={showExperimentalAutoTakeoff}
+            existingTakeoffLineCount={takeoffItems.length}
             showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
             lastDetectionFeedback={lastDetectionFeedback}
           />
