@@ -158,14 +158,22 @@ Columnas:
 - En móvil: hoja primero, PDF debajo.
 - Sigue siendo manual asistido; sin OCR ni automatización.
 
-### 18G — Semiautomático asistido
+### 18G — Export XLSX básico (completado)
+
+- Endpoint `GET /api/files/trameado/[sheetId]/xlsx`.
+- Mismas columnas que CSV: ISO, CLASE, Nº, Ø, SCH., PALILLO, COLADA.
+- Formato básico: cabecera en negrita, anchos razonables, PALILLO numérico, fila congelada, autofiltro.
+- Botón «Exportar Excel» junto a CSV; CSV se mantiene sin cambios.
+- Excel formateado avanzado / plantilla exacta cliente: fase posterior.
+
+### 18H — Semiautomático asistido
 
 - Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
 - Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
 - Sugerencia de longitudes desde cotas extraídas (si texto embebido).
 - Alertas de discrepancia; sin autoaplicar.
 
-### 18H — Iso trameado y export PDF
+### 18I — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.

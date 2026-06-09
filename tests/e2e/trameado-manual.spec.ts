@@ -87,6 +87,18 @@ test.describe("trameado manual", () => {
     expect(exportBody).toContain("HL-E2E-A012AA-N-01");
     expect(exportBody).toContain("363");
 
+    const xlsxLink = page.getByTestId("trameado-export-xlsx");
+    await expect(xlsxLink).toBeVisible();
+    const xlsxHref = await xlsxLink.getAttribute("href");
+    expect(xlsxHref).toMatch(/\/api\/files\/trameado\/[^/]+\/xlsx$/);
+    const xlsxResponse = await page.request.get(xlsxHref!);
+    expect(xlsxResponse.status()).toBe(200);
+    expect(xlsxResponse.headers()["content-type"]).toContain(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    const xlsxBody = await xlsxResponse.body();
+    expect(xlsxBody.byteLength).toBeGreaterThan(0);
+
     await page.getByTestId("trameado-edit-segment").first().click();
     await page.getByTestId("trameado-segment-form").getByLabel(/PALILLO/).fill("370");
     await page.getByTestId("trameado-update-segment-submit").click();
@@ -150,6 +162,7 @@ test.describe("trameado manual", () => {
       "1 tramo",
     );
     await expect(page.getByTestId("trameado-export-csv")).toBeVisible();
+    await expect(page.getByTestId("trameado-export-xlsx")).toBeVisible();
     await expect(page.getByTestId("trameado-create-sheet")).toHaveCount(0);
     await expect(page.getByTestId("trameado-add-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-edit-segment")).toHaveCount(0);

@@ -1,3 +1,5 @@
+import ExcelJS from "exceljs";
+
 import {
   buildTrameadoCsv,
   buildTrameadoCsvDownloadBuffer,
@@ -7,6 +9,14 @@ import {
   sortTrameadoExportSegments,
   TRAMEADO_CSV_HEADERS,
 } from "../lib/trameado/export-csv";
+import {
+  buildTrameadoXlsxBuffer,
+  buildTrameadoXlsxExportPath,
+  buildTrameadoXlsxFileName,
+  TRAMEADO_XLSX_CONTENT_TYPE,
+  TRAMEADO_XLSX_HEADERS,
+  TRAMEADO_XLSX_SHEET_NAME,
+} from "../lib/trameado/export-xlsx";
 import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
@@ -164,8 +174,8 @@ function verifySegmentHelpers(): void {
   );
 }
 
-function verifyCsvExport(): void {
-  const sheet = {
+function buildSampleExportSheet() {
+  return {
     lineIdentifier: "HL-1291-A012AA-N-01",
     lineClass: "A012AA",
     segments: [
@@ -191,6 +201,10 @@ function verifyCsvExport(): void {
       },
     ],
   };
+}
+
+function verifyCsvExport(): void {
+  const sheet = buildSampleExportSheet();
 
   const csv = buildTrameadoCsv(sheet);
   const lines = csv.split("\r\n");
@@ -241,14 +255,99 @@ function verifyCsvExport(): void {
   );
 }
 
-function main(): void {
+async function verifyXlsxExport(): Promise<void> {
+  const sheet = buildSampleExportSheet();
+  const buffer = await buildTrameadoXlsxBuffer(sheet);
+
+  assert(buffer.length > 0, "XLSX buffer should not be empty");
+
+  assert(
+    TRAMEADO_XLSX_CONTENT_TYPE ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "XLSX content type constant should match OpenXML spreadsheet MIME",
+  );
+
+  assert(
+    TRAMEADO_XLSX_HEADERS.join(",") ===
+      "ISO,CLASE,Nº,Ø,SCH.,PALILLO,COLADA",
+    "XLSX headers should match client column order",
+  );
+
+  assert(
+    buildTrameadoXlsxFileName("HL-1291-A012AA-N-01", "DWG-001") ===
+      "trameado-DWG-001-HL-1291-A012AA-N-01.xlsx",
+    "XLSX file name should include drawing and line identifiers",
+  );
+
+  assert(
+    buildTrameadoXlsxFileName("HL-1291-A012AA-N-01") ===
+      "hoja-palilleo-HL-1291-A012AA-N-01.xlsx",
+    "XLSX file name should fall back to hoja-palilleo prefix",
+  );
+
+  assert(
+    buildTrameadoXlsxExportPath("sheet-123") ===
+      "/api/files/trameado/sheet-123/xlsx",
+    "XLSX export path should match API route",
+  );
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(
+    buffer as unknown as Parameters<ExcelJS.Workbook["xlsx"]["load"]>[0],
+  );
+
+  const worksheet = workbook.getWorksheet(TRAMEADO_XLSX_SHEET_NAME);
+  assert(worksheet !== undefined, "XLSX workbook should contain palilleo sheet");
+  if (!worksheet) {
+    return;
+  }
+
+  const headerValues = TRAMEADO_XLSX_HEADERS.map(
+    (_, index) => worksheet.getRow(1).getCell(index + 1).value,
+  );
+  assert(
+    headerValues.join(",") === TRAMEADO_XLSX_HEADERS.join(","),
+    "XLSX header row should match export columns",
+  );
+
+  assert(
+    worksheet.rowCount === 1 + sheet.segments.length,
+    "XLSX should contain header row plus one row per segment",
+  );
+
+  const firstDataRow = worksheet.getRow(2);
+  assert(
+    firstDataRow.getCell(1).value === sheet.lineIdentifier,
+    "First data row should repeat ISO on each segment row",
+  );
+  assert(
+    firstDataRow.getCell(3).value === "<1>",
+    "First data row should use visible segment label in sortOrder",
+  );
+  assert(
+    firstDataRow.getCell(6).value === 120,
+    "PALILLO should export as numeric cell value",
+  );
+
+  const secondDataRow = worksheet.getRow(3);
+  assert(
+    secondDataRow.getCell(7).value === "'-C-123",
+    "Formula-risk COLADA values should be protected in XLSX",
+  );
+}
+
+async function main(): Promise<void> {
   verifyFormatHelpers();
   verifySheetValidation();
   verifySegmentValidation();
   verifyExportLabels();
   verifySegmentHelpers();
   verifyCsvExport();
+  await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }
 
-main();
+main().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});

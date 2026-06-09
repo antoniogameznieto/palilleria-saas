@@ -128,6 +128,7 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 |----------|------|
 | Paso Trameado en detalle de plano (PDF + tabla) | 18C ✅ |
 | Export CSV hoja cliente | 18D ✅ |
+| Export Excel básico hoja cliente | 18G ✅ |
 | Export Excel formateado / PDF plantilla | posterior |
 | Hints desde BOM (Ø, SCH.) | 18E |
 | Anotaciones iso trameado | 18F |
@@ -158,6 +159,32 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 **UI:** botón «Exportar CSV» en pestaña Trameado (`ExportTrameadoCsvButton`); visible con ≥1 tramo; viewer puede descargar.
 
 **Verificación:** `verifyCsvExport()` en `scripts/verify-trameado-model.ts`.
+
+## Export XLSX (18G)
+
+**Ruta:** `GET /api/files/trameado/[sheetId]/xlsx`  
+**Helper:** `lib/trameado/export-xlsx.ts`  
+**Librería:** `exceljs` (misma que export takeoff del trabajo).
+
+| Columna | Origen |
+|---------|--------|
+| ISO | `sheet.lineIdentifier` |
+| CLASE | `sheet.lineClass` |
+| Nº | `segment.segmentLabel` o `<n>` desde `segmentNumber` |
+| Ø | `segment.diameter` |
+| SCH. | `segment.schedule` |
+| PALILLO | `segment.palilloLength` (número, mm) |
+| COLADA | `segment.heatNumber` |
+
+- Reutiliza orden, etiquetas Nº, nombre de archivo y `protectSpreadsheetExportText` del export CSV.
+- Hoja Excel: «Hoja de palilleo»; cabecera en negrita; anchos de columna; fila 1 congelada; autofiltro.
+- Nombre archivo: `trameado-{drawingNumber}-{lineIdentifier}.xlsx` (sanitizado); fallback `hoja-palilleo-{lineIdentifier}.xlsx`.
+- Permisos: idénticos al CSV (401/403/400 sin tramos).
+- CSV existente sin cambios.
+
+**UI:** botones «Exportar CSV» y «Exportar Excel» en cabecera del panel hoja (`ExportTrameadoCsvButton`); visible con ≥1 tramo; viewer puede descargar; aviso si pendiente de revisión.
+
+**Verificación:** `verifyXlsxExport()` en `scripts/verify-trameado-model.ts`.
 
 ## Archivos tocados en 18B
 
