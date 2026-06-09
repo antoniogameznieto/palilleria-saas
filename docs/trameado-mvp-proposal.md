@@ -17,8 +17,8 @@ El MVP **no** intenta leer marcas azules ni automatizar el trameado visual. El B
 | Enfoque | Decisión |
 |---------|----------|
 | A. Manual asistido | **MVP** |
-| B. Semiautomático | Fase 18C (post-MVP) |
-| C. Automático visual | Descartado hasta nuevo input; requiere OCR/visión |
+| B. Semiautomático | Fase 18I-A (post-research 18H) |
+| C. Automático visual | Descartado para MVP; ver [trameado-auto-research.md](./trameado-auto-research.md) |
 
 ## 3. Flujo de usuario propuesto
 
@@ -166,14 +166,34 @@ Columnas:
 - Botón «Exportar Excel» junto a CSV; CSV se mantiene sin cambios.
 - Excel formateado avanzado / plantilla exacta cliente: fase posterior.
 
-### 18H — Semiautomático asistido
+### 18H — Research trameado automático (completado)
 
-- Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
-- Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
-- Sugerencia de longitudes desde cotas extraídas (si texto embebido).
-- Alertas de discrepancia; sin autoaplicar.
+- Documento: [trameado-auto-research.md](./trameado-auto-research.md).
+- Script: `npm run research:trameado-auto`.
+- **Conclusión:** trameado automático total **no viable** con PDFs de ejemplo del cliente (escaneos RICOH, 12–140 chars embebidos).
+- Tramos `<n>` y PALILLO **no** aparecen como texto; marcas azules son raster/OCR (Nivel 4, alto riesgo).
+- PDFs vectoriales individuales sí permiten hints metadatos/BOM (Nivel 1–2).
+- **Automático realista** = asistente: precrear hojas, sugerir Ø/SCH, usuario introduce longitudes mirando PDF.
+- **Automático visual** (OCR marcas azules, geometría) = alto riesgo; no MVP.
 
-### 18I — Iso trameado y export PDF
+### 18I-A — Asistente BOM/metadatos (recomendado)
+
+- Precrear hojas con ISO, CLASE, Ø, SCH desde metadatos + BOM.
+- Parejas `-01`/`-02` cuando detectables.
+- Alertas discrepancia BOM vs suma tramos (sin autoaplicar).
+- Usuario sigue introduciendo PALILLO manualmente.
+
+### 18I-B — Parser experimental texto embebido (condicional)
+
+- Solo si aparecen PDFs con tramos `<n>` en texto estructurado.
+- No prioritario con ejemplos actuales.
+
+### 18I-C — Research OCR visual (backlog)
+
+- OCR no productivo sobre isos escaneados / marcas azules.
+- Requiere golden set y precisión medida antes de UI.
+
+### 18J — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.
@@ -193,6 +213,7 @@ Columnas:
 - Análisis funcional: [trameado-functional-analysis.md](./trameado-functional-analysis.md)
 - Modelo técnico 18B: [trameado-technical-model.md](./trameado-technical-model.md)
 - Beta BOM: [auto-takeoff-research.md](./auto-takeoff-research.md)
+- Research automático: [trameado-auto-research.md](./trameado-auto-research.md)
 
 ---
 

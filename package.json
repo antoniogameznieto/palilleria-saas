@@ -15,6 +15,7 @@
     "check:tesseract": "tsx scripts/check-tesseract.ts",
     "benchmark:ocr": "tsx scripts/benchmark-title-block-ocr.ts",
     "research:auto-takeoff": "tsx scripts/research-auto-takeoff-from-pdf.ts",
+    "research:trameado-auto": "tsx scripts/research-trameado-auto.ts",
     "research:out-of-bom": "tsx scripts/research-out-of-bom-items.ts",
     "benchmark:auto-takeoff": "tsx scripts/benchmark-auto-takeoff.ts",
     "validate:auto-takeoff-golden": "tsx scripts/validate-auto-takeoff-golden.ts",
