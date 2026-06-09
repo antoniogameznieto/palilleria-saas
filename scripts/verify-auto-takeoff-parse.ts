@@ -18,7 +18,9 @@ import {
   resolveSelectedSuggestionsForImport,
   toImportableTakeoffRow,
 } from "../lib/drawings/experimental-auto-takeoff-import";
+import { canAccessExperimentalAutoTakeoff } from "../lib/drawings/experimental-auto-takeoff-config";
 import {
+  BETA_NO_IMPORTABLE_PROPOSAL_NOTE,
   buildBetaProposalSummary,
   buildExperimentalAssistantDiscoveryCopy,
   buildExperimentalAssistantMetrics,
@@ -30,6 +32,7 @@ import {
   getBulkSelectableMissingKeys,
   getVisibleImportableMissingKeys,
   groupBetaProposalItems,
+  hasBetaImportableProposal,
   isBetaExcludedProposalItem,
   isBetaReadyProposalItem,
   isBetaReviewProposalItem,
@@ -311,6 +314,37 @@ async function main(): Promise<void> {
     !importMatchedRejected.ok &&
       importMatchedRejected.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys,
     "Matched devuelve error invalidKeys",
+  );
+
+  const importDifferentQuantityRejected = resolveSelectedSuggestionsForImport({
+    verifiedItems: [
+      {
+        ...verifiedMissing[0],
+        comparisonStatus: "differentQuantity",
+      },
+    ],
+    selectedSuggestionKeys: [key],
+  });
+  assert(
+    !importDifferentQuantityRejected.ok &&
+      importDifferentQuantityRejected.error ===
+        EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys,
+    "DifferentQuantity devuelve invalidKeys",
+  );
+
+  const importUncertainRejected = resolveSelectedSuggestionsForImport({
+    verifiedItems: [
+      {
+        ...verifiedMissing[0],
+        comparisonStatus: "uncertain",
+      },
+    ],
+    selectedSuggestionKeys: [key],
+  });
+  assert(
+    !importUncertainRejected.ok &&
+      importUncertainRejected.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidKeys,
+    "Uncertain devuelve invalidKeys",
   );
 
   const emptySelection = normalizeSelectedSuggestionKeys([]);
@@ -598,6 +632,98 @@ async function main(): Promise<void> {
       !allReadyMerged.has("k-exclude"),
     "Select all ready no incluye review/exclude/matched",
   );
+
+  const zeroReadyItems = [
+    withBusinessRuleFields({
+      item: 1,
+      reference: "1000937601",
+      description: '1.1/2" TUBERIA',
+      quantity: "0.2",
+      unit: "M",
+      confidence: 1,
+      comparisonStatus: "matched" as const,
+      suggestionKey: "k-only-matched",
+    }),
+    withBusinessRuleFields({
+      item: 14,
+      reference: null,
+      description: "DISCO CIEGO TALADRADO",
+      quantity: "1",
+      unit: "ud",
+      confidence: 0.9,
+      comparisonStatus: "missing" as const,
+      suggestionKey: "k-only-review",
+    }),
+    withBusinessRuleFields({
+      item: 15,
+      reference: "1000196324",
+      description: '3/4" FIGURA 8 1500# RF',
+      quantity: "1",
+      unit: "ud",
+      confidence: 0.95,
+      comparisonStatus: "missing" as const,
+      suggestionKey: "k-only-exclude",
+    }),
+  ];
+  const zeroReadySummary = buildBetaProposalSummary(zeroReadyItems, {
+    matchedCount: 1,
+    missingCount: 2,
+    differentQuantityCount: 0,
+    uncertainCount: 0,
+  });
+  assert(zeroReadySummary.readyCount === 0, "Resumen beta 0 ready");
+  assert(zeroReadySummary.reviewCount === 1, "Resumen beta solo review");
+  assert(zeroReadySummary.excludedCount === 1, "Resumen beta solo exclude");
+  assert(getAllReadyProposalKeys(zeroReadyItems).length === 0, "All-ready vacío");
+  assert(
+    mergeSelectionWithAllReady(new Set(), []).size === 0,
+    "Select all ready con lista vacía no añade claves",
+  );
+  assert(
+    !isExperimentalSuggestionImportable(
+      zeroReadyItems.find((item) => item.suggestionKey === "k-only-matched")!,
+    ),
+    "Matched no importable en UI",
+  );
+  assert(
+    !isExperimentalSuggestionImportable(
+      zeroReadyItems.find((item) => item.suggestionKey === "k-only-exclude")!,
+    ),
+    "Exclude no importable en UI",
+  );
+  assert(
+    !isExperimentalSuggestionBulkSelectable(
+      zeroReadyItems.find((item) => item.suggestionKey === "k-only-exclude")!,
+    ),
+    "Exclude nunca bulk selectable",
+  );
+  assert(
+    hasBetaImportableProposal(zeroReadyItems),
+    "Review missing mantiene propuesta importable",
+  );
+  assert(
+    !hasBetaImportableProposal([zeroReadyItems[0]!, zeroReadyItems[2]!]),
+    "Solo matched+exclude no es importable",
+  );
+  assert(
+    BETA_NO_IMPORTABLE_PROPOSAL_NOTE.includes("No hay líneas nuevas importables"),
+    "Copy sin propuesta importable",
+  );
+
+  const previewReview = buildExperimentalImportPreviewSummary(
+    uiItems,
+    new Set(["k-review"]),
+  );
+  assert(
+    previewReview?.hasReviewSelected === true &&
+      previewReview.reviewWarningMessage != null,
+    "Preview avisa si hay review seleccionadas",
+  );
+
+  assert(!canAccessExperimentalAutoTakeoff("viewer"), "Viewer sin acceso beta");
+  assert(canAccessExperimentalAutoTakeoff("engineer"), "Engineer con acceso beta");
+  assert(canAccessExperimentalAutoTakeoff("owner"), "Owner con acceso beta");
+  assert(canAccessExperimentalAutoTakeoff("admin"), "Admin con acceso beta");
 
   const preview = buildExperimentalImportPreviewSummary(
     uiItems,

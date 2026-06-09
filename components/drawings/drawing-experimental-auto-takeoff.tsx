@@ -15,6 +15,7 @@ import {
   TAKEOFF_COMPARISON_STATUS_LABELS,
 } from "@/lib/drawings/experimental-auto-takeoff-compare-labels";
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import { hasUsefulEmbeddedText } from "@/lib/drawings/experimental-auto-takeoff-parse";
 import type { BusinessAction } from "@/lib/drawings/auto-takeoff-business-rules";
 import {
   BUSINESS_ACTION_BADGE_CLASS,
@@ -23,6 +24,7 @@ import {
 } from "@/lib/drawings/experimental-auto-takeoff-business-labels";
 import {
   BETA_EXCLUDED_GROUP_COPY,
+  BETA_NO_IMPORTABLE_PROPOSAL_NOTE,
   BETA_PROPOSAL_PREVIEW_MAX_ITEMS,
   BETA_REVIEW_GROUP_COPY,
   EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS,
@@ -39,6 +41,7 @@ import {
   getAllReadyProposalKeys,
   getVisibleImportableMissingKeys,
   groupBetaProposalItems,
+  hasBetaImportableProposal,
   isExperimentalAssistantStepComplete,
   isExperimentalSuggestionImportable,
   mergeSelectionWithAllReady,
@@ -443,15 +446,15 @@ export function DrawingExperimentalAutoTakeoff({
     }
   }, [importState.success, router]);
 
-  const noEmbeddedText =
+  const noProposalText =
     hasResult &&
-    analyzeState.hasEmbeddedText === false &&
-    !analyzeState.error &&
-    suggestedItems.length === 0;
+    suggestedItems.length === 0 &&
+    (analyzeState.hasEmbeddedText === false ||
+      !hasUsefulEmbeddedText(analyzeState.textLength ?? 0));
   const emptyBom =
     hasResult &&
-    !analyzeState.error &&
     analyzeState.hasEmbeddedText === true &&
+    hasUsefulEmbeddedText(analyzeState.textLength ?? 0) &&
     suggestedItems.length === 0;
 
   function toggleSelection(key: string, checked: boolean) {
@@ -499,9 +502,7 @@ export function DrawingExperimentalAutoTakeoff({
     }
   }
 
-  const hasImportableMissing = suggestedItems.some((item) =>
-    isExperimentalSuggestionImportable(item),
-  );
+  const hasImportableMissing = hasBetaImportableProposal(suggestedItems);
 
   return (
     <div
@@ -549,14 +550,22 @@ export function DrawingExperimentalAutoTakeoff({
               {analyzeState.error}
             </p>
           ) : null}
-          {noEmbeddedText ? (
-            <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-              Este PDF no contiene texto embebido útil.
+          {noProposalText ? (
+            <p
+              className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground"
+              data-testid="auto-takeoff-beta-no-embedded-text"
+            >
+              Este PDF no contiene texto embebido útil. La propuesta beta supervisada
+              no puede generarse sin una relación de materiales en el PDF.
             </p>
           ) : null}
           {emptyBom ? (
-            <p className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-              No se encontró una relación de materiales con filas parseables.
+            <p
+              className="rounded-lg border border-dashed bg-muted/10 px-4 py-3 text-sm text-muted-foreground"
+              data-testid="auto-takeoff-beta-empty-bom"
+            >
+              No se encontró una relación de materiales con filas parseables. No hay
+              propuesta importable en este plano.
             </p>
           ) : null}
           <form action={analyzeAction}>
@@ -599,6 +608,15 @@ export function DrawingExperimentalAutoTakeoff({
               summary={betaProposalSummary}
               groups={betaProposalGroups}
             />
+
+            {!hasImportableMissing ? (
+              <p
+                className="rounded-md border border-muted-foreground/20 bg-muted/10 px-3 py-2 text-xs text-muted-foreground"
+                data-testid="auto-takeoff-beta-no-importable"
+              >
+                {BETA_NO_IMPORTABLE_PROPOSAL_NOTE}
+              </p>
+            ) : null}
 
             <AssistantMetrics metrics={metrics} />
 

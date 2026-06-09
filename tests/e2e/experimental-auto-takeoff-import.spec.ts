@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { drawingBomPath, E2E_USERS, login } from "./fixtures";
+import { drawingBomPath, drawingPath, E2E_USERS, login } from "./fixtures";
 
 test.describe("importación experimental auto-takeoff", () => {
   test("engineer filtra, selecciona e importa 1 missing sin matched", async ({
@@ -165,6 +165,20 @@ test.describe("importación experimental auto-takeoff", () => {
       "2 de",
     );
     await expect(page.getByTestId("experimental-auto-takeoff-select-row")).toHaveCount(0);
+  });
+
+  test("PDF sin BOM útil no muestra propuesta importable", async ({ page }) => {
+    await login(page, E2E_USERS.engineer);
+    await page.goto(drawingPath());
+
+    await page.getByRole("button", { name: "Automatización" }).click();
+    await expect(page.getByTestId("experimental-auto-takeoff-section")).toBeVisible();
+    await page.getByTestId("experimental-auto-takeoff-run").click();
+    await expect(page.getByTestId("auto-takeoff-beta-no-embedded-text")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("auto-takeoff-beta-proposal")).toHaveCount(0);
+    await expect(page.getByTestId("auto-takeoff-import-reviewed-proposal")).toHaveCount(0);
   });
 
   test("viewer no ve bloque experimental", async ({ page }) => {

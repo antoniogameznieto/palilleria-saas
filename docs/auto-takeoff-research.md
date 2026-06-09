@@ -711,6 +711,31 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 **CI:** tests puros de agrupación; E2E actualizado con `auto-takeoff-beta-*` testids.
 
+### Fase 15G — Hardening beta supervisada
+
+**Objetivo:** Cerrar el bloque beta con seguridad servidor, edge cases, permisos, copy y cobertura antes de demo interna.
+
+**Servidor** (`resolveSelectedSuggestionsForImport`): rechaza selección vacía, duplicados, claves inventadas, `matched`, `differentQuantity`, `uncertain`, `exclude` y claves que dejaron de ser `missing` tras re-extraer.
+
+**Permisos:** `canAccessExperimentalAutoTakeoff` = `canManageTakeoffItems` (owner/admin/engineer). Viewer sin bloque ni import.
+
+**UI edge cases:**
+
+| Caso | Comportamiento |
+|------|----------------|
+| PDF sin texto embebido | Mensaje claro; sin propuesta ni import |
+| BOM vacío | Mensaje claro; sin propuesta importable |
+| 0 listas para incluir | Resumen 0 ready; `select all ready` deshabilitado |
+| Solo matched/exclude | `auto-takeoff-beta-no-importable`; sin paso import |
+| Review seleccionada | Aviso fuerte en preview |
+| Post-import | Estado `requires_review` si invalidó revisión |
+
+**Copy:** beta supervisada, revisión humana obligatoria, no autoimport, exclusiones no importables.
+
+**Docs:** [auto-takeoff-beta-supervisada.md](./auto-takeoff-beta-supervisada.md) — guía demo interna.
+
+**CI:** tests puros 15G en `verify:auto-takeoff`; E2E PDF sin BOM en `experimental-auto-takeoff-import.spec.ts`.
+
 ---
 
 ## Comandos
@@ -758,6 +783,7 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `lib/drawings/experimental-auto-takeoff-compare.ts` | Comparador puro (14C) |
 | `lib/drawings/experimental-auto-takeoff-import.ts` | Validación/import keys (14D) |
 | `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview + comparación + import |
+| `docs/auto-takeoff-beta-supervisada.md` | Guía flujo beta supervisada (15G) |
 | `docs/auto-takeoff-research.md` | Este documento |
 
 ## Referencias
@@ -785,3 +811,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15D | Reglas include/exclude/review | 57 include, 4 exclude FIGURA 8, pureza propuesta 100 %; tests en verify |
 | 2026-06-09 | 15E | Reglas en asistente experimental | Métricas/filtros/badges; bulk solo include; exclude no importable; E2E DMS-703 |
 | 2026-06-09 | 15F | Propuesta beta supervisada | Tres grupos UI; CTA propuesta revisada; select all ready; copy beta |
+| 2026-06-09 | 15G | Hardening beta supervisada | Seguridad import; permisos; edge cases; guía demo; E2E sin BOM |

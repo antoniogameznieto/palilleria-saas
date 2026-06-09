@@ -14,6 +14,7 @@ import {
   BETA_EXCLUDED_GROUP_NOTE,
   BETA_REVIEW_GROUP_NOTE,
   BETA_SUPERVISED_DISCOVERY_NOTE,
+  BETA_SUPERVISED_NO_AUTO_IMPORT_NOTE,
   BUSINESS_CATEGORY_LABELS,
   EXPERIMENTAL_IMPORT_REVIEW_WARNING,
 } from "@/lib/drawings/experimental-auto-takeoff-business-labels";
@@ -62,7 +63,10 @@ export const EXPERIMENTAL_IMPORT_PREVIEW_WARNING =
   "Se crearán líneas reales y se invalidará la revisión de palillería si estaba marcada.";
 
 export const EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE =
-  "Revisa antes de importar. No se importa nada automáticamente.";
+  BETA_SUPERVISED_NO_AUTO_IMPORT_NOTE;
+
+export const BETA_NO_IMPORTABLE_PROPOSAL_NOTE =
+  "No hay líneas nuevas importables en esta propuesta. Revisa los grupos de revisión o excluidas, o comprueba las ya existentes en palillería.";
 
 export const EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS = [
   "Se crearán líneas reales de palillería en este plano.",
@@ -330,6 +334,12 @@ export function mergeSelectionWithAllReady(
   }
 
   return next;
+}
+
+export function hasBetaImportableProposal(
+  items: ExperimentalSuggestionListItem[],
+): boolean {
+  return items.some((item) => isExperimentalSuggestionImportable(item));
 }
 
 export const BETA_REVIEW_GROUP_COPY = BETA_REVIEW_GROUP_NOTE;

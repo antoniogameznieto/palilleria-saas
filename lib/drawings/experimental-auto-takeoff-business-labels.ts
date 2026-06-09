@@ -41,7 +41,10 @@ export const BUSINESS_CONFIDENCE_LABELS: Record<BusinessConfidence, string> = {
 };
 
 export const BETA_SUPERVISED_DISCOVERY_NOTE =
-  "La propuesta se genera con reglas automáticas, pero requiere revisión humana.";
+  "La propuesta se genera con reglas automáticas, pero requiere revisión humana. No es palillería final automática.";
+
+export const BETA_SUPERVISED_NO_AUTO_IMPORT_NOTE =
+  "No se importa nada automáticamente. Solo se crean líneas si tú seleccionas e importas la propuesta revisada.";
 
 /** @deprecated Usar BETA_SUPERVISED_DISCOVERY_NOTE en UI 15F+ */
 export const EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE =

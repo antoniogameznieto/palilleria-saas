@@ -155,9 +155,7 @@ export async function analyzeExperimentalAutoTakeoffAction(
 
     if (!analysis.ok) {
       return {
-        success: analysis.hasEmbeddedText
-          ? undefined
-          : analysis.error,
+        success: "Análisis completado sin propuesta importable.",
         hasEmbeddedText: analysis.hasEmbeddedText,
         textLength: analysis.textLength,
         sectionsFound: [],
