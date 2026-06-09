@@ -8,9 +8,9 @@ import {
   createTakeoffItemAction,
   updateTakeoffItemAction,
 } from "@/lib/actions/takeoff";
-import { DeleteTakeoffItemButton } from "@/components/drawings/takeoff/delete-takeoff-item-button";
-import { DuplicateTakeoffItemButton } from "@/components/drawings/takeoff/duplicate-takeoff-item-button";
 import { ExportTakeoffCsvButton } from "@/components/drawings/takeoff/export-takeoff-csv-button";
+import { TakeoffItemNotesCell } from "@/components/drawings/takeoff/takeoff-item-notes-cell";
+import { TakeoffItemRowActions } from "@/components/drawings/takeoff/takeoff-item-row-actions";
 import { ImportTakeoffCsvButton } from "@/components/drawings/takeoff/import-takeoff-csv-button";
 import { DrawingTakeoffItemForm } from "@/components/drawings/takeoff/drawing-takeoff-item-form";
 import { DrawingTakeoffReviewStatus } from "@/components/drawings/takeoff/drawing-takeoff-review-status";
@@ -67,16 +67,6 @@ function formatCell(value: string | null): string {
   }
 
   return value;
-}
-
-function truncateText(value: string | null, maxLength = 56): string {
-  const formatted = formatCell(value);
-
-  if (formatted === "—" || formatted.length <= maxLength) {
-    return formatted;
-  }
-
-  return `${formatted.slice(0, maxLength - 1)}…`;
 }
 
 export function DrawingTakeoffSection({
@@ -338,7 +328,15 @@ export function DrawingTakeoffSection({
               isWorkspace && "max-h-[min(58vh,540px)] overflow-y-auto",
             )}
           >
-            <table className="w-full min-w-[44rem] text-sm">
+            <table className="w-full min-w-[36rem] table-fixed text-sm">
+              <colgroup>
+                <col className="w-[11%]" />
+                <col className="w-[36%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[17%]" />
+                {canEdit ? <col className="w-[20%]" /> : null}
+              </colgroup>
               <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 font-medium">Referencia</th>
@@ -360,8 +358,11 @@ export function DrawingTakeoffSection({
                     <td className="px-3 py-2 align-top text-muted-foreground whitespace-nowrap">
                       {formatCell(item.reference)}
                     </td>
-                    <td className="max-w-[16rem] px-3 py-2 align-top font-medium">
-                      <span className="line-clamp-2" title={item.description}>
+                    <td className="px-3 py-2 align-top font-medium">
+                      <span
+                        className="line-clamp-3 text-foreground"
+                        title={item.description}
+                      >
                         {item.description}
                       </span>
                     </td>
@@ -371,39 +372,21 @@ export function DrawingTakeoffSection({
                     <td className="px-3 py-2 align-top text-muted-foreground whitespace-nowrap">
                       {formatCell(item.unit)}
                     </td>
-                    <td className="max-w-[12rem] px-3 py-2 align-top text-muted-foreground">
-                      <span title={formatCell(item.notes)}>
-                        {truncateText(item.notes)}
-                      </span>
+                    <td className="px-3 py-2 align-top">
+                      <TakeoffItemNotesCell notes={item.notes} />
                     </td>
                     {canEdit ? (
                       <td className="px-3 py-2 align-top">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            onClick={() => {
-                              setEditingItemId(item.id);
-                              setShowCreateForm(false);
-                            }}
-                          >
-                            Editar
-                          </Button>
-                          <DuplicateTakeoffItemButton
-                            companyId={companyId}
-                            jobId={jobId}
-                            drawingId={drawingId}
-                            takeoffItemId={item.id}
-                          />
-                          <DeleteTakeoffItemButton
-                            companyId={companyId}
-                            jobId={jobId}
-                            drawingId={drawingId}
-                            takeoffItemId={item.id}
-                          />
-                        </div>
+                        <TakeoffItemRowActions
+                          companyId={companyId}
+                          jobId={jobId}
+                          drawingId={drawingId}
+                          takeoffItemId={item.id}
+                          onEdit={() => {
+                            setEditingItemId(item.id);
+                            setShowCreateForm(false);
+                          }}
+                        />
                       </td>
                     ) : null}
                   </tr>

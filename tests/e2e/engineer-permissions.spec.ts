@@ -20,6 +20,10 @@ test.describe("permisos engineer", () => {
     await expect(page.getByTestId("takeoff-add-line")).toBeVisible();
     await expect(page.getByTestId("takeoff-import-csv")).toBeVisible();
     await expect(page.getByTestId("confirm-takeoff-review")).toBeVisible();
+    await expect(page.getByTestId("takeoff-edit-row").first()).toBeVisible();
+    await page.getByTestId("takeoff-row-actions-menu").first().click();
+    await expect(page.getByTestId("duplicate-takeoff-item")).toBeVisible();
+    await expect(page.getByTestId("delete-takeoff-item")).toBeVisible();
   });
 
   test("no ve eliminar plano (solo admin/owner)", async ({ page }) => {

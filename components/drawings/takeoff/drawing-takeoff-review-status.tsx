@@ -105,8 +105,9 @@ export function DrawingTakeoffReviewStatus({
 
   return (
     <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-      <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-        Palillería pendiente de revisión
+      <p className="text-sm text-amber-900 dark:text-amber-200">
+        Hay líneas importadas o modificadas. Revisa la tabla antes de marcarla
+        como revisada.
       </p>
 
       {confirmState.error || resetState.error ? (
