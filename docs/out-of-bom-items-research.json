@@ -1,0 +1,1555 @@
+{
+  "generatedAt": "2026-06-09T11:11:04.524Z",
+  "commit": "52d4f6a93e334b123412c9a1c915d98f119502df",
+  "summary": {
+    "pdfsAnalyzed": 20,
+    "pdfsWithBom": 18,
+    "pdfsWithSoportesBlock": 6,
+    "totalSupportCandidates": 32,
+    "totalOutOfBomCandidates": 20,
+    "parseableSupportRows": 12,
+    "looseSupportMentions": 12
+  },
+  "analyses": [
+    {
+      "fileName": "dms-703.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/tests/fixtures/auto-takeoff-golden/dms-703.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 3652,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 116,
+      "bomParsedRowCount": 21,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 116,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "20 1.1/2\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938243\t1",
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1"
+          ],
+          "contextAfter": [
+            "22 STD-PS-050 (PSL)\tSUP-001\t1",
+            "PENDIENTE 1.1%"
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 117,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PENDIENTE 1.1%",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 117,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PENDIENTE 1.1%",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 178,
+          "lineText": "SUP-001",
+          "region": "post_soportes",
+          "contextBefore": [
+            "F10 G17 B19",
+            "041"
+          ],
+          "contextAfter": [
+            "VER DETALLE \"R\"",
+            "3"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 186,
+          "lineText": "1.1/2\" BRIDA CIEGA RF 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "NOTA 29",
+            "TALADRO DE 3/4\""
+          ],
+          "contextAfter": [
+            "HALF COUPLING 3/4\"",
+            "3/4\"-DMS"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 190,
+          "lineText": "1.1/2\" BRIDA SW 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "3/4\"-DMS",
+            "TUBERIA 3/4\""
+          ],
+          "contextAfter": [
+            "DISCO CIEGO 1.1/2\" CON TALADRO DE 3/4\"",
+            "INOX 321 (SOLDAR AL DISTRIBUIDOR 3/4\")"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "Cabecera SOPORTES en línea 116.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    },
+    {
+      "fileName": "dms-704.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/tests/fixtures/auto-takeoff-golden/dms-704.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 3149,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 17,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 39,
+          "lineText": "NO NECESITA SOPORTES",
+          "region": "bom",
+          "contextBefore": [
+            "A2",
+            "NOTAS : 1.- TODAS LAS COTAS SE COMPROBARÁN EN OBRA"
+          ],
+          "contextAfter": [
+            "1601GB16A-REVAMPING DE PLATFORMING R-98",
+            "SR-01-A01-PL1 UNIDAD DE PLATFORMING"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 153,
+          "lineText": "1.1/2\" BRIDA SW 1500 #",
+          "region": "bom",
+          "contextBefore": [
+            "DETALLE \"R\"",
+            "TUBERIA 3/4\""
+          ],
+          "contextAfter": [
+            "DISCO CIEGO 1.1/2\" CON TALADRO DE 3/4\"",
+            "INOX 321 (SOLDAR AL DISTRIBUIDOR 3/4\")"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 167,
+          "lineText": "1.1/2\" BRIDA CIEGA RF 1500 #",
+          "region": "bom",
+          "contextBefore": [
+            "NOTA 29",
+            "TALADRO DE 3/4\""
+          ],
+          "contextAfter": [
+            "HALF COUPLING 3/4\""
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido."
+      ]
+    },
+    {
+      "fileName": "hl-1289-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/tests/fixtures/auto-takeoff-golden/hl-1289-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2116,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 11,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "hl-1293-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/tests/fixtures/auto-takeoff-golden/hl-1293-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2253,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 11,
+      "supportCandidates": [
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 132,
+          "lineText": "SUP-001",
+          "region": "bom",
+          "contextBefore": [
+            "PLANO Nº: 2301GB47G-C1-L-KP-1290-01",
+            "4X4\"DN"
+          ],
+          "contextAfter": [
+            "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "soporte",
+          "patternLabel": "SOPORTE",
+          "category": "support",
+          "lineNumber": 133,
+          "lineText": "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+          "region": "bom",
+          "contextBefore": [
+            "4X4\"DN",
+            "SUP-001"
+          ],
+          "contextAfter": [
+            "NA",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 133,
+          "lineText": "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+          "region": "bom",
+          "contextBefore": [
+            "4X4\"DN",
+            "SUP-001"
+          ],
+          "contextAfter": [
+            "NA",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido."
+      ]
+    },
+    {
+      "fileName": "dw-701.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/tests/fixtures/auto-takeoff-golden/dw-701.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1574,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 73,
+      "bomParsedRowCount": 2,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 73,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M",
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5"
+          ],
+          "contextAfter": [
+            "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+            "CLASE:"
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 74,
+          "lineText": "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "CLASE:",
+            "C090AHT"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 74,
+          "lineText": "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "CLASE:",
+            "C090AHT"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 98,
+          "lineText": "SUP-001",
+          "region": "post_soportes",
+          "contextBefore": [
+            "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+            "1.1/2X1.1/2\"DN"
+          ],
+          "contextAfter": [
+            "Punto de Apoyo"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 61,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N-01",
+          "region": "bom",
+          "contextBefore": [
+            "EL=+104577",
+            "N"
+          ],
+          "contextAfter": [
+            "1.02",
+            "3.50"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 69,
+          "lineText": "1601GB16A-PL1-L-DW-701-01\t2559-00-1",
+          "region": "bom",
+          "contextBefore": [
+            "NO",
+            "A010AA"
+          ],
+          "contextAfter": [
+            "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N",
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 70,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N",
+          "region": "bom",
+          "contextBefore": [
+            "A010AA",
+            "1601GB16A-PL1-L-DW-701-01\t2559-00-1"
+          ],
+          "contextAfter": [
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M",
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 95,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-702-A010AA-N",
+          "region": "post_soportes",
+          "contextBefore": [
+            "836",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "contextAfter": [
+            "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+            "1.1/2X1.1/2\"DN"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 96,
+          "lineText": "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+          "region": "post_soportes",
+          "contextBefore": [
+            "PARA CONT. VER LINEA NUM.",
+            "1601GB16A-PL1-1.1/2\"-DW-702-A010AA-N"
+          ],
+          "contextAfter": [
+            "1.1/2X1.1/2\"DN",
+            "SUP-001"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "Cabecera SOPORTES en línea 73.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1289-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2116,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 11,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1289-02.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-02.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1244,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 4,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1291-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2015,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 10,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1291-02.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-02.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1245,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 4,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1292-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2040,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 10,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1292-02.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-02.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1246,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 4,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1293-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2253,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 11,
+      "supportCandidates": [
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 132,
+          "lineText": "SUP-001",
+          "region": "bom",
+          "contextBefore": [
+            "PLANO Nº: 2301GB47G-C1-L-KP-1290-01",
+            "4X4\"DN"
+          ],
+          "contextAfter": [
+            "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "soporte",
+          "patternLabel": "SOPORTE",
+          "category": "support",
+          "lineNumber": 133,
+          "lineText": "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+          "region": "bom",
+          "contextBefore": [
+            "4X4\"DN",
+            "SUP-001"
+          ],
+          "contextAfter": [
+            "NA",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 133,
+          "lineText": "SOPORTE COMÚN CON LÍNEA: 2301GB47G-HL-1275 (SUP-001)",
+          "region": "bom",
+          "contextBefore": [
+            "4X4\"DN",
+            "SUP-001"
+          ],
+          "contextAfter": [
+            "NA",
+            "NA"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1293-02.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-02.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1245,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 4,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "2301GB47G-C1-L-HL-1294-01.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1294-01.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 2100,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 86,
+      "bomParsedRowCount": 10,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 86,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "9 4\" VALVULA COMPUERTA FUNDIDA C-1\t1000069035\t2",
+            "10 4\" VALVULA RETENCION FUNDIDA R-1\t1000070694\t1"
+          ],
+          "contextAfter": [
+            "11 STD-PS-053 (PSL)\tSUP-002\t1",
+            "4X4\"DN"
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 87,
+          "lineText": "11 STD-PS-053 (PSL)\tSUP-002\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "10 4\" VALVULA RETENCION FUNDIDA R-1\t1000070694\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "4X4\"DN",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 87,
+          "lineText": "11 STD-PS-053 (PSL)\tSUP-002\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "10 4\" VALVULA RETENCION FUNDIDA R-1\t1000070694\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "4X4\"DN",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 129,
+          "lineText": "SUP-002",
+          "region": "post_soportes",
+          "contextBefore": [
+            "NA",
+            "NA"
+          ],
+          "contextAfter": [
+            "-- 1 of 1 --"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [],
+      "observations": [
+        "Cabecera SOPORTES en línea 86.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    },
+    {
+      "fileName": "Hoja de palilleo.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/Hoja de palilleo.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 12,
+      "hasBom": false,
+      "bomSectionIds": [],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 0,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "Sin encabezado BOM reconocible.",
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "Isos trameados.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/Isos trameados.pdf",
+      "pageCount": 9,
+      "embeddedTextLength": 140,
+      "hasBom": false,
+      "bomSectionIds": [],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 0,
+      "supportCandidates": [],
+      "outOfBomCandidates": [],
+      "observations": [
+        "Sin encabezado BOM reconocible.",
+        "No se detectó cabecera SOPORTES en texto embebido.",
+        "Sin candidatos fuera del BOM detectados por patrones."
+      ]
+    },
+    {
+      "fileName": "1601GB16A-PL1-L-DMS-702-01-R03.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-702-01-R03.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 3616,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 117,
+      "bomParsedRowCount": 21,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 117,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "20 1.1/2\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938243\t1",
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1"
+          ],
+          "contextAfter": [
+            "22 STD-PS-050 (PSL)\tSUP-001\t1",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 118,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PARA CONT. VER LINEA NUM.",
+            "P-156-20\"-CL371-INS"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 118,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PARA CONT. VER LINEA NUM.",
+            "P-156-20\"-CL371-INS"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 174,
+          "lineText": "SUP-001",
+          "region": "post_soportes",
+          "contextBefore": [
+            "F10 G17 B19",
+            "TIEIN-040"
+          ],
+          "contextAfter": [
+            "VER DETALLE \"R\"",
+            "3\t3\t3\t3\t3\t3\t3\t3"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 183,
+          "lineText": "1.1/2\" BRIDA CIEGA RF 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "NOTA 29",
+            "TALADRO DE 3/4\""
+          ],
+          "contextAfter": [
+            "HALF COUPLING 3/4\"",
+            "3/4\"-DMS"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 187,
+          "lineText": "1.1/2\" BRIDA SW 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "3/4\"-DMS",
+            "TUBERIA 3/4\""
+          ],
+          "contextAfter": [
+            "DISCO CIEGO 1.1/2\" CON TALADRO DE 3/4\"",
+            "INOX 321 (SOLDAR AL DISTRIBUIDOR 3/4\")"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "Cabecera SOPORTES en línea 117.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    },
+    {
+      "fileName": "1601GB16A-PL1-L-DMS-703-01-R03.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-703-01-R03.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 3652,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 116,
+      "bomParsedRowCount": 21,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 116,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "20 1.1/2\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938243\t1",
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1"
+          ],
+          "contextAfter": [
+            "22 STD-PS-050 (PSL)\tSUP-001\t1",
+            "PENDIENTE 1.1%"
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 117,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PENDIENTE 1.1%",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 117,
+          "lineText": "22 STD-PS-050 (PSL)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "21 3/4\" BRIDA CIEGA RF 1500# AA A-182 F11 ESP-1300-3 T>450ºC\t1000938241\t1",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "PENDIENTE 1.1%",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 178,
+          "lineText": "SUP-001",
+          "region": "post_soportes",
+          "contextBefore": [
+            "F10 G17 B19",
+            "041"
+          ],
+          "contextAfter": [
+            "VER DETALLE \"R\"",
+            "3"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 186,
+          "lineText": "1.1/2\" BRIDA CIEGA RF 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "NOTA 29",
+            "TALADRO DE 3/4\""
+          ],
+          "contextAfter": [
+            "HALF COUPLING 3/4\"",
+            "3/4\"-DMS"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 190,
+          "lineText": "1.1/2\" BRIDA SW 1500 #",
+          "region": "post_soportes",
+          "contextBefore": [
+            "3/4\"-DMS",
+            "TUBERIA 3/4\""
+          ],
+          "contextAfter": [
+            "DISCO CIEGO 1.1/2\" CON TALADRO DE 3/4\"",
+            "INOX 321 (SOLDAR AL DISTRIBUIDOR 3/4\")"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "Cabecera SOPORTES en línea 116.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    },
+    {
+      "fileName": "1601GB16A-PL1-L-DMS-704-01-R02.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-704-01-R02.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 3149,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": false,
+      "soportesLineNumber": null,
+      "bomParsedRowCount": 17,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 39,
+          "lineText": "NO NECESITA SOPORTES",
+          "region": "bom",
+          "contextBefore": [
+            "A2",
+            "NOTAS : 1.- TODAS LAS COTAS SE COMPROBARÁN EN OBRA"
+          ],
+          "contextAfter": [
+            "1601GB16A-REVAMPING DE PLATFORMING R-98",
+            "SR-01-A01-PL1 UNIDAD DE PLATFORMING"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 153,
+          "lineText": "1.1/2\" BRIDA SW 1500 #",
+          "region": "bom",
+          "contextBefore": [
+            "DETALLE \"R\"",
+            "TUBERIA 3/4\""
+          ],
+          "contextAfter": [
+            "DISCO CIEGO 1.1/2\" CON TALADRO DE 3/4\"",
+            "INOX 321 (SOLDAR AL DISTRIBUIDOR 3/4\")"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "brida",
+          "patternLabel": "BRIDA",
+          "category": "manual_flange",
+          "lineNumber": 167,
+          "lineText": "1.1/2\" BRIDA CIEGA RF 1500 #",
+          "region": "bom",
+          "contextBefore": [
+            "NOTA 29",
+            "TALADRO DE 3/4\""
+          ],
+          "contextAfter": [
+            "HALF COUPLING 3/4\""
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "No se detectó cabecera SOPORTES en texto embebido."
+      ]
+    },
+    {
+      "fileName": "1601GB16A-PL1-L-DW-701-01-R1.pdf",
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-701-01-R1.pdf",
+      "pageCount": 1,
+      "embeddedTextLength": 1574,
+      "hasBom": true,
+      "bomSectionIds": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "hasSoportesBlock": true,
+      "soportesLineNumber": 73,
+      "bomParsedRowCount": 2,
+      "supportCandidates": [
+        {
+          "patternId": "soportes_header",
+          "patternLabel": "SOPORTES",
+          "category": "support",
+          "lineNumber": 73,
+          "lineText": "SOPORTES",
+          "region": "post_soportes",
+          "contextBefore": [
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M",
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5"
+          ],
+          "contextAfter": [
+            "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+            "CLASE:"
+          ],
+          "parseability": "header_only",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Solo cabecera de bloque; sin fila estructurada en la misma línea."
+          ]
+        },
+        {
+          "patternId": "std_ps",
+          "patternLabel": "STD-PS",
+          "category": "support",
+          "lineNumber": 74,
+          "lineText": "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "CLASE:",
+            "C090AHT"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 74,
+          "lineText": "3 STD-PS-051 (PSL) STD-PS-275 (PS) LISEGA 29D219 (SH-012) (SH)\tSUP-001\t1",
+          "region": "post_soportes",
+          "contextBefore": [
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5",
+            "SOPORTES"
+          ],
+          "contextAfter": [
+            "CLASE:",
+            "C090AHT"
+          ],
+          "parseability": "tab_row_support",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Formato tabular tipo soporte (ítem + ref no SAP)."
+          ]
+        },
+        {
+          "patternId": "sup_ref",
+          "patternLabel": "SUP-",
+          "category": "support",
+          "lineNumber": 98,
+          "lineText": "SUP-001",
+          "region": "post_soportes",
+          "contextBefore": [
+            "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+            "1.1/2X1.1/2\"DN"
+          ],
+          "contextAfter": [
+            "Punto de Apoyo"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "outOfBomCandidates": [
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 61,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N-01",
+          "region": "bom",
+          "contextBefore": [
+            "EL=+104577",
+            "N"
+          ],
+          "contextAfter": [
+            "1.02",
+            "3.50"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 69,
+          "lineText": "1601GB16A-PL1-L-DW-701-01\t2559-00-1",
+          "region": "bom",
+          "contextBefore": [
+            "NO",
+            "A010AA"
+          ],
+          "contextAfter": [
+            "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N",
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 70,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-701-A010AA-N",
+          "region": "bom",
+          "contextBefore": [
+            "A010AA",
+            "1601GB16A-PL1-L-DW-701-01\t2559-00-1"
+          ],
+          "contextAfter": [
+            "1 1.1/2\" SCH 80 TUBERIA EXT. PLANOS A.C. A-106 B\t1000026994\t8.4 M",
+            "2 1.1/2\" CODO 90 SW 3000# A.C. A-105\t1000030543\t5"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Mención dentro del bloque BOM (posible falso positivo manual).",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 95,
+          "lineText": "1601GB16A-PL1-1.1/2\"-DW-702-A010AA-N",
+          "region": "post_soportes",
+          "contextBefore": [
+            "836",
+            "PARA CONT. VER LINEA NUM."
+          ],
+          "contextAfter": [
+            "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+            "1.1/2X1.1/2\"DN"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        },
+        {
+          "patternId": "dw_ref",
+          "patternLabel": "DW",
+          "category": "dw_manual",
+          "lineNumber": 96,
+          "lineText": "PLANO Nº: 1601GB16A-PL1-L-DW-702-01",
+          "region": "post_soportes",
+          "contextBefore": [
+            "PARA CONT. VER LINEA NUM.",
+            "1601GB16A-PL1-1.1/2\"-DW-702-A010AA-N"
+          ],
+          "contextAfter": [
+            "1.1/2X1.1/2\"DN",
+            "SUP-001"
+          ],
+          "parseability": "loose_text",
+          "likelyInParsedBom": false,
+          "observations": [
+            "Aparece en bloque posterior a SOPORTES.",
+            "Texto suelto; no sigue patrón tabular del parser."
+          ]
+        }
+      ],
+      "observations": [
+        "Cabecera SOPORTES en línea 73.",
+        "2 fila(s) de soporte con formato tabular tras SOPORTES."
+      ]
+    }
+  ]
+}

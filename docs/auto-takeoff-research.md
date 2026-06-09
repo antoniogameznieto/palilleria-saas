@@ -738,6 +738,31 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 ---
 
+### Fase 16A — Investigación soportes y partidas fuera del BOM
+
+**Objetivo:** Medir cómo aparecen soportes (STD-PS, SOPORTES) y partidas manuales (DW, brida, válvula) en texto embebido de PDFs reales, sin OCR ni cambios de producto.
+
+**Commit de referencia:** `52d4f6a` (post Fase 15G).
+
+**Herramienta:** `npm run research:out-of-bom -- <pdf|directorio> [...] [--limit N] [--match texto] [--json]`
+
+**Informe completo:** [out-of-bom-items-research.md](./out-of-bom-items-research.md)
+
+**Helpers:** `lib/drawings/out-of-bom-research.ts` · `scripts/research-out-of-bom-items.ts`
+
+**Muestra probada:** business set (5 PDFs) + muestra 15A ampliada en `Ejemplos` (20 PDFs totales con `--limit 20`).
+
+**Conclusión breve:**
+
+- **Soportes DMS/HL:** bloque tabular tras cabecera `SOPORTES` (`STD-PS` + `SUP-xxx`); **parseables** con extensión opt-in del parser (el actual corta en `SOPORTES`).
+- **HL-1293:** soporte solo como mención suelta (`SOPORTE COMÚN CON LÍNEA`); no fila tabular → **checklist manual**.
+- **DW-701:** BOM mínimo (2 filas SAP) + soportes tabulares post-SOPORTES; brida/válvula y tags DW en cajetín/notas → **texto suelto, no parseable** de forma fiable.
+- **Falsos positivos:** BRIDA en leyendas de detalle (DMS) y menciones DW dentro del bloque BOM.
+
+**Recomendación → Fase 16B:** parser opt-in post-SOPORTES para soportes tabulares (acción `review`); partidas DW y menciones sueltas como checklist manual; no autoimportar fuera del BOM sin supervisión.
+
+---
+
 ## Comandos
 
 ```bash
@@ -747,6 +772,7 @@ npm run validate:auto-takeoff-golden   # golden set precisión/recall (15B)
 npm run validate:auto-takeoff-business # precisión de negocio (15C)
 npm run validate:auto-takeoff-business-rules # reglas BOM → palillería (15D)
 npm run verify:auto-takeoff            # parser + golden set en CI
+npm run research:out-of-bom -- ./tests/fixtures/auto-takeoff-business  # soportes/fuera BOM (16A)
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
 
@@ -784,6 +810,9 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `lib/drawings/experimental-auto-takeoff-import.ts` | Validación/import keys (14D) |
 | `components/drawings/drawing-experimental-auto-takeoff.tsx` | UI preview + comparación + import |
 | `docs/auto-takeoff-beta-supervisada.md` | Guía flujo beta supervisada (15G) |
+| `scripts/research-out-of-bom-items.ts` | Investigación fuera del BOM (16A) |
+| `lib/drawings/out-of-bom-research.ts` | Helpers análisis soportes/fuera BOM (16A) |
+| `docs/out-of-bom-items-research.md` | Informe investigación 16A |
 | `docs/auto-takeoff-research.md` | Este documento |
 
 ## Referencias
@@ -812,3 +841,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15E | Reglas en asistente experimental | Métricas/filtros/badges; bulk solo include; exclude no importable; E2E DMS-703 |
 | 2026-06-09 | 15F | Propuesta beta supervisada | Tres grupos UI; CTA propuesta revisada; select all ready; copy beta |
 | 2026-06-09 | 15G | Hardening beta supervisada | Seguridad import; permisos; edge cases; guía demo; E2E sin BOM |
+| 2026-06-09 | 16A | Business + golden/Ejemplos | Soportes tabulares parseables; DW manual checklist; informe out-of-bom |

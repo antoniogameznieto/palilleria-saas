@@ -68,6 +68,11 @@ import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
 } from "../lib/drawings/experimental-auto-takeoff-parse";
+import {
+  analyzeOutOfBomEmbeddedText,
+  assessOutOfBomLineParseability,
+  resolveOutOfBomTextRegion,
+} from "../lib/drawings/out-of-bom-research";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -1071,6 +1076,68 @@ async function main(): Promise<void> {
   );
   assert(unknownRule.businessCategory === "unknown", "Desconocido unknown");
   assert(unknownRule.businessAction === "review", "Desconocido review");
+
+  const outOfBomDms = analyzeOutOfBomEmbeddedText({
+    text: DMS_703_SAMPLE,
+    fileName: "dms-703-sample.txt",
+    path: "sample",
+    pageCount: 1,
+  });
+  assert(outOfBomDms.hasSoportesBlock, "DMS sample tiene bloque SOPORTES");
+  assert(
+    outOfBomDms.supportCandidates.some(
+      (candidate) => candidate.parseability === "tab_row_support",
+    ),
+    "DMS sample soporte tabular post-SOPORTES",
+  );
+  assert(
+    outOfBomDms.supportCandidates.some((candidate) => candidate.patternId === "std_ps"),
+    "DMS sample detecta STD-PS",
+  );
+  assert(
+    outOfBomDms.bomParsedRowCount === 4,
+    "DMS sample BOM parseado sin filas de soporte",
+  );
+
+  assert(
+    assessOutOfBomLineParseability("22 STD-PS-050 (PSL)\tSUP-001\t1") ===
+      "tab_row_support",
+    "Línea soporte tabular parseable",
+  );
+  assert(
+    resolveOutOfBomTextRegion({
+      lineNumber: 10,
+      bomStartLine: 2,
+      soportesLine: 8,
+    }) === "post_soportes",
+    "Región post_soportes",
+  );
+
+  const dwLooseSample = `
+RELACION DE MATERIALES
+1 TUBERIA EXT\t1000026994\t8.4 M
+2 CODO 90 SW\t1000030543\t5
+NOTAS DW-701
+BRIDA WN RF 150 2 UD
+VALVULA COMPUERTA 1 UD
+SOPORTE TIPO A 1 UD
+`;
+  const outOfBomDw = analyzeOutOfBomEmbeddedText({
+    text: dwLooseSample,
+    fileName: "dw-701-sample.txt",
+    path: "sample",
+    pageCount: 1,
+  });
+  assert(
+    outOfBomDw.outOfBomCandidates.length >= 2,
+    "DW sample detecta partidas manuales sueltas",
+  );
+  assert(
+    outOfBomDw.outOfBomCandidates.every(
+      (candidate) => candidate.parseability === "loose_text",
+    ),
+    "DW manual es texto suelto",
+  );
 
   const goldenReport = await runAutoTakeoffGoldenValidation({
     goldenSetDir: path.join(
