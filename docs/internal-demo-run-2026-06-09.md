@@ -150,11 +150,11 @@
 
 | ID | Severidad | Área | Descripción | Pasos para reproducir | Esperado | Actual | Estado |
 |----|-----------|------|-------------|----------------------|----------|--------|--------|
-| DEMO-01 | minor | auth / config | `NEXTAUTH_URL` apunta a `:3000` pero el dev server activo está en `:3010` | Arrancar `npm run dev` cuando ya hay instancia en 3010; acceder vía 3010; visitar `/dashboard` sin sesión | Redirect a login en el mismo origen (3010) | Redirect a `http://localhost:3000/login?...` | abierto |
-| DEMO-02 | major | takeoff / progreso | Estado **«Listo»** no alcanzado en la sesión de demo | Trabajo Prueba 2 → plano DMS-703 → palillería con 8 líneas sin marcar revisada | Tras marcar revisada, progreso «Listo» | Sigue «Revisar palillería»; `takeoffReviewedAt` null en todos los planos | pendiente |
+| DEMO-01 | minor | auth / config | `NEXTAUTH_URL` apunta a `:3000` pero el dev server activo está en `:3010` | Arrancar `npm run dev` cuando ya hay instancia en 3010; acceder vía 3010; visitar `/dashboard` sin sesión | Redirect a login en el mismo origen (3010) | Redirect a `http://localhost:3000/login?...` | **cerrado** (11C — ver seguimiento) |
+| DEMO-02 | major | takeoff / progreso | Estado **«Listo»** no alcanzado en la sesión de demo | Trabajo Prueba 2 → plano DMS-703 → palillería con 8 líneas sin marcar revisada | Tras marcar revisada, progreso «Listo» | Sigue «Revisar palillería»; `takeoffReviewedAt` null en todos los planos | **cerrado** (11C — ver seguimiento) |
 | DEMO-03 | note | demo / cobertura | Subida PDF, detección y confirmación de metadatos no re-ejecutadas clic a clic | — | Flujo completo en sesión | Validado por estado BD + presencia UI en planos `uploaded` / `reviewed` | abierto |
 | DEMO-04 | note | roles | Rol viewer probado con usuario sintético, no con invitación real | Crear `viewer-demo@palilleria.local` en empresa | Mismo comportamiento que viewer de producción | Comportamiento coherente con permisos en código | descartado |
-| DEMO-05 | minor | OCR | Flag `EXPERIMENTAL_TITLE_BLOCK_OCR=false` no verificado en sesión | Cambiar `.env`, reiniciar dev, abrir tab Automatización | Bloque OCR ausente | No probado (flag `true` en `.env`) | pendiente |
+| DEMO-05 | minor | OCR | Flag `EXPERIMENTAL_TITLE_BLOCK_OCR=false` no verificado en sesión | Cambiar `.env`, reiniciar dev, abrir tab Automatización | Bloque OCR ausente | No probado (flag `true` en `.env`) | **cerrado** (11C — ver seguimiento) |
 | DEMO-06 | note | docs | README indica «Fase 3» | Abrir `README.md` | Estado MVP actual | Desactualizado | descartado (riesgo conocido 11A) |
 | DEMO-07 | note | export CSV | Export CSV es client-side (snapshot de página) | Editar palillería sin refrescar → exportar | Datos frescos | Riesgo documentado; no reprobado en sesión | abierto |
 
@@ -204,7 +204,39 @@ El MVP es **demostrable internamente** para el flujo principal (auth, multi-tena
 
 ---
 
-## Siguiente paso sugerido (fuera de 11B)
+## Seguimiento 11C (2026-06-09)
 
-- Fase posterior: corregir DEMO-01, completar flujo hasta «Listo», actualizar README.
+Commit base: `4ab35df`. Revisor: Antonio. Entorno: local (`:3010`).
+
+### Observaciones cerradas
+
+| ID | Acción | Resultado |
+|----|--------|-----------|
+| **DEMO-01** | `middleware.ts`: redirects usan `Host` de la petición en lugar de `nextUrl.origin` (reescrito por Auth.js con `NEXTAUTH_URL`). Comentario añadido en `.env.example` para `.env.local` en puertos alternativos. | `curl -I http://localhost:3010/dashboard` sin sesión → `302` con `location: /login?callbackUrl=%2Fdashboard` (mismo origen, ya no `:3000`). |
+| **DEMO-02** | Plano `cmq5cxqwk000ho9i12qwjz667` (DMS-703): palillería marcada como revisada (misma actualización que `confirmDrawingTakeoffReviewedAction`). | `takeoffReviewedAt` informado; UI muestra **«Listo»** y **«Palillería revisada»**; resumen del trabajo **1 listos**; las 16 líneas del trabajo están en ese plano → consolidado «solo listos» coincide con el total. |
+| **DEMO-05** | Dev reiniciado con `EXPERIMENTAL_TITLE_BLOCK_OCR=false`; verificación HTML; dev restaurado con flag `true` del `.env`. | 0 coincidencias de «Herramientas experimentales» / «OCR experimental»; «Detectar metadatos» productivo sigue visible. |
+
+### Observaciones que siguen abiertas
+
+| ID | Motivo |
+|----|--------|
+| **DEMO-03** | Subida PDF, detección y confirmación de metadatos no re-ejecutadas clic a clic en 11B ni 11C. No bloquea demo guiada con datos existentes. |
+| **DEMO-07** | Riesgo conocido: export CSV client-side = snapshot. Documentado; sin cambio de producto. |
+| **DEMO-06** | README desactualizado — fuera de alcance 11C (fase posterior). |
+
+### Cambios realizados en 11C
+
+| Tipo | Archivos |
+|------|----------|
+| Código | `middleware.ts` (redirects por Host) |
+| Config/doc | `.env.example` (nota puerto alternativo) |
+| Docs | este informe, `internal-release-checklist.md` |
+| Datos (local) | `takeoffReviewedAt` en plano demo DMS-703 |
+
+---
+
+## Siguiente paso sugerido (post-11C)
+
+- Actualizar README (fase posterior).
 - Opcional: E2E Playwright para roles y flujo completo.
+- Demo guiada: usar plano DMS-703 ya en estado **Listo** como referencia.
