@@ -202,6 +202,7 @@ npm run test:e2e:ui               # Playwright modo UI
 | [docs/ocr-benchmark-results.md](docs/ocr-benchmark-results.md) | Resultados benchmark OCR |
 | [docs/tesseract-ocr-setup.md](docs/tesseract-ocr-setup.md) | Instalación Tesseract (solo OCR exp.) |
 | [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md) | Tests E2E Playwright (Fase 12A) |
+| [docs/post-demo-backlog.md](docs/post-demo-backlog.md) | Backlog priorizado post-demo interna |
 | `cursor-palilleria-docs/` | Especificación funcional del producto |
 
 ## Limitaciones conocidas
