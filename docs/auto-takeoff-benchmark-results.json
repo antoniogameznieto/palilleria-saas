@@ -1,0 +1,608 @@
+{
+  "meta": {
+    "date": "2026-06-09T09:53:12.961Z",
+    "commit": "26ff027",
+    "command": "npm run benchmark:auto-takeoff -- ./Ejemplos/Ejemplo 1 ./Ejemplos/Ejemplo 2 ./storage/companies/cmq59yda70001o9qewato82p8/jobs/cmq5a8ic50009o9qegcl9k1a6 --limit 30",
+    "inputs": [
+      "./Ejemplos/Ejemplo 1",
+      "./Ejemplos/Ejemplo 2",
+      "./storage/companies/cmq59yda70001o9qewato82p8/jobs/cmq5a8ic50009o9qegcl9k1a6"
+    ],
+    "fingerprint": "fc53986285ee"
+  },
+  "summary": {
+    "pdfsAnalyzed": 17,
+    "pdfsWithErrors": 0,
+    "pdfsWithUsefulEmbeddedText": 15,
+    "pdfsWithBomDetected": 15,
+    "pdfsWithSuggestions": 15,
+    "totalSuggestedRows": 134,
+    "averageRowsPerPdfWithBom": 8.93,
+    "confidenceDistribution": {
+      "high": 134,
+      "medium": 0,
+      "low": 0
+    },
+    "topUnits": [
+      {
+        "unit": "m",
+        "count": 15
+      }
+    ],
+    "errorsByType": [],
+    "sectionIdCounts": [
+      {
+        "sectionId": "MATERIALES",
+        "count": 15
+      },
+      {
+        "sectionId": "RELACION_DE_MATERIALES",
+        "count": 15
+      }
+    ]
+  },
+  "results": [
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-01.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1289-01.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-01.pdf",
+      "fileSizeBytes": 131098,
+      "pageCount": 1,
+      "embeddedTextLength": 2116,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 11,
+      "averageConfidence": 1,
+      "rowsWithReference": 11,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~91)."
+      ],
+      "confidenceBuckets": {
+        "high": 11,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-02.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1289-02.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1289-02.pdf",
+      "fileSizeBytes": 117350,
+      "pageCount": 1,
+      "embeddedTextLength": 1244,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 4,
+      "averageConfidence": 1,
+      "rowsWithReference": 4,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~70)."
+      ],
+      "confidenceBuckets": {
+        "high": 4,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-01.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1291-01.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-01.pdf",
+      "fileSizeBytes": 129345,
+      "pageCount": 1,
+      "embeddedTextLength": 2015,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 10,
+      "averageConfidence": 1,
+      "rowsWithReference": 10,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~88)."
+      ],
+      "confidenceBuckets": {
+        "high": 10,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-02.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1291-02.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1291-02.pdf",
+      "fileSizeBytes": 116171,
+      "pageCount": 1,
+      "embeddedTextLength": 1245,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 4,
+      "averageConfidence": 1,
+      "rowsWithReference": 4,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~70)."
+      ],
+      "confidenceBuckets": {
+        "high": 4,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-01.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1292-01.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-01.pdf",
+      "fileSizeBytes": 128111,
+      "pageCount": 1,
+      "embeddedTextLength": 2040,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 10,
+      "averageConfidence": 1,
+      "rowsWithReference": 10,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~87)."
+      ],
+      "confidenceBuckets": {
+        "high": 10,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-02.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1292-02.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1292-02.pdf",
+      "fileSizeBytes": 116194,
+      "pageCount": 1,
+      "embeddedTextLength": 1246,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 4,
+      "averageConfidence": 1,
+      "rowsWithReference": 4,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~70)."
+      ],
+      "confidenceBuckets": {
+        "high": 4,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-01.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1293-01.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-01.pdf",
+      "fileSizeBytes": 135491,
+      "pageCount": 1,
+      "embeddedTextLength": 2253,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 11,
+      "averageConfidence": 1,
+      "rowsWithReference": 11,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~94)."
+      ],
+      "confidenceBuckets": {
+        "high": 11,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-02.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1293-02.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1293-02.pdf",
+      "fileSizeBytes": 116155,
+      "pageCount": 1,
+      "embeddedTextLength": 1245,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 4,
+      "averageConfidence": 1,
+      "rowsWithReference": 4,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~70)."
+      ],
+      "confidenceBuckets": {
+        "high": 4,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1294-01.pdf",
+      "fileName": "2301GB47G-C1-L-HL-1294-01.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/2301GB47G-C1-L-HL-1294-01.pdf",
+      "fileSizeBytes": 133542,
+      "pageCount": 1,
+      "embeddedTextLength": 2100,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 10,
+      "averageConfidence": 1,
+      "rowsWithReference": 10,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales detectado en línea 86 (SOPORTES)."
+      ],
+      "confidenceBuckets": {
+        "high": 10,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/Hoja de palilleo.pdf",
+      "fileName": "Hoja de palilleo.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/Hoja de palilleo.pdf",
+      "fileSizeBytes": 695399,
+      "pageCount": 1,
+      "embeddedTextLength": 12,
+      "hasUsefulEmbeddedText": false,
+      "sectionsFound": [],
+      "trackedSectionsFound": [],
+      "suggestedRowCount": 0,
+      "averageConfidence": null,
+      "rowsWithReference": 0,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [],
+      "warnings": [
+        "No se encontró encabezado de relación de materiales (RELACIÓN DE MATERIALES, BOM, etc.)."
+      ],
+      "confidenceBuckets": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 1/Isos trameados.pdf",
+      "fileName": "Isos trameados.pdf",
+      "relativePath": "Ejemplos/Ejemplo 1/Isos trameados.pdf",
+      "fileSizeBytes": 7180147,
+      "pageCount": 9,
+      "embeddedTextLength": 140,
+      "hasUsefulEmbeddedText": false,
+      "sectionsFound": [],
+      "trackedSectionsFound": [],
+      "suggestedRowCount": 0,
+      "averageConfidence": null,
+      "rowsWithReference": 0,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [],
+      "warnings": [
+        "No se encontró encabezado de relación de materiales (RELACIÓN DE MATERIALES, BOM, etc.)."
+      ],
+      "confidenceBuckets": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-702-01-R03.pdf",
+      "fileName": "1601GB16A-PL1-L-DMS-702-01-R03.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-702-01-R03.pdf",
+      "fileSizeBytes": 65074,
+      "pageCount": 1,
+      "embeddedTextLength": 3616,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 21,
+      "averageConfidence": 0.9952,
+      "rowsWithReference": 20,
+      "rowsWithoutReference": 1,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales detectado en línea 117 (SOPORTES)."
+      ],
+      "confidenceBuckets": {
+        "high": 21,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-703-01-R03.pdf",
+      "fileName": "1601GB16A-PL1-L-DMS-703-01-R03.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-703-01-R03.pdf",
+      "fileSizeBytes": 67809,
+      "pageCount": 1,
+      "embeddedTextLength": 3652,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 21,
+      "averageConfidence": 0.9952,
+      "rowsWithReference": 20,
+      "rowsWithoutReference": 1,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales detectado en línea 116 (SOPORTES)."
+      ],
+      "confidenceBuckets": {
+        "high": 21,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-704-01-R02.pdf",
+      "fileName": "1601GB16A-PL1-L-DMS-704-01-R02.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DMS-704-01-R02.pdf",
+      "fileSizeBytes": 63192,
+      "pageCount": 1,
+      "embeddedTextLength": 3149,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 17,
+      "averageConfidence": 1,
+      "rowsWithReference": 17,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~112)."
+      ],
+      "confidenceBuckets": {
+        "high": 17,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-701-01-R1.pdf",
+      "fileName": "1601GB16A-PL1-L-DW-701-01-R1.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-701-01-R1.pdf",
+      "fileSizeBytes": 27230,
+      "pageCount": 1,
+      "embeddedTextLength": 1574,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 2,
+      "averageConfidence": 1,
+      "rowsWithReference": 2,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales detectado en línea 73 (SOPORTES)."
+      ],
+      "confidenceBuckets": {
+        "high": 2,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-702-01-R1.pdf",
+      "fileName": "1601GB16A-PL1-L-DW-702-01-R1.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-702-01-R1.pdf",
+      "fileSizeBytes": 27851,
+      "pageCount": 1,
+      "embeddedTextLength": 1742,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 3,
+      "averageConfidence": 1,
+      "rowsWithReference": 3,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales detectado en línea 81 (SOPORTES)."
+      ],
+      "confidenceBuckets": {
+        "high": 3,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    },
+    {
+      "path": "/Users/antoniogameznieto/Desktop/Dev/trameado-masa/Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-702-02-R0.pdf",
+      "fileName": "1601GB16A-PL1-L-DW-702-02-R0.pdf",
+      "relativePath": "Ejemplos/Ejemplo 2/1601GB16A-PL1-L-DW-702-02-R0.pdf",
+      "fileSizeBytes": 26427,
+      "pageCount": 1,
+      "embeddedTextLength": 1415,
+      "hasUsefulEmbeddedText": true,
+      "sectionsFound": [
+        "RELACION_DE_MATERIALES",
+        "MATERIALES"
+      ],
+      "trackedSectionsFound": [
+        "MATERIALES",
+        "RELACION_DE_MATERIALES"
+      ],
+      "suggestedRowCount": 2,
+      "averageConfidence": 1,
+      "rowsWithReference": 2,
+      "rowsWithoutReference": 0,
+      "unitsDetected": [
+        "m"
+      ],
+      "warnings": [
+        "Fin de bloque de materiales tras 8 líneas sin patrón (línea ~81)."
+      ],
+      "confidenceBuckets": {
+        "high": 2,
+        "medium": 0,
+        "low": 0
+      },
+      "error": null,
+      "errorType": null
+    }
+  ]
+}

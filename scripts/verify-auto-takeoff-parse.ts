@@ -29,6 +29,12 @@ import {
   resolveExperimentalAssistantStatus,
 } from "../lib/drawings/experimental-auto-takeoff-ui";
 import {
+  aggregateAutoTakeoffBenchmarkResults,
+  bucketConfidence,
+  dedupePdfPathsByBasename,
+  matchesPdfNameFilter,
+} from "../lib/drawings/auto-takeoff-benchmark";
+import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
 } from "../lib/drawings/experimental-auto-takeoff-parse";
@@ -480,6 +486,78 @@ function main(): void {
   assert(
     isExperimentalAssistantStepComplete("analyze", "with_selection"),
     "Paso analizar completado con selección",
+  );
+
+  assert(
+    matchesPdfNameFilter("DMS-703.pdf", "DMS-70"),
+    "Filtro match substring",
+  );
+  assert(
+    !matchesPdfNameFilter("HL-1289.pdf", "^DMS"),
+    "Filtro match regex excluye",
+  );
+
+  const deduped = dedupePdfPathsByBasename([
+    "/a/DMS-703.pdf",
+    "/b/dms-703.pdf",
+    "/c/HL-1289.pdf",
+  ]);
+  assert(deduped.length === 2, "Dedupe por basename");
+  assert(deduped[0] === "/a/DMS-703.pdf", "Conserva primera ruta en dedupe");
+
+  assert(bucketConfidence(0.95) === "high", "Bucket alta confianza");
+  assert(bucketConfidence(0.6) === "medium", "Bucket media confianza");
+  assert(bucketConfidence(0.2) === "low", "Bucket baja confianza");
+
+  const aggregated = aggregateAutoTakeoffBenchmarkResults([
+    {
+      path: "/a/DMS-703.pdf",
+      fileName: "DMS-703.pdf",
+      relativePath: "a/DMS-703.pdf",
+      fileSizeBytes: 1000,
+      pageCount: 1,
+      embeddedTextLength: 5000,
+      hasUsefulEmbeddedText: true,
+      sectionsFound: ["RELACION_DE_MATERIALES"],
+      trackedSectionsFound: ["RELACION_DE_MATERIALES"],
+      suggestedRowCount: 21,
+      averageConfidence: 0.92,
+      rowsWithReference: 18,
+      rowsWithoutReference: 3,
+      unitsDetected: ["m", "ud"],
+      warnings: [],
+      confidenceBuckets: { high: 20, medium: 1, low: 0 },
+      error: null,
+      errorType: null,
+    },
+    {
+      path: "/b/scan.pdf",
+      fileName: "scan.pdf",
+      relativePath: "b/scan.pdf",
+      fileSizeBytes: 2000,
+      pageCount: 1,
+      embeddedTextLength: 12,
+      hasUsefulEmbeddedText: false,
+      sectionsFound: [],
+      trackedSectionsFound: [],
+      suggestedRowCount: 0,
+      averageConfidence: null,
+      rowsWithReference: 0,
+      rowsWithoutReference: 0,
+      unitsDetected: [],
+      warnings: [],
+      confidenceBuckets: { high: 0, medium: 0, low: 0 },
+      error: null,
+      errorType: null,
+    },
+  ]);
+
+  assert(aggregated.pdfsAnalyzed === 2, "Agregado cuenta PDFs");
+  assert(aggregated.pdfsWithBomDetected === 1, "Agregado BOM detectada");
+  assert(aggregated.totalSuggestedRows === 21, "Agregado total filas");
+  assert(
+    aggregated.averageRowsPerPdfWithBom === 21,
+    "Agregado media filas con BOM",
   );
 
   console.log("verify-auto-takeoff-parse: all checks passed");

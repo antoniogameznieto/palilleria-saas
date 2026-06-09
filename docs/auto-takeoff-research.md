@@ -482,11 +482,49 @@ Helpers: `resolveExperimentalAssistantStatus`, `buildExperimentalAssistantDiscov
 
 ---
 
+## Fase 15A — benchmark ampliado
+
+> **Commit de referencia:** `26ff027` (post Fase 14G).  
+> **Herramienta:** `npm run benchmark:auto-takeoff -- <pdf|directorio> [...]`  
+> **Informe completo:** [auto-takeoff-benchmark-results.md](./auto-takeoff-benchmark-results.md) (JSON: [auto-takeoff-benchmark-results.json](./auto-takeoff-benchmark-results.json))
+
+Benchmark real del motor de extracción sobre **17 PDFs únicos** (Ejemplos 1/2 + job de prueba en storage), sin OCR, sin BD ni cambios de producto.
+
+### Resumen agregado
+
+| Métrica | Resultado |
+|---------|-----------|
+| PDFs analizados | **17** |
+| Con texto embebido útil | **15** (88,2 %) |
+| Con BOM / RELACIÓN DE MATERIALES detectable | **15** |
+| Con ≥1 sugerencia | **15** |
+| Total filas sugeridas | **134** |
+| Errores de parseo | **0** |
+| Confianza | **Alta en las 134 filas** (bucket ≥ 0,9) |
+| Media filas/PDF con BOM | 8,93 |
+
+### Conclusión
+
+**Parcialmente viable para beta acotada** en PDFs vectoriales con BOM embebida, especialmente series **DMS** y **HL** (21 filas en DMS-702/703, 17 en DMS-704, 10–11 en HL-1289/1293, etc.).
+
+### Limitaciones observadas
+
+- **No viable** para hojas manuales o raster (`Hoja de palilleo.pdf`: 12 chars).
+- **No viable** para isométricos sin BOM útil (`Isos trameados.pdf`: 140 chars en 9 páginas).
+- **Extracción parcial** en algunos **DW** (p. ej. DW-701: 2 filas; DW-702: 2–3 filas) y en hojas detalle `-02` de HL (4 filas vs 10–11 en `-01`).
+
+### Recomendación → Fase 15B
+
+Golden set etiquetado (10–15 PDFs) con filas esperadas para medir **precisión real**, no solo cobertura. Beta interna limitada a planos que pasen preview con texto útil + sección BOM.
+
+---
+
 ## Comandos
 
 ```bash
 npm run research:auto-takeoff -- ./ruta/plano.pdf
-npm run verify:auto-takeoff          # tests puros del parser
+npm run benchmark:auto-takeoff -- ./Ejemplos "./storage/.../job" --limit 30
+npm run verify:auto-takeoff          # tests puros del parser + benchmark helpers
 npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embebido
 ```
 
@@ -495,6 +533,9 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | Archivo | Rol |
 |---------|-----|
 | `scripts/research-auto-takeoff-from-pdf.ts` | CLI de investigación (14A) |
+| `scripts/benchmark-auto-takeoff.ts` | Benchmark ampliado multi-PDF (15A) |
+| `lib/drawings/auto-takeoff-benchmark.ts` | Helpers puros de benchmark (15A) |
+| `docs/auto-takeoff-benchmark-results.md` | Informe benchmark 15A |
 | `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import (14B–14E) |
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
@@ -527,3 +568,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 14E | Hardening + E2E | Límites 200/duplicados; E2E seed BOM; verify + CI |
 | 2026-06-09 | 14F | Importación asistida | Filtros, selección visible, resumen previo, feedback |
 | 2026-06-09 | 14G | Asistente experimental | 4 pasos, estados, métricas, copy guiado |
+| 2026-06-09 | 15A | Benchmark 17 PDFs (Ejemplos + storage) | 15 con BOM, 134 filas, 0 errores; beta acotada viable en DMS/HL |
