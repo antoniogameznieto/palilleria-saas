@@ -40,8 +40,18 @@ export const BUSINESS_CONFIDENCE_LABELS: Record<BusinessConfidence, string> = {
   low: "Baja",
 };
 
+export const BETA_SUPERVISED_DISCOVERY_NOTE =
+  "La propuesta se genera con reglas automáticas, pero requiere revisión humana.";
+
+/** @deprecated Usar BETA_SUPERVISED_DISCOVERY_NOTE en UI 15F+ */
 export const EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE =
-  "La app clasifica las sugerencias como incluir, revisar o excluir según reglas experimentales de negocio. Revísalo antes de importar.";
+  "La app clasifica las sugerencias como incluir, revisar o excluir según reglas de negocio. Revísalo antes de importar.";
+
+export const BETA_REVIEW_GROUP_NOTE =
+  "Estas líneas pueden ser válidas, pero necesitan revisión antes de importarlas.";
+
+export const BETA_EXCLUDED_GROUP_NOTE =
+  "Estas líneas no se importan porque las reglas las han marcado como no necesarias para la palillería final.";
 
 export const EXPERIMENTAL_IMPORT_REVIEW_WARNING =
   "Hay elementos marcados para revisión. Comprueba antes de importar.";

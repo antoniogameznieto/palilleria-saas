@@ -11,8 +11,10 @@ import type {
   BusinessRuleCategory,
 } from "@/lib/drawings/auto-takeoff-business-rules";
 import {
+  BETA_EXCLUDED_GROUP_NOTE,
+  BETA_REVIEW_GROUP_NOTE,
+  BETA_SUPERVISED_DISCOVERY_NOTE,
   BUSINESS_CATEGORY_LABELS,
-  EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE,
   EXPERIMENTAL_IMPORT_REVIEW_WARNING,
 } from "@/lib/drawings/experimental-auto-takeoff-business-labels";
 
@@ -87,10 +89,25 @@ export const EXPERIMENTAL_ASSISTANT_STEPS: ReadonlyArray<{
   number: number;
 }> = [
   { id: "analyze", number: 1, label: "Analizar relación de materiales" },
-  { id: "review", number: 2, label: "Revisar sugerencias" },
-  { id: "import", number: 3, label: "Seleccionar e importar" },
+  { id: "review", number: 2, label: "Revisar propuesta" },
+  { id: "import", number: 3, label: "Importar propuesta revisada" },
   { id: "final", number: 4, label: "Revisar palillería" },
 ];
+
+export const BETA_PROPOSAL_PREVIEW_MAX_ITEMS = 4;
+
+export type BetaProposalSummary = {
+  readyCount: number;
+  reviewCount: number;
+  excludedCount: number;
+  alreadyExistingCount: number;
+};
+
+export type BetaProposalGroups = {
+  ready: ExperimentalSuggestionListItem[];
+  review: ExperimentalSuggestionListItem[];
+  excluded: ExperimentalSuggestionListItem[];
+};
 
 export type ExperimentalAssistantMetrics = {
   suggested: number;
@@ -243,10 +260,80 @@ export function buildExperimentalAssistantDiscoveryCopy(params: {
       matchedCount > 0
         ? `${matchedCount} ya están en tu palillería.`
         : null,
-    businessRulesNote: EXPERIMENTAL_BUSINESS_RULES_DISCOVERY_NOTE,
+    businessRulesNote: BETA_SUPERVISED_DISCOVERY_NOTE,
     safetyNote: EXPERIMENTAL_ASSISTANT_NO_AUTO_IMPORT_NOTE,
   };
 }
+
+export function isBetaReadyProposalItem(
+  item: ExperimentalSuggestionListItem,
+): boolean {
+  return (
+    item.comparisonStatus === "missing" && item.businessAction === "include"
+  );
+}
+
+export function isBetaReviewProposalItem(
+  item: ExperimentalSuggestionListItem,
+): boolean {
+  return (
+    item.comparisonStatus === "missing" && item.businessAction === "review"
+  );
+}
+
+export function isBetaExcludedProposalItem(
+  item: ExperimentalSuggestionListItem,
+): boolean {
+  return item.businessAction === "exclude";
+}
+
+export function groupBetaProposalItems(
+  items: ExperimentalSuggestionListItem[],
+): BetaProposalGroups {
+  return {
+    ready: items.filter(isBetaReadyProposalItem),
+    review: items.filter(isBetaReviewProposalItem),
+    excluded: items.filter(isBetaExcludedProposalItem),
+  };
+}
+
+export function buildBetaProposalSummary(
+  items: ExperimentalSuggestionListItem[],
+  comparisonSummary: ComparisonSummaryCounts | null | undefined,
+): BetaProposalSummary {
+  const groups = groupBetaProposalItems(items);
+
+  return {
+    readyCount: groups.ready.length,
+    reviewCount: groups.review.length,
+    excludedCount: groups.excluded.length,
+    alreadyExistingCount: comparisonSummary?.matchedCount ?? 0,
+  };
+}
+
+export function getAllReadyProposalKeys(
+  items: ExperimentalSuggestionListItem[],
+): string[] {
+  return items
+    .filter(isBetaReadyProposalItem)
+    .map((item) => item.suggestionKey);
+}
+
+export function mergeSelectionWithAllReady(
+  currentSelection: ReadonlySet<string>,
+  allReadyKeys: string[],
+): Set<string> {
+  const next = new Set(currentSelection);
+
+  for (const key of allReadyKeys) {
+    next.add(key);
+  }
+
+  return next;
+}
+
+export const BETA_REVIEW_GROUP_COPY = BETA_REVIEW_GROUP_NOTE;
+export const BETA_EXCLUDED_GROUP_COPY = BETA_EXCLUDED_GROUP_NOTE;
 
 export function isExperimentalAssistantStepComplete(
   stepId: ExperimentalAssistantStepId,

@@ -19,17 +19,24 @@ import {
   toImportableTakeoffRow,
 } from "../lib/drawings/experimental-auto-takeoff-import";
 import {
+  buildBetaProposalSummary,
   buildExperimentalAssistantDiscoveryCopy,
   buildExperimentalAssistantMetrics,
   buildExperimentalBusinessMetrics,
   buildExperimentalImportPreviewSummary,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
+  getAllReadyProposalKeys,
   getBulkSelectableMissingKeys,
   getVisibleImportableMissingKeys,
+  groupBetaProposalItems,
+  isBetaExcludedProposalItem,
+  isBetaReadyProposalItem,
+  isBetaReviewProposalItem,
   isExperimentalAssistantStepComplete,
   isExperimentalSuggestionBulkSelectable,
   isExperimentalSuggestionImportable,
+  mergeSelectionWithAllReady,
   mergeSelectionWithVisibleMissing,
   resolveExperimentalAssistantActiveStep,
   resolveExperimentalAssistantStatus,
@@ -545,6 +552,53 @@ async function main(): Promise<void> {
   assert(businessMetrics.review === 2, "Métricas negocio review (disco ciego + desconocido)");
   assert(businessMetrics.exclude === 1, "Métricas negocio exclude");
 
+  const betaGroups = groupBetaProposalItems(uiItems);
+  assert(betaGroups.ready.length === 1, "Grupo ready = include + missing");
+  assert(betaGroups.review.length === 1, "Grupo review = review + missing");
+  assert(betaGroups.excluded.length === 1, "Grupo excluded = exclude");
+  assert(
+    isBetaReadyProposalItem(uiItems.find((item) => item.suggestionKey === "k-missing")!),
+    "Ready item include missing",
+  );
+  assert(
+    !isBetaReadyProposalItem(uiItems.find((item) => item.suggestionKey === "k-matched")!),
+    "Matched no entra en ready",
+  );
+  assert(
+    isBetaReviewProposalItem(uiItems.find((item) => item.suggestionKey === "k-review")!),
+    "Review group item",
+  );
+  assert(
+    isBetaExcludedProposalItem(uiItems.find((item) => item.suggestionKey === "k-exclude")!),
+    "Excluded group item",
+  );
+
+  const betaSummary = buildBetaProposalSummary(uiItems, {
+    matchedCount: 1,
+    missingCount: 3,
+    differentQuantityCount: 0,
+    uncertainCount: 1,
+  });
+  assert(betaSummary.readyCount === 1, "Resumen beta ready");
+  assert(betaSummary.reviewCount === 1, "Resumen beta review");
+  assert(betaSummary.excludedCount === 1, "Resumen beta excluded");
+  assert(betaSummary.alreadyExistingCount === 1, "Resumen beta ya existen");
+
+  const allReady = getAllReadyProposalKeys(uiItems);
+  assert(allReady.length === 1 && allReady[0] === "k-missing", "Todas las listas para incluir");
+
+  const allReadyMerged = mergeSelectionWithAllReady(
+    new Set(["k-review"]),
+    allReady,
+  );
+  assert(
+    allReadyMerged.size === 2 &&
+      allReadyMerged.has("k-missing") &&
+      allReadyMerged.has("k-review") &&
+      !allReadyMerged.has("k-exclude"),
+    "Select all ready no incluye review/exclude/matched",
+  );
+
   const preview = buildExperimentalImportPreviewSummary(
     uiItems,
     new Set(["k-missing"]),
@@ -609,8 +663,8 @@ async function main(): Promise<void> {
     "Copy descubrimiento con total",
   );
   assert(
-    discovery.businessRulesNote.includes("incluir, revisar o excluir"),
-    "Copy reglas de negocio",
+    discovery.businessRulesNote.includes("requiere revisión humana"),
+    "Copy beta supervisada",
   );
   assert(
     discovery.safetyNote.includes("No se importa nada automáticamente"),

@@ -22,27 +22,34 @@ import {
   BUSINESS_CATEGORY_LABELS,
 } from "@/lib/drawings/experimental-auto-takeoff-business-labels";
 import {
+  BETA_EXCLUDED_GROUP_COPY,
+  BETA_PROPOSAL_PREVIEW_MAX_ITEMS,
+  BETA_REVIEW_GROUP_COPY,
   EXPERIMENTAL_ASSISTANT_IMPORT_IMPACT_ITEMS,
   EXPERIMENTAL_ASSISTANT_STEPS,
   EXPERIMENTAL_SUGGESTION_ACTION_FILTER_OPTIONS,
   EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS,
+  buildBetaProposalSummary,
   buildExperimentalAssistantDiscoveryCopy,
   buildExperimentalAssistantMetrics,
-  buildExperimentalBusinessCategoryMetrics,
-  buildExperimentalBusinessMetrics,
   buildExperimentalImportPreviewSummary,
   EXPERIMENTAL_ASSISTANT_FINAL_MESSAGE,
   filterExperimentalSuggestions,
   formatExperimentalImportConfirmMessage,
+  getAllReadyProposalKeys,
   getVisibleImportableMissingKeys,
+  groupBetaProposalItems,
   isExperimentalAssistantStepComplete,
   isExperimentalSuggestionImportable,
+  mergeSelectionWithAllReady,
   mergeSelectionWithVisibleMissing,
   resolveExperimentalAssistantActiveStep,
   resolveExperimentalAssistantStatus,
+  type BetaProposalGroups,
+  type BetaProposalSummary,
   type ExperimentalAssistantStatus,
-  type ExperimentalBusinessMetrics,
   type ExperimentalSuggestionActionFilter,
+  type ExperimentalSuggestionListItem,
   type ExperimentalSuggestionStatusFilter,
 } from "@/lib/drawings/experimental-auto-takeoff-ui";
 import { Badge } from "@/components/ui/badge";
@@ -170,45 +177,132 @@ function BusinessActionBadge({ action }: { action: BusinessAction }) {
   );
 }
 
-function BusinessMetrics({ metrics }: { metrics: ExperimentalBusinessMetrics }) {
-  const actionItems = [
-    { label: "Incluir", value: metrics.include },
-    { label: "Revisar", value: metrics.review },
-    { label: "Excluir", value: metrics.exclude },
-  ];
-  const categoryItems = buildExperimentalBusinessCategoryMetrics(metrics);
+function formatProposalRowLabel(item: ExperimentalSuggestionListItem): string {
+  const ref = item.reference?.trim();
+  const desc = item.description?.trim();
+
+  if (ref && desc) {
+    return `${ref} — ${desc}`;
+  }
+
+  return ref ?? desc ?? "—";
+}
+
+function ProposalGroupPreview({
+  items,
+  emptyLabel,
+}: {
+  items: ExperimentalSuggestionListItem[];
+  emptyLabel: string;
+}) {
+  if (items.length === 0) {
+    return <p className="text-xs text-muted-foreground">{emptyLabel}</p>;
+  }
+
+  const preview = items.slice(0, BETA_PROPOSAL_PREVIEW_MAX_ITEMS);
 
   return (
-    <div className="space-y-2" data-testid="experimental-auto-takeoff-business-metrics">
-      <p className="text-xs font-medium text-foreground">Reglas de negocio (experimental)</p>
-      <dl className="grid grid-cols-3 gap-2 sm:grid-cols-3">
-        {actionItems.map((item) => (
-          <div
-            key={item.label}
-            className="rounded-md border bg-muted/20 px-3 py-2 text-center"
-          >
-            <dt className="text-[11px] text-muted-foreground">{item.label}</dt>
-            <dd className="text-lg font-semibold text-foreground">{item.value}</dd>
-          </div>
-        ))}
-      </dl>
-      {categoryItems.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          <span className="text-[11px] text-muted-foreground">Categorías principales:</span>
-          {categoryItems.map((item) => (
-            <Badge
-              key={item.category}
-              variant="outline"
-              className="text-[11px]"
-              data-testid="experimental-auto-takeoff-business-category-badge"
-              data-business-category={item.category}
-            >
-              {item.label}: {item.count}
-            </Badge>
-          ))}
-        </div>
+    <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+      {preview.map((item) => (
+        <li key={item.suggestionKey}>{formatProposalRowLabel(item)}</li>
+      ))}
+      {items.length > preview.length ? (
+        <li>… y {items.length - preview.length} más</li>
       ) : null}
-    </div>
+    </ul>
+  );
+}
+
+function BetaProposalPanel({
+  summary,
+  groups,
+}: {
+  summary: BetaProposalSummary;
+  groups: BetaProposalGroups;
+}) {
+  return (
+    <section
+      className="space-y-4 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3"
+      data-testid="auto-takeoff-beta-proposal"
+    >
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium text-foreground">Propuesta de palillería</h3>
+        <p className="text-xs text-muted-foreground">
+          Beta supervisada — revisa los tres grupos antes de importar.
+        </p>
+      </div>
+
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="rounded-md border border-emerald-500/30 bg-background px-3 py-2 text-center">
+          <dt className="text-[11px] text-muted-foreground">Listas para incluir</dt>
+          <dd
+            className="text-lg font-semibold text-foreground"
+            data-testid="auto-takeoff-beta-ready-count"
+          >
+            {summary.readyCount}
+          </dd>
+        </div>
+        <div className="rounded-md border border-amber-500/30 bg-background px-3 py-2 text-center">
+          <dt className="text-[11px] text-muted-foreground">Requieren revisión</dt>
+          <dd
+            className="text-lg font-semibold text-foreground"
+            data-testid="auto-takeoff-beta-review-count"
+          >
+            {summary.reviewCount}
+          </dd>
+        </div>
+        <div className="rounded-md border bg-background px-3 py-2 text-center">
+          <dt className="text-[11px] text-muted-foreground">Excluidas por reglas</dt>
+          <dd
+            className="text-lg font-semibold text-foreground"
+            data-testid="auto-takeoff-beta-excluded-count"
+          >
+            {summary.excludedCount}
+          </dd>
+        </div>
+        <div className="rounded-md border bg-background px-3 py-2 text-center">
+          <dt className="text-[11px] text-muted-foreground">Ya existen en palillería</dt>
+          <dd className="text-lg font-semibold text-foreground">
+            {summary.alreadyExistingCount}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div
+          className="space-y-2 rounded-md border border-emerald-500/20 bg-background p-3"
+          data-testid="auto-takeoff-ready-group"
+        >
+          <p className="text-xs font-medium text-foreground">Listas para incluir</p>
+          <ProposalGroupPreview
+            items={groups.ready}
+            emptyLabel="Ninguna línea nueva lista para incluir."
+          />
+        </div>
+        <div
+          className="space-y-2 rounded-md border border-amber-500/20 bg-background p-3"
+          data-testid="auto-takeoff-review-group"
+        >
+          <p className="text-xs font-medium text-foreground">Requieren revisión</p>
+          <p className="text-[11px] text-muted-foreground">{BETA_REVIEW_GROUP_COPY}</p>
+          <ProposalGroupPreview
+            items={groups.review}
+            emptyLabel="Ninguna línea pendiente de revisión manual."
+          />
+        </div>
+        <div
+          className="space-y-2 rounded-md border bg-background p-3"
+          data-testid="auto-takeoff-excluded-group"
+        >
+          <p className="text-xs font-medium text-foreground">Excluidas por reglas</p>
+          <p className="text-[11px] text-muted-foreground">{BETA_EXCLUDED_GROUP_COPY}</p>
+          <ProposalGroupPreview
+            items={groups.excluded}
+            emptyLabel="Ninguna línea excluida por reglas."
+          />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -286,8 +380,20 @@ export function DrawingExperimentalAutoTakeoff({
       }),
     [suggestedItems, statusFilter, actionFilter, searchQuery],
   );
-  const businessMetrics = useMemo(
-    () => buildExperimentalBusinessMetrics(suggestedItems),
+  const betaProposalSummary = useMemo(
+    () =>
+      buildBetaProposalSummary(
+        suggestedItems,
+        analyzeState.comparisonSummary,
+      ),
+    [suggestedItems, analyzeState.comparisonSummary],
+  );
+  const betaProposalGroups = useMemo(
+    () => groupBetaProposalItems(suggestedItems),
+    [suggestedItems],
+  );
+  const allReadyKeys = useMemo(
+    () => getAllReadyProposalKeys(suggestedItems),
     [suggestedItems],
   );
   const visibleMissingKeys = useMemo(
@@ -362,9 +468,15 @@ export function DrawingExperimentalAutoTakeoff({
     });
   }
 
-  function selectVisibleMissing() {
+  function selectVisibleReady() {
     setSelectedKeys((current) =>
       mergeSelectionWithVisibleMissing(current, visibleMissingKeys),
+    );
+  }
+
+  function selectAllReady() {
+    setSelectedKeys((current) =>
+      mergeSelectionWithAllReady(current, allReadyKeys),
     );
   }
 
@@ -403,7 +515,7 @@ export function DrawingExperimentalAutoTakeoff({
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium text-foreground">
-              Asistente experimental de palillería sugerida
+              Propuesta beta supervisada de palillería
             </p>
             <Badge
               variant="outline"
@@ -414,8 +526,8 @@ export function DrawingExperimentalAutoTakeoff({
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Sigue los pasos: analizar → revisar → seleccionar/importar → revisar
-            palillería.
+            Beta supervisada: analizar → revisar propuesta → importar solo lo
+            seleccionado → revisar palillería. No se importa nada automáticamente.
           </p>
           <AssistantStepIndicator
             activeStepId={activeStepId}
@@ -483,14 +595,18 @@ export function DrawingExperimentalAutoTakeoff({
               </div>
             ) : null}
 
+            <BetaProposalPanel
+              summary={betaProposalSummary}
+              groups={betaProposalGroups}
+            />
+
             <AssistantMetrics metrics={metrics} />
-            <BusinessMetrics metrics={businessMetrics} />
 
             <section
               className="space-y-3 rounded-md border bg-background p-3"
               data-testid="experimental-auto-takeoff-step-review"
             >
-              <h3 className="text-sm font-medium">2. Revisar sugerencias</h3>
+              <h3 className="text-sm font-medium">2. Detalle y filtros</h3>
               {comparisonLine ? (
                 <p
                   className="text-xs text-muted-foreground"
@@ -710,7 +826,7 @@ export function DrawingExperimentalAutoTakeoff({
                 data-testid="experimental-auto-takeoff-step-import"
               >
                 <h3 className="text-sm font-medium">
-                  3. Seleccionar e importar
+                  3. Importar propuesta revisada
                 </h3>
 
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -718,18 +834,29 @@ export function DrawingExperimentalAutoTakeoff({
                     className="font-medium text-foreground"
                     data-testid="experimental-auto-takeoff-selected-count"
                   >
-                    {selectedKeys.size} sugerencia(s) seleccionada(s) para importar
+                    {selectedKeys.size} línea(s) seleccionada(s) para importar
                   </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2"
-                    onClick={selectVisibleMissing}
+                    onClick={selectAllReady}
+                    disabled={allReadyKeys.length === 0}
+                    data-testid="auto-takeoff-select-all-ready"
+                  >
+                    Seleccionar todas las listas para incluir
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2"
+                    onClick={selectVisibleReady}
                     disabled={visibleMissingKeys.length === 0}
                     data-testid="experimental-auto-takeoff-select-visible-missing"
                   >
-                    Seleccionar faltantes visibles
+                    Seleccionar listas visibles
                   </Button>
                   <Button
                     type="button"
@@ -817,11 +944,11 @@ export function DrawingExperimentalAutoTakeoff({
                     type="submit"
                     variant="default"
                     disabled={importPending || selectedKeys.size === 0}
-                    data-testid="experimental-auto-takeoff-import"
+                    data-testid="auto-takeoff-import-reviewed-proposal"
                   >
                     {importPending
                       ? "Importando..."
-                      : "Importar seleccionadas (experimental)"}
+                      : "Importar propuesta revisada"}
                   </Button>
                 </form>
               </section>

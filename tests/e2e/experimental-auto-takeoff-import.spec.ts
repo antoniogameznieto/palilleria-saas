@@ -19,6 +19,7 @@ test.describe("importación experimental auto-takeoff", () => {
     await page.getByRole("button", { name: "Automatización" }).click();
     await expect(page.getByTestId("experimental-auto-takeoff-section")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-assistant")).toBeVisible();
+    await expect(page.getByText("Propuesta beta supervisada de palillería")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
       "data-status",
       "not_analyzed",
@@ -37,23 +38,29 @@ test.describe("importación experimental auto-takeoff", () => {
       "No se importa nada automáticamente",
     );
     await expect(page.getByTestId("experimental-auto-takeoff-discovery-copy")).toContainText(
-      "incluir, revisar o excluir",
+      "requiere revisión humana",
     );
+
+    await expect(page.getByTestId("auto-takeoff-beta-proposal")).toBeVisible();
+    await expect(page.getByTestId("auto-takeoff-beta-ready-count")).toHaveText("18");
+    await expect(page.getByTestId("auto-takeoff-beta-review-count")).toHaveText("1");
+    await expect(page.getByTestId("auto-takeoff-beta-excluded-count")).toHaveText("1");
+    await expect(page.getByTestId("auto-takeoff-review-group")).toContainText(
+      "necesitan revisión antes de importarlas",
+    );
+    await expect(page.getByTestId("auto-takeoff-excluded-group")).toContainText(
+      "no se importan porque las reglas",
+    );
+    await expect(page.getByTestId("auto-takeoff-excluded-group")).toContainText("FIGURA 8");
+
     await expect(page.getByTestId("experimental-auto-takeoff-metrics")).toBeVisible();
-    await expect(page.getByTestId("experimental-auto-takeoff-business-metrics")).toBeVisible();
-    await expect(page.getByTestId("experimental-auto-takeoff-business-metrics")).toContainText(
-      "Incluir",
-    );
-    await expect(page.getByTestId("experimental-auto-takeoff-business-metrics")).toContainText(
-      "Revisar",
-    );
-    await expect(page.getByTestId("experimental-auto-takeoff-business-metrics")).toContainText(
-      "Excluir",
-    );
     await expect(page.getByTestId("experimental-auto-takeoff-step-review")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-assistant-status")).toHaveAttribute(
       "data-status",
       "analyzed",
+    );
+    await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
+      "0 línea",
     );
 
     await page.getByTestId("experimental-auto-takeoff-business-action-filter").selectOption(
@@ -81,14 +88,14 @@ test.describe("importación experimental auto-takeoff", () => {
       "20",
     );
 
-    await page.getByTestId("experimental-auto-takeoff-select-visible-missing").click();
+    await page.getByTestId("auto-takeoff-select-all-ready").click();
     await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "18 sugerencia",
+      "18 línea",
     );
 
     await page.getByRole("button", { name: "Deseleccionar todo" }).click();
     await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "0 sugerencia",
+      "0 línea",
     );
 
     await page.getByTestId("experimental-auto-takeoff-search").fill("1000937596");
@@ -98,7 +105,7 @@ test.describe("importación experimental auto-takeoff", () => {
 
     await page.getByTestId("experimental-auto-takeoff-select-row").check();
     await expect(page.getByTestId("experimental-auto-takeoff-selected-count")).toContainText(
-      "1 sugerencia",
+      "1 línea",
     );
     await expect(page.getByTestId("experimental-auto-takeoff-import-preview")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-import-preview")).toContainText(
@@ -119,7 +126,7 @@ test.describe("importación experimental auto-takeoff", () => {
       void dialog.accept();
     });
 
-    await page.getByTestId("experimental-auto-takeoff-import").click();
+    await page.getByTestId("auto-takeoff-import-reviewed-proposal").click();
     await expect(page.getByTestId("experimental-auto-takeoff-step-final")).toBeVisible({
       timeout: 30_000,
     });

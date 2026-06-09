@@ -685,6 +685,32 @@ La capa de reglas **mejora la pureza de la propuesta** sin tocar parsing ni impo
 
 **CI:** tests puros ampliados en `verify:auto-takeoff`; E2E en `experimental-auto-takeoff-import.spec.ts`.
 
+### Fase 15F — Propuesta beta supervisada
+
+**Objetivo:** Reorganizar el asistente en tres grupos claros (incluir / revisar / excluir) con copy “beta supervisada”, sin autoimportar ni cambiar importación segura.
+
+**Propuesta de palillería** (bloque superior):
+
+| Grupo | Criterio | DMS-703 E2E |
+|-------|----------|-------------|
+| Listas para incluir | `missing` + `include` | 18 |
+| Requieren revisión | `missing` + `review` | 1 (DISCO CIEGO) |
+| Excluidas por reglas | `exclude` | 1 (FIGURA 8) |
+| Ya existen | `matchedCount` | 1 |
+
+**Acciones:**
+
+- CTA principal: **Importar propuesta revisada** (solo seleccionadas).
+- **Seleccionar todas las listas para incluir** → todas las `missing` + `include`.
+- **Seleccionar listas visibles** → mismo criterio, solo filas visibles con filtro activo.
+- Sin auto-selección tras analizar.
+
+**Copy:** “Beta supervisada”, “La propuesta se genera con reglas automáticas, pero requiere revisión humana.”
+
+**Helpers:** `groupBetaProposalItems`, `buildBetaProposalSummary`, `getAllReadyProposalKeys` en `experimental-auto-takeoff-ui.ts`.
+
+**CI:** tests puros de agrupación; E2E actualizado con `auto-takeoff-beta-*` testids.
+
 ---
 
 ## Comandos
@@ -758,3 +784,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-09 | 15C | Business set 5 PDFs, 40 required rows | Recall negocio 82,5 %, recall BOM 100 %, utilidad 53,2 %; script separado |
 | 2026-06-09 | 15D | Reglas include/exclude/review | 57 include, 4 exclude FIGURA 8, pureza propuesta 100 %; tests en verify |
 | 2026-06-09 | 15E | Reglas en asistente experimental | Métricas/filtros/badges; bulk solo include; exclude no importable; E2E DMS-703 |
+| 2026-06-09 | 15F | Propuesta beta supervisada | Tres grupos UI; CTA propuesta revisada; select all ready; copy beta |
