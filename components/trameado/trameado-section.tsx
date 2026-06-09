@@ -8,6 +8,7 @@ import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
 import { TrameadoSegmentForm } from "@/components/trameado/trameado-segment-form";
 import type { TrameadoStickySegmentValues } from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
+import { TrameadoSheetAssistant } from "@/components/trameado/trameado-sheet-assistant";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
+import {
+  getCreatableTrameadoSheetSuggestions,
+  shouldShowTrameadoSheetAssistant,
+  type TrameadoSheetSuggestion,
+} from "@/lib/trameado/suggestions";
 import {
   formatTrameadoSheetSummary,
   getNextSegmentNumber,
@@ -30,6 +36,7 @@ type TrameadoSectionProps = {
   drawingId: string;
   drawingFileName: string;
   sheets: SerializedTrameadoSheet[];
+  sheetSuggestions: TrameadoSheetSuggestion[];
   canManage: boolean;
   suggestedLineIdentifier: string | null;
   variant?: "page" | "workspace";
@@ -53,6 +60,7 @@ export function TrameadoSection({
   drawingId,
   drawingFileName,
   sheets,
+  sheetSuggestions,
   canManage,
   suggestedLineIdentifier,
   variant = "workspace",
@@ -102,6 +110,23 @@ export function TrameadoSection({
   const sheetSummary = selectedSheet
     ? formatTrameadoSheetSummary(selectedSheet.segments)
     : "0 tramos · 0 mm";
+
+  const showAssistant =
+    canManage &&
+    shouldShowTrameadoSheetAssistant(sheetSuggestions, sheets.length);
+  const creatableSuggestionCount = getCreatableTrameadoSheetSuggestions(
+    sheetSuggestions,
+  ).length;
+
+  const handleSuggestedSheetsCreated = (sheetIds: string[]) => {
+    const lastSheetId = sheetIds[sheetIds.length - 1];
+
+    if (lastSheetId) {
+      setUserSheetId(lastSheetId);
+    }
+
+    setShowCreateSheet(false);
+  };
 
   const sheetPanel = (
     <div
@@ -157,12 +182,27 @@ export function TrameadoSection({
       <div className="min-h-0 flex-1 space-y-4">
         {sheets.length === 0 ? (
           <div className="space-y-4">
+            {showAssistant ? (
+              <TrameadoSheetAssistant
+                key={sheetSuggestions
+                  .map((suggestion) => `${suggestion.suggestionKey}:${suggestion.alreadyExists}`)
+                  .join("|")}
+                companyId={companyId}
+                jobId={jobId}
+                drawingId={drawingId}
+                suggestions={sheetSuggestions}
+                onSheetsCreated={handleSuggestedSheetsCreated}
+              />
+            ) : null}
+
             <div className="rounded-lg border border-dashed bg-muted/15 px-4 py-6 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">
                 Todavía no hay hoja de palilleo para este plano.
               </p>
               <p className="mt-1">
-                Crea una hoja para empezar a introducir los tramos fabricables.
+                {creatableSuggestionCount > 0
+                  ? "Usa el asistente o crea una hoja manualmente para empezar a introducir los tramos fabricables."
+                  : "Crea una hoja para empezar a introducir los tramos fabricables."}
               </p>
             </div>
 
@@ -179,10 +219,11 @@ export function TrameadoSection({
               ) : (
                 <Button
                   type="button"
+                  variant="outline"
                   data-testid="trameado-create-sheet"
                   onClick={() => setShowCreateSheet(true)}
                 >
-                  Crear hoja de palilleo
+                  Crear hoja manualmente
                 </Button>
               )
             ) : (
@@ -193,6 +234,19 @@ export function TrameadoSection({
           </div>
         ) : (
           <div className="space-y-4">
+            {showAssistant ? (
+              <TrameadoSheetAssistant
+                key={sheetSuggestions
+                  .map((suggestion) => `${suggestion.suggestionKey}:${suggestion.alreadyExists}`)
+                  .join("|")}
+                companyId={companyId}
+                jobId={jobId}
+                drawingId={drawingId}
+                suggestions={sheetSuggestions}
+                onSheetsCreated={handleSuggestedSheetsCreated}
+              />
+            ) : null}
+
             {showCreateSheet && canManage ? (
               <TrameadoSheetForm
                 companyId={companyId}

@@ -2,6 +2,7 @@
 
 import type { LengthUnit, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import { prisma } from "@/lib/db";
@@ -22,6 +23,18 @@ import {
   trameadoSheetFormSchema,
   trameadoSheetUpdateSchema,
 } from "@/lib/validations/trameado";
+
+const suggestedTrameadoSheetsPayloadSchema = z.object({
+  suggestions: z
+    .array(
+      z.object({
+        lineIdentifier: z.string().trim().min(1),
+        lineClass: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
+      }),
+    )
+    .min(1, "Selecciona al menos una hoja sugerida."),
+});
 
 function revalidateDrawingPage(
   companyId: string,
@@ -468,4 +481,121 @@ export async function markTrameadoSheetReviewedAction(
 
   revalidateDrawingPage(companyId, jobId, drawingId);
   return { success: "Hoja de trameado marcada como revisada." };
+}
+
+export async function createSuggestedTrameadoSheetsAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseDrawingScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId } = scope;
+  const { membership } = await requireDrawingAccess(companyId, jobId, drawingId);
+
+  if (!canManageTrameado(membership.role)) {
+    return { error: "No tienes permiso para gestionar el trameado." };
+  }
+
+  const rawPayload = formData.get("suggestionsPayload");
+
+  if (typeof rawPayload !== "string" || rawPayload.trim().length === 0) {
+    return { error: "No se recibieron hojas sugeridas para crear." };
+  }
+
+  let parsedPayload: z.infer<typeof suggestedTrameadoSheetsPayloadSchema>;
+
+  try {
+    parsedPayload = suggestedTrameadoSheetsPayloadSchema.parse(
+      JSON.parse(rawPayload),
+    );
+  } catch {
+    return { error: "Las hojas sugeridas no tienen un formato válido." };
+  }
+
+  const existingSheets = await prisma.drawingTrameadoSheet.findMany({
+    where: {
+      companyId,
+      jobId,
+      drawingId,
+    },
+    select: {
+      lineIdentifier: true,
+    },
+  });
+
+  const existingIdentifiers = new Set(
+    existingSheets.map((sheet) => sheet.lineIdentifier.trim().toLowerCase()),
+  );
+
+  const createdSheetIds: string[] = [];
+  const skippedExisting: string[] = [];
+  const errors: string[] = [];
+
+  for (const suggestion of parsedPayload.suggestions) {
+    const normalizedIdentifier = suggestion.lineIdentifier.trim().toLowerCase();
+
+    if (existingIdentifiers.has(normalizedIdentifier)) {
+      skippedExisting.push(suggestion.lineIdentifier);
+      continue;
+    }
+
+    const parsedSheet = trameadoSheetFormSchema.safeParse({
+      lineIdentifier: suggestion.lineIdentifier,
+      lineClass: suggestion.lineClass ?? undefined,
+      notes: suggestion.notes ?? undefined,
+    });
+
+    if (!parsedSheet.success) {
+      errors.push(
+        `${suggestion.lineIdentifier}: ${parsedSheet.error.issues[0]?.message ?? "datos inválidos"}`,
+      );
+      continue;
+    }
+
+    const sheet = await prisma.drawingTrameadoSheet.create({
+      data: {
+        companyId,
+        jobId,
+        drawingId,
+        lineIdentifier: parsedSheet.data.lineIdentifier,
+        lineClass: parsedSheet.data.lineClass,
+        notes: parsedSheet.data.notes,
+      },
+    });
+
+    existingIdentifiers.add(normalizedIdentifier);
+    createdSheetIds.push(sheet.id);
+  }
+
+  revalidateDrawingPage(companyId, jobId, drawingId);
+
+  if (createdSheetIds.length === 0) {
+    if (skippedExisting.length > 0 && errors.length === 0) {
+      return {
+        error: "Las hojas seleccionadas ya existen para este plano.",
+      };
+    }
+
+    return {
+      error:
+        errors[0] ??
+        "No se pudo crear ninguna hoja sugerida. Revisa la selección.",
+    };
+  }
+
+  const summaryParts = [`${createdSheetIds.length} hoja(s) creada(s).`];
+
+  if (skippedExisting.length > 0) {
+    summaryParts.push(`${skippedExisting.length} ya existían.`);
+  }
+
+  return {
+    success: summaryParts.join(" "),
+    trameadoSheetIds: createdSheetIds,
+    trameadoSheetId: createdSheetIds[0],
+  };
 }

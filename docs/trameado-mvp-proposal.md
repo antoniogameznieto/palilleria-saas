@@ -176,12 +176,14 @@ Columnas:
 - **Automático realista** = asistente: precrear hojas, sugerir Ø/SCH, usuario introduce longitudes mirando PDF.
 - **Automático visual** (OCR marcas azules, geometría) = alto riesgo; no MVP.
 
-### 18I-A — Asistente BOM/metadatos (recomendado)
+### 18I-A — Asistente BOM/metadatos (completado)
 
-- Precrear hojas con ISO, CLASE, Ø, SCH desde metadatos + BOM.
-- Parejas `-01`/`-02` cuando detectables.
-- Alertas discrepancia BOM vs suma tramos (sin autoaplicar).
-- Usuario sigue introduciendo PALILLO manualmente.
+- Helper `lib/trameado/suggestions.ts` y action `createSuggestedTrameadoSheetsAction`.
+- Bloque «Asistente de hoja de palilleo» en pestaña Trameado.
+- Precrea hojas con ISO, CLASE, Ø y SCH sugeridos desde metadatos + BOM.
+- Pareja `-01`/`-02` solo con base (plano relacionado o tubería 3/4" en BOM).
+- **No** crea tramos ni longitudes PALILLO.
+- Viewer no ve el asistente.
 
 ### 18I-B — Parser experimental texto embebido (condicional)
 

@@ -252,6 +252,8 @@ Opciones evaluadas:
 4. Entrega valor al cliente («automatización» percibida) sin prometer magia sobre escaneos.
 5. Reutiliza motor auto-takeoff beta **solo como consulta**, no como output de trameado.
 
+**Estado (18I-A implementado):** ver [trameado-technical-model.md](./trameado-technical-model.md#asistente-bommetadatos-18i-a).
+
 ### Alcance propuesto 18I-A (borrador)
 
 - Al abrir Trameado sin hoja: botón «Crear hoja sugerida» con ISO, CLASE, Ø, SCH desde metadatos + BOM.

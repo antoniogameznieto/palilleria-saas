@@ -16,6 +16,8 @@ import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-
 import { TrameadoSection } from "@/components/trameado/trameado-section";
 import { getDrawingTrameadoSheets } from "@/lib/trameado/db";
 import { buildSuggestedLineIdentifier } from "@/lib/trameado/suggest-line-identifier";
+import { buildTrameadoSheetSuggestions } from "@/lib/trameado/suggestions";
+import { prisma } from "@/lib/db";
 import {
   canConfirmDetectedDrawingMetadata,
   canDeleteDrawings,
@@ -48,7 +50,7 @@ export default async function DrawingDetailPage({
   );
   const canEditTakeoff = canManageTakeoffItems(membership.role);
   const canEditTrameado = canManageTrameado(membership.role);
-  const [{ job }, activities, takeoffItems, jobTakeoffItems, trameadoSheets] =
+  const [{ job }, activities, takeoffItems, jobTakeoffItems, trameadoSheets, jobDrawings] =
     await Promise.all([
       requireJobAccess(companyId, jobId),
       getDrawingRecentActivity(companyId, jobId, drawingId),
@@ -57,6 +59,18 @@ export default async function DrawingDetailPage({
         ? getJobTakeoffExportItems(companyId, jobId)
         : Promise.resolve([]),
       getDrawingTrameadoSheets(companyId, jobId, drawingId),
+      prisma.drawing.findMany({
+        where: {
+          companyId,
+          jobId,
+        },
+        select: {
+          id: true,
+          drawingNumber: true,
+          lineNumber: true,
+          revision: true,
+        },
+      }),
     ]);
 
   const canEditMetadata = canEditDrawingMetadata(membership.role);
@@ -90,6 +104,17 @@ export default async function DrawingDetailPage({
     lineNumber: drawing.lineNumber,
     revision: drawing.revision,
   });
+  const trameadoSheetSuggestions = buildTrameadoSheetSuggestions({
+    drawing: {
+      id: drawing.id,
+      drawingNumber: drawing.drawingNumber,
+      lineNumber: drawing.lineNumber,
+      revision: drawing.revision,
+    },
+    takeoffItems,
+    existingLineIdentifiers: trameadoSheets.map((sheet) => sheet.lineIdentifier),
+    relatedDrawings: jobDrawings.filter((jobDrawing) => jobDrawing.id !== drawing.id),
+  });
   const drawingProgress = getDrawingProgress({
     status: drawing.status,
     drawingNumber: drawing.drawingNumber,
@@ -121,6 +146,7 @@ export default async function DrawingDetailPage({
       drawingId={drawing.id}
       drawingFileName={drawing.originalFileName}
       sheets={trameadoSheets}
+      sheetSuggestions={trameadoSheetSuggestions}
       canManage={canEditTrameado}
       suggestedLineIdentifier={suggestedLineIdentifier}
       variant="workspace"

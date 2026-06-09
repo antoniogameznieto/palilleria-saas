@@ -129,6 +129,7 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 | Paso Trameado en detalle de plano (PDF + tabla) | 18C ✅ |
 | Export CSV hoja cliente | 18D ✅ |
 | Export Excel básico hoja cliente | 18G ✅ |
+| Asistente BOM/metadatos | 18I-A ✅ |
 | Export Excel formateado / PDF plantilla | posterior |
 | Hints desde BOM (Ø, SCH.) | 18E |
 | Anotaciones iso trameado | 18F |
@@ -185,6 +186,26 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 **UI:** botones «Exportar CSV» y «Exportar Excel» en cabecera del panel hoja (`ExportTrameadoCsvButton`); visible con ≥1 tramo; viewer puede descargar; aviso si pendiente de revisión.
 
 **Verificación:** `verifyXlsxExport()` en `scripts/verify-trameado-model.ts`.
+
+## Asistente BOM/metadatos (18I-A)
+
+**Helper:** `lib/trameado/suggestions.ts`  
+**Action:** `createSuggestedTrameadoSheetsAction` en `lib/actions/trameado.ts`  
+**UI:** `TrameadoSheetAssistant` en pestaña Trameado (solo engineer+).
+
+| Automatiza | No automatiza |
+|------------|---------------|
+| Sugerir ISO desde metadatos | Tramos `<n>` |
+| Derivar CLASE de identificador HL | Longitudes PALILLO |
+| Sugerir Ø/SCH desde BOM takeoff | Lectura marcas azules / OCR |
+| Precrear hojas vacías (sin segmentos) | Duplicar hojas existentes |
+| Pareja `-02` con base documentada | Pareja a ciegas |
+
+- Notas de hoja incluyen hint `Asistente BOM/metadatos · Ø … · SCH …`.
+- Permisos: owner/admin/engineer; viewer no ve CTA.
+- Dedupe por `lineIdentifier` existente en el drawing.
+
+**Verificación:** `verifySheetSuggestions()` en `scripts/verify-trameado-model.ts`.
 
 ## Archivos tocados en 18B
 

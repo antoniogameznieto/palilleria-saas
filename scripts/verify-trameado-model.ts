@@ -18,6 +18,14 @@ import {
   TRAMEADO_XLSX_SHEET_NAME,
 } from "../lib/trameado/export-xlsx";
 import {
+  buildTrameadoSheetSuggestions,
+  dedupeTrameadoSheetSuggestions,
+  deriveLineClassFromIdentifier,
+  detectDiameterFromText,
+  detectScheduleFromText,
+  getCreatableTrameadoSheetSuggestions,
+} from "../lib/trameado/suggestions";
+import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
   formatTrameadoSheetSummary,
@@ -255,6 +263,96 @@ function verifyCsvExport(): void {
   );
 }
 
+function verifySheetSuggestions(): void {
+  assert(
+    deriveLineClassFromIdentifier("HL-1291-A012AA-N-01") === "A012AA",
+    "Line class should derive from HL identifier",
+  );
+
+  assert(
+    detectDiameterFromText('1 4" TUBERIA A106 Gr.B SCH 40').includes('4"'),
+    "Diameter detection should find quoted inch values",
+  );
+
+  assert(
+    detectScheduleFromText('1 4" TUBERIA A106 Gr.B SCH 40').includes("40"),
+    "Schedule detection should find SCH 40",
+  );
+
+  const suggestions = buildTrameadoSheetSuggestions({
+    drawing: {
+      id: "drawing-1",
+      drawingNumber: "2301GB47G-C1-L-HL-1291-01",
+      lineNumber: "HL-1291-A012AA-N-01",
+      revision: "0",
+    },
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        reference: "1000938243",
+        unit: "m",
+      },
+      {
+        description: '1 3/4" TUBERIA A106 Gr.B SCH 80',
+        reference: "1000938241",
+        unit: "m",
+      },
+    ],
+    existingLineIdentifiers: [],
+    relatedDrawings: [
+      {
+        id: "drawing-2",
+        drawingNumber: "2301GB47G-C1-L-HL-1291-02",
+        lineNumber: "HL-1291-A012AA-N-02",
+        revision: "0",
+      },
+    ],
+  });
+
+  assert(suggestions.length >= 2, "Should suggest primary and pair -02 sheets");
+  assert(
+    suggestions[0]?.lineIdentifier === "HL-1291-A012AA-N-01",
+    "Primary suggestion should use drawing line number",
+  );
+  assert(
+    suggestions[0]?.lineClass === "A012AA",
+    "Primary suggestion should include derived line class",
+  );
+  assert(
+    suggestions[0]?.diameter === '4"',
+    "Primary suggestion should inherit main pipe diameter",
+  );
+  assert(
+    suggestions.some((suggestion) => suggestion.lineIdentifier.endsWith("-02")),
+    "Should include -02 pair suggestion when related drawing exists",
+  );
+
+  const deduped = dedupeTrameadoSheetSuggestions([
+    suggestions[0]!,
+    suggestions[0]!,
+  ]);
+  assert(deduped.length === 1, "Duplicate suggestions should dedupe by ISO");
+
+  const withExisting = buildTrameadoSheetSuggestions({
+    drawing: {
+      id: "drawing-1",
+      drawingNumber: null,
+      lineNumber: "HL-1291-A012AA-N-01",
+      revision: null,
+    },
+    takeoffItems: [],
+    existingLineIdentifiers: ["HL-1291-A012AA-N-01"],
+  });
+  assert(
+    withExisting[0]?.alreadyExists === true,
+    "Existing line identifiers should mark suggestions as already present",
+  );
+  assert(
+    getCreatableTrameadoSheetSuggestions(withExisting).length === 0,
+    "Creatable suggestions should exclude existing sheets",
+  );
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -343,6 +441,7 @@ async function main(): Promise<void> {
   verifyExportLabels();
   verifySegmentHelpers();
   verifyCsvExport();
+  verifySheetSuggestions();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

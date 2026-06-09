@@ -19,6 +19,48 @@ async function fillSegmentForm(
 }
 
 test.describe("trameado manual", () => {
+  test("engineer usa asistente para precrear hoja sugerida sin segmentos", async ({
+    page,
+  }) => {
+    await login(page, E2E_USERS.engineer);
+    await page.goto(drawingPath());
+
+    await page.getByRole("button", { name: "Trameado", exact: true }).click();
+    await expect(page.getByTestId("trameado-sheet-assistant")).toBeVisible();
+    await expect(page.getByTestId("trameado-create-suggested-sheets")).toBeVisible();
+
+    const primarySuggestion = page
+      .getByTestId("trameado-sheet-suggestion")
+      .filter({ hasText: "HL-E2E-A012AA-N-01" });
+    await expect(primarySuggestion).toBeVisible();
+    await expect(primarySuggestion.getByTestId("trameado-suggestion-diameter")).toContainText(
+      '4"',
+    );
+    await expect(primarySuggestion.getByTestId("trameado-suggestion-schedule")).toContainText(
+      "40",
+    );
+
+    const pairSuggestion = page
+      .getByTestId("trameado-sheet-suggestion")
+      .filter({ hasText: "HL-E2E-A012AA-N-02" });
+    if (await pairSuggestion.count()) {
+      await pairSuggestion
+        .getByTestId("trameado-sheet-suggestion-checkbox")
+        .uncheck();
+    }
+
+    await primarySuggestion.getByTestId("trameado-sheet-suggestion-checkbox").check();
+    await expect(page.getByTestId("trameado-create-suggested-sheets")).toBeEnabled();
+    await page.getByTestId("trameado-create-suggested-sheets").click();
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+      "HL-E2E-A012AA-N-01",
+      { timeout: 15_000 },
+    );
+    await expect(page.getByText("CLASE ·").locator("..")).toContainText("A012AA");
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(0);
+    await expect(primarySuggestion).toContainText("Ya existe");
+  });
+
   test("engineer crea hoja, añade tramo, edita, borra y marca revisada", async ({
     page,
   }) => {
@@ -163,6 +205,10 @@ test.describe("trameado manual", () => {
     );
     await expect(page.getByTestId("trameado-export-csv")).toBeVisible();
     await expect(page.getByTestId("trameado-export-xlsx")).toBeVisible();
+    await expect(page.getByTestId("trameado-create-suggested-sheets")).toHaveCount(
+      0,
+    );
+    await expect(page.getByTestId("trameado-sheet-assistant")).toHaveCount(0);
     await expect(page.getByTestId("trameado-create-sheet")).toHaveCount(0);
     await expect(page.getByTestId("trameado-add-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-edit-segment")).toHaveCount(0);

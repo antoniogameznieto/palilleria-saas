@@ -16,6 +16,7 @@ export type AuthActionState = {
   fieldErrors?: Record<string, string[]>;
   success?: string;
   trameadoSheetId?: string;
+  trameadoSheetIds?: string[];
 };
 
 export async function loginAction(
