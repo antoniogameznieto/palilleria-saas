@@ -5,6 +5,7 @@ import {
   type ExperimentalTitleBlockOcrResult,
 } from "@/lib/drawings/experimental-title-block-ocr";
 import { parseTitleBlockCropPercentsFromFormData } from "@/lib/drawings/experimental-title-block-crop-params";
+import { parseOcrPreprocessStrategyFromFormData } from "@/lib/drawings/experimental-ocr-preprocess-constants";
 import {
   canAccessExperimentalTitleBlockOcr,
   isExperimentalTitleBlockOcrEnabled,
@@ -37,6 +38,7 @@ export type ExperimentalTitleBlockOcrActionState = {
   hasPreview?: boolean;
   cropImageDataUrl?: string | null;
   cropZoneLabel?: string;
+  preprocessLabel?: string;
   textPreview?: string | null;
   metadataCandidates?: ExperimentalTitleBlockOcrResult["metadataCandidates"];
   warnings?: string[];
@@ -75,11 +77,18 @@ export async function analyzeExperimentalTitleBlockOcrAction(
     return { error: cropParams.error };
   }
 
+  const preprocessParams = parseOcrPreprocessStrategyFromFormData(formData);
+
+  if ("error" in preprocessParams) {
+    return { error: preprocessParams.error };
+  }
+
   try {
     const result = await analyzeTitleBlockFromDrawingStorage({
       storagePath: drawing.storagePath,
       mimeType: drawing.mimeType,
       cropPercents: cropParams.params,
+      preprocessStrategy: preprocessParams.strategy,
     });
 
     const detectedFields = [
@@ -102,6 +111,7 @@ export async function analyzeExperimentalTitleBlockOcrAction(
       hasPreview: result.hasPreview,
       cropImageDataUrl: result.cropImageDataUrl,
       cropZoneLabel: result.cropZoneLabel,
+      preprocessLabel: result.preprocessLabel,
       textPreview: result.textPreview,
       metadataCandidates: result.metadataCandidates,
       warnings: result.warnings,

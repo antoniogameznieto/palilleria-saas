@@ -12,6 +12,11 @@ import {
   type TitleBlockCropPercents,
 } from "@/lib/drawings/experimental-title-block-crop-params";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
+import {
+  DEFAULT_OCR_PREPROCESS_STRATEGY,
+  OCR_PREPROCESS_STRATEGIES,
+  type OcrPreprocessStrategy,
+} from "@/lib/drawings/experimental-ocr-preprocess-constants";
 import { TESSERACT_SETUP_DOC } from "@/lib/drawings/tesseract-cli-constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +66,8 @@ export function DrawingExperimentalTitleBlockOcr({
   const [cropParams, setCropParams] = useState<TitleBlockCropPercents>(
     DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
   );
+  const [preprocessStrategy, setPreprocessStrategy] =
+    useState<OcrPreprocessStrategy>(DEFAULT_OCR_PREPROCESS_STRATEGY);
   const [state, formAction, isPending] = useActionState(
     analyzeExperimentalTitleBlockOcrAction,
     initialState,
@@ -124,6 +131,28 @@ export function DrawingExperimentalTitleBlockOcr({
           ★ Preset recomendado para cajetines extendidos (no es el default).
         </p>
 
+        <div className="space-y-1">
+          <Label htmlFor="preprocess-strategy">Preprocesado OCR</Label>
+          <select
+            id="preprocess-strategy"
+            className="flex h-9 w-full max-w-md rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+            value={preprocessStrategy}
+            onChange={(event) =>
+              setPreprocessStrategy(event.target.value as OcrPreprocessStrategy)
+            }
+          >
+            {OCR_PREPROCESS_STRATEGIES.map((strategy) => (
+              <option key={strategy.id} value={strategy.id}>
+                {strategy.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Solo afecta la imagen enviada a Tesseract; la vista previa muestra
+            el recorte sin procesar. Default: original.
+          </p>
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {CROP_FIELDS.map(({ key, label, min, max }) => (
             <div key={key} className="space-y-1">
@@ -160,6 +189,11 @@ export function DrawingExperimentalTitleBlockOcr({
           {state.cropZoneLabel ? (
             <p className="text-xs font-medium text-muted-foreground">
               {state.cropZoneLabel}
+            </p>
+          ) : null}
+          {state.preprocessLabel ? (
+            <p className="text-xs font-medium text-muted-foreground">
+              Preprocesado: {state.preprocessLabel}
             </p>
           ) : null}
           <p className="text-xs text-muted-foreground">
@@ -237,6 +271,11 @@ export function DrawingExperimentalTitleBlockOcr({
           type="hidden"
           name="heightPercent"
           value={cropParams.heightPercent}
+        />
+        <input
+          type="hidden"
+          name="preprocessStrategy"
+          value={preprocessStrategy}
         />
         <Button type="submit" variant="outline" disabled={isPending}>
           {isPending ? "Analizando cajetín..." : "Analizar cajetín con OCR"}

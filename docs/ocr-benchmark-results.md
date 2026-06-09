@@ -134,6 +134,31 @@ RELACIÓN DE MATERIALES...
 
 ---
 
+## Sesión 2026-06-09 — Preprocesado OCR (Fase 10H)
+
+**Archivo:** `1601GB16A-PL1-L-DMS-703-01-R03.pdf`  
+**Preset:** `bottom-wide` (35/60/65/40)  
+**Tesseract:** 5.5.2
+
+| Estrategia | Duración | Nº plano | Línea | Revisión | Texto OCR clave | Observaciones |
+|------------|----------|----------|-------|----------|-----------------|---------------|
+| `original` | 1000 ms | DMS-703 ✓ | — | — | `*1601GB16A-PL1-3/4'-DMS-703-...` (ruidoso) | Baseline 10G; nº plano OK |
+| `grayscale` | 1069 ms | — | — | — | Texto fragmentado | Peor que original en este PDF |
+| `high-contrast` | 654 ms | DMS-703 ✓ | PL1-L ✓ | — | `160168164 PLI-L-DMS-703-01` | **Mejor equilibrio** velocidad + candidatos |
+| `threshold` | 752 ms | — | — | — | Pérdida de detalle | Binarizado demasiado agresivo aquí |
+| `upscale` | 1295 ms | DMS-703 ✓ | PL1-L ✓ | — | Similar a high-contrast | Detecta línea pero más lento |
+
+### Conclusión preprocesado (10H)
+
+- **Mejor estrategia probada:** `high-contrast` — detecta **DMS-703** y **PL1-L** en ~650 ms.
+- `upscale` también detecta línea, pero ~2× más lento.
+- `original` mantiene nº plano sin línea.
+- `grayscale` y `threshold` no mejoran este PDF.
+- **Revisión** sigue sin detectarse en ninguna variante.
+- Default experimental sigue siendo `original`; `high-contrast` candidato a recomendación futura.
+
+---
+
 ## Plantilla por prueba (detalle)
 
 Usa este bloque debajo de la tabla cuando necesites más contexto.
@@ -176,8 +201,9 @@ Basado en la sesión con `1601GB16A-PL1-L-DMS-703-01-R03.pdf` (Tesseract 5.5.2, 
 | ROI amplia inferior (35/60/65/40) | **Mejor opción probada** — nº plano DMS-703 correcto |
 | Idiomas spa+eng | Funcionan; pipeline < 1 s en local |
 | Tiempo medio por plano | ~500–790 ms (6 pruebas, mismo PDF) |
-| Línea / revisión | No detectadas; parser actual no cubre códigos OCR ruidosos |
-| ¿Listo para integración seria? | **No** — hace falta preset ROI por formato y mejoras de parser antes de «Aplicar» |
+| Línea / revisión | Línea **PL1-L** con `high-contrast`/`upscale` + bottom-wide; revisión pendiente |
+| Preprocesado OCR (10H) | `high-contrast` mejor opción probada; default sigue `original` |
+| ¿Listo para integración seria? | **No** — hace falta validar más planos y revisión antes de «Aplicar» |
 
 ---
 

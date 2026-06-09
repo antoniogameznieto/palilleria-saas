@@ -16,6 +16,12 @@ import {
   computeTitleBlockCropRect,
   computeTitleBlockCropRectFromPercents,
 } from "../lib/drawings/experimental-title-block-crop";
+import {
+  DEFAULT_OCR_PREPROCESS_STRATEGY,
+  OCR_PREPROCESS_STRATEGY_IDS,
+  parseOcrPreprocessStrategy,
+  resolveOcrPreprocessStrategy,
+} from "../lib/drawings/experimental-ocr-preprocess-constants";
 import { parseDrawingMetadataFromOcrText } from "../lib/drawings/parse-ocr-text-tolerant";
 
 function assert(condition: boolean, message: string): void {
@@ -176,6 +182,41 @@ function verifyTitleBlockCropPresets(): void {
   );
 }
 
+function verifyOcrPreprocessStrategies(): void {
+  assert(
+    DEFAULT_OCR_PREPROCESS_STRATEGY === "original",
+    "Default OCR preprocess strategy should be original",
+  );
+
+  assert(
+    OCR_PREPROCESS_STRATEGY_IDS.length === 5,
+    "Expected five OCR preprocess strategies",
+  );
+
+  for (const strategyId of OCR_PREPROCESS_STRATEGY_IDS) {
+    const parsed = parseOcrPreprocessStrategy(strategyId);
+    assert(
+      !("error" in parsed) && parsed.strategy === strategyId,
+      `Strategy ${strategyId} should parse successfully`,
+    );
+  }
+
+  assert(
+    resolveOcrPreprocessStrategy(null) === "original",
+    "Null preprocess should resolve to original",
+  );
+  assert(
+    resolveOcrPreprocessStrategy("not-a-strategy") === "original",
+    "Unknown preprocess should fall back to original",
+  );
+
+  const unknownParsed = parseOcrPreprocessStrategy("not-a-strategy");
+  assert(
+    "error" in unknownParsed,
+    "Unknown preprocess should return error in strict parse",
+  );
+}
+
 function verifyOcrTolerantParsing(): void {
   const benchmarkText = "*1601GB16A-PL1-3/4'-DMS-703-CO90AHT-N-01";
   const benchmarkResult = parseDrawingMetadataFromOcrText(benchmarkText);
@@ -249,6 +290,7 @@ function verifyCropPreviewLimits(): void {
 verifyTitleBlockCropRect();
 verifyTitleBlockCropValidation();
 verifyTitleBlockCropPresets();
+verifyOcrPreprocessStrategies();
 verifyOcrTolerantParsing();
 verifyCropPreviewLimits();
 console.log("verify-title-block-crop: all checks passed");

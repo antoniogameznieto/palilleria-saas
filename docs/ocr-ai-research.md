@@ -548,3 +548,51 @@ npm run lint
 npm run build
 ```
 
+---
+
+## Fase 10H — Preprocesado OCR experimental (implementado)
+
+> **Estado:** experimental, misma feature flag `EXPERIMENTAL_TITLE_BLOCK_OCR`.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| `lib/drawings/experimental-ocr-preprocess-constants.ts` | Estrategias, validación, parse FormData (client-safe) |
+| `lib/drawings/experimental-ocr-preprocess.ts` | Aplicación con `@napi-rs/canvas` antes de Tesseract |
+| Benchmark `--preprocess` | Compara estrategias en un PDF local |
+| UI | Selector «Preprocesado OCR» (default: original) |
+
+### Estrategias
+
+| ID | Efecto |
+|----|--------|
+| `original` | Sin cambios (**default**) |
+| `grayscale` | Escala de grises |
+| `high-contrast` | Grises + contraste elevado |
+| `threshold` | Binarizado umbral 140 |
+| `upscale` | Ampliación 2× |
+
+La vista previa del recorte **no** se preprocesa; solo la imagen enviada a Tesseract.
+
+### Conclusiones iniciales (PDF benchmark)
+
+Con `bottom-wide` en `1601GB16A-PL1-L-DMS-703-01-R03.pdf`:
+
+- **`high-contrast`:** mejor equilibrio — DMS-703 + PL1-L, ~650 ms.
+- **`upscale`:** mismos candidatos, más lento.
+- **`original`:** DMS-703 sin línea.
+- **`grayscale` / `threshold`:** no mejoran en este caso.
+- **Revisión:** pendiente en todas las variantes.
+
+Ver detalle: [ocr-benchmark-results.md](./ocr-benchmark-results.md).
+
+### Verificación local
+
+```bash
+npm run benchmark:ocr -- ./plano.pdf --preset bottom-wide --preprocess high-contrast
+npm run verify:title-block-crop
+npm run lint
+npm run build
+```
+

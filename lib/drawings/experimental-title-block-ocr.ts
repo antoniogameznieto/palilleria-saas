@@ -25,6 +25,12 @@ import {
   buildTesseractMissingWarnings,
   getMissingRecommendedTesseractLanguages,
 } from "@/lib/drawings/tesseract-cli-constants";
+import {
+  DEFAULT_OCR_PREPROCESS_STRATEGY,
+  formatOcrPreprocessLabel,
+  type OcrPreprocessStrategy,
+} from "@/lib/drawings/experimental-ocr-preprocess-constants";
+import { applyExperimentalOcrPreprocess } from "@/lib/drawings/experimental-ocr-preprocess";
 import { diagnoseTesseractCli } from "@/lib/drawings/tesseract-cli-diagnostic";
 import { PDF_MIME_TYPE, getFile } from "@/lib/storage";
 
@@ -37,6 +43,8 @@ export type ExperimentalTitleBlockOcrResult = {
   cropImageDataUrl: string | null;
   cropZoneLabel: string;
   usedCropPercents: TitleBlockCropPercents;
+  usedPreprocessStrategy: OcrPreprocessStrategy;
+  preprocessLabel: string;
   extractedText: string | null;
   textPreview: string | null;
   metadataCandidates: ParsedDrawingMetadata;
@@ -167,6 +175,7 @@ async function runTesseractOnPng(pngBuffer: Buffer): Promise<string | null> {
 export async function analyzeTitleBlockFromPdfBuffer(
   buffer: Buffer,
   cropPercents: TitleBlockCropPercents = DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+  preprocessStrategy: OcrPreprocessStrategy = DEFAULT_OCR_PREPROCESS_STRATEGY,
 ): Promise<ExperimentalTitleBlockOcrResult> {
   const warnings: string[] = [];
 
@@ -241,7 +250,25 @@ export async function analyzeTitleBlockFromPdfBuffer(
       warnings.push(buildTesseractMissingLanguageWarning(missingLanguages));
     }
 
-    extractedText = await runTesseractOnPng(titleBlockPng);
+    let ocrInputPng = titleBlockPng;
+
+    if (preprocessStrategy !== "original") {
+      try {
+        ocrInputPng = await applyExperimentalOcrPreprocess(
+          titleBlockPng,
+          preprocessStrategy,
+        );
+        warnings.push(
+          `Preprocesado OCR aplicado: ${formatOcrPreprocessLabel(preprocessStrategy)}.`,
+        );
+      } catch {
+        warnings.push(
+          `No se pudo aplicar preprocesado «${formatOcrPreprocessLabel(preprocessStrategy)}»; se usó el recorte original para OCR.`,
+        );
+      }
+    }
+
+    extractedText = await runTesseractOnPng(ocrInputPng);
 
     if (!extractedText) {
       warnings.push(
@@ -278,6 +305,8 @@ export async function analyzeTitleBlockFromPdfBuffer(
     cropImageDataUrl,
     cropZoneLabel: formatTitleBlockCropZoneLabel(cropPercents),
     usedCropPercents: cropPercents,
+    usedPreprocessStrategy: preprocessStrategy,
+    preprocessLabel: formatOcrPreprocessLabel(preprocessStrategy),
     extractedText,
     textPreview: buildTextPreview(extractedText),
     metadataCandidates,
@@ -289,6 +318,7 @@ export async function analyzeTitleBlockFromDrawingStorage(params: {
   storagePath: string | null;
   mimeType: string | null;
   cropPercents?: TitleBlockCropPercents;
+  preprocessStrategy?: OcrPreprocessStrategy;
 }): Promise<ExperimentalTitleBlockOcrResult> {
   if (params.mimeType && params.mimeType !== PDF_MIME_TYPE) {
     throw new Error("El archivo no es un PDF válido.");
@@ -303,5 +333,6 @@ export async function analyzeTitleBlockFromDrawingStorage(params: {
   return analyzeTitleBlockFromPdfBuffer(
     buffer,
     params.cropPercents ?? DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+    params.preprocessStrategy ?? DEFAULT_OCR_PREPROCESS_STRATEGY,
   );
 }

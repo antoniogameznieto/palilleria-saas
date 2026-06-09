@@ -1,13 +1,13 @@
 /**
- * EXPERIMENTAL / DEV ONLY — Fase 10F
+ * EXPERIMENTAL / DEV ONLY — Fase 10F+
  *
- * Benchmark local del pipeline OCR experimental (render + recorte + Tesseract).
+ * Benchmark local del pipeline OCR experimental (render + recorte + preprocesado + Tesseract).
  * No toca BD, storage productivo ni CI/build.
  *
  * Uso:
  *   npm run benchmark:ocr -- ./ruta/plano.pdf
- *   npm run benchmark:ocr -- ./ruta/plano.pdf --preset bottom-right
- *   npm run benchmark:ocr -- ./ruta/plano.pdf --x 65 --y 75 --width 35 --height 25
+ *   npm run benchmark:ocr -- ./ruta/plano.pdf --preset bottom-wide
+ *   npm run benchmark:ocr -- ./ruta/plano.pdf --preset bottom-wide --preprocess grayscale
  */
 
 import { access, readFile } from "node:fs/promises";
@@ -22,6 +22,13 @@ import {
   validateTitleBlockCropPercents,
   type TitleBlockCropPercents,
 } from "../lib/drawings/experimental-title-block-crop-params";
+import {
+  DEFAULT_OCR_PREPROCESS_STRATEGY,
+  OCR_PREPROCESS_STRATEGY_IDS,
+  formatOcrPreprocessLabel,
+  parseOcrPreprocessStrategy,
+  type OcrPreprocessStrategy,
+} from "../lib/drawings/experimental-ocr-preprocess-constants";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "../lib/drawings/pdf-text-constants";
 import { TESSERACT_SETUP_DOC } from "../lib/drawings/tesseract-cli-constants";
 import { diagnoseTesseractCli } from "../lib/drawings/tesseract-cli-diagnostic";
@@ -32,22 +39,24 @@ type CliOptions = {
   pdfPath: string;
   presetId: string | null;
   cropPercents: TitleBlockCropPercents;
+  preprocessStrategy: OcrPreprocessStrategy;
   help: boolean;
 };
 
 function printUsage(): void {
-  console.log(`benchmark-title-block-ocr — benchmark experimental (Fase 10F)
+  console.log(`benchmark-title-block-ocr — benchmark experimental (Fase 10F+)
 
 Uso:
   npm run benchmark:ocr -- <ruta-local.pdf> [opciones]
 
 Opciones:
-  --preset <id>     Preset de recorte (${TITLE_BLOCK_CROP_PRESETS.map((p) => p.id).join(", ")})
-  --x <0-95>        X en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.xPercent})
-  --y <0-95>        Y en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.yPercent})
-  --width <5-100>   Ancho en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.widthPercent})
-  --height <5-100>  Alto en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.heightPercent})
-  --help            Muestra esta ayuda
+  --preset <id>        Preset de recorte (${TITLE_BLOCK_CROP_PRESETS.map((p) => p.id).join(", ")})
+  --preprocess <id>    Preprocesado OCR (${OCR_PREPROCESS_STRATEGY_IDS.join(", ")}, default ${DEFAULT_OCR_PREPROCESS_STRATEGY})
+  --x <0-95>           X en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.xPercent})
+  --y <0-95>           Y en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.yPercent})
+  --width <5-100>      Ancho en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.widthPercent})
+  --height <5-100>     Alto en % (default ${DEFAULT_TITLE_BLOCK_CROP_PERCENTS.heightPercent})
+  --help               Muestra esta ayuda
 
 Notas:
   - Mismo pipeline que la server action experimental (sin BD ni upload).
@@ -106,6 +115,7 @@ function parseArgs(argv: string[]): CliOptions {
       pdfPath: "",
       presetId: null,
       cropPercents: DEFAULT_TITLE_BLOCK_CROP_PERCENTS,
+      preprocessStrategy: DEFAULT_OCR_PREPROCESS_STRATEGY,
       help: true,
     };
   }
@@ -152,7 +162,19 @@ function parseArgs(argv: string[]): CliOptions {
     throw new Error(validationError);
   }
 
-  return { pdfPath, presetId, cropPercents, help: false };
+  const preprocessParsed = parseOcrPreprocessStrategy(options.get("preprocess"));
+
+  if ("error" in preprocessParsed) {
+    throw new Error(preprocessParsed.error);
+  }
+
+  return {
+    pdfPath,
+    presetId,
+    cropPercents,
+    preprocessStrategy: preprocessParsed.strategy,
+    help: false,
+  };
 }
 
 function formatCandidate(value: string | null): string {
@@ -182,7 +204,7 @@ async function main(): Promise<number> {
 
   const tesseractDiagnostic = await diagnoseTesseractCli();
 
-  console.log("=== Benchmark OCR experimental del cajetín (Fase 10F) ===\n");
+  console.log("=== Benchmark OCR experimental del cajetín ===\n");
   console.log(`Archivo: ${absolutePdfPath}`);
 
   if (options.presetId) {
@@ -190,6 +212,9 @@ async function main(): Promise<number> {
   }
 
   console.log(`Zona: ${formatTitleBlockCropZoneLabel(options.cropPercents)}`);
+  console.log(
+    `Preprocesado: ${formatOcrPreprocessLabel(options.preprocessStrategy)}`,
+  );
   console.log(
     `Idiomas (pipeline): ${PIPELINE_LANGUAGE_ATTEMPTS.join(" → ")} (--psm 6)`,
   );
@@ -208,7 +233,11 @@ async function main(): Promise<number> {
   let result;
 
   try {
-    result = await analyzeTitleBlockFromPdfBuffer(buffer, options.cropPercents);
+    result = await analyzeTitleBlockFromPdfBuffer(
+      buffer,
+      options.cropPercents,
+      options.preprocessStrategy,
+    );
   } catch (error) {
     console.error(
       "\nError en el pipeline experimental:",
@@ -223,6 +252,7 @@ async function main(): Promise<number> {
   console.log(`Preview generada: ${result.hasPreview ? "sí" : "no"}`);
   console.log(`Data URL preview: ${result.cropImageDataUrl ? "sí (no impresa)" : "no"}`);
   console.log(`Zona aplicada: ${result.cropZoneLabel}`);
+  console.log(`Preprocesado aplicado: ${result.preprocessLabel}`);
 
   console.log("\n--- Candidatos parseados ---");
   console.log(`  Nº plano: ${formatCandidate(result.metadataCandidates.drawingNumber)}`);
