@@ -14,8 +14,19 @@ import {
   TAKEOFF_COMPARISON_STATUS_LABELS,
 } from "@/lib/drawings/experimental-auto-takeoff-compare-labels";
 import type { TakeoffComparisonStatus } from "@/lib/drawings/experimental-auto-takeoff-compare";
+import {
+  EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS,
+  buildExperimentalImportPreviewSummary,
+  filterExperimentalSuggestions,
+  formatExperimentalImportConfirmMessage,
+  getVisibleImportableMissingKeys,
+  mergeSelectionWithVisibleMissing,
+  type ExperimentalSuggestionStatusFilter,
+} from "@/lib/drawings/experimental-auto-takeoff-ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type DrawingExperimentalAutoTakeoffProps = {
   companyId: string;
@@ -99,6 +110,9 @@ export function DrawingExperimentalAutoTakeoff({
     [analyzeState.suggestedItems],
   );
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] =
+    useState<ExperimentalSuggestionStatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const hasResult = analyzeState.success != null || analyzeState.error != null;
   const hasSuggestions = suggestedItems.length > 0;
   const existingCount =
@@ -107,28 +121,34 @@ export function DrawingExperimentalAutoTakeoff({
     suggestedItems.length,
     analyzeState.comparisonSummary,
   );
-  const missingItems = useMemo(
+  const filteredItems = useMemo(
     () =>
-      suggestedItems.filter(
-        (item) =>
-          item.comparisonStatus === "missing" && item.suggestionKey.length > 0,
-      ),
-    [suggestedItems],
+      filterExperimentalSuggestions(suggestedItems, {
+        statusFilter,
+        searchQuery,
+      }),
+    [suggestedItems, statusFilter, searchQuery],
+  );
+  const visibleMissingKeys = useMemo(
+    () => getVisibleImportableMissingKeys(filteredItems),
+    [filteredItems],
+  );
+  const importPreview = useMemo(
+    () => buildExperimentalImportPreviewSummary(suggestedItems, selectedKeys),
+    [suggestedItems, selectedKeys],
   );
   const analysisFingerprint = useMemo(
     () => suggestedItems.map((item) => item.suggestionKey).join("|"),
     [suggestedItems],
   );
-  const [selectionFingerprint, setSelectionFingerprint] =
+  const [resultsFingerprint, setResultsFingerprint] =
     useState(analysisFingerprint);
 
-  if (selectionFingerprint !== analysisFingerprint) {
-    setSelectionFingerprint(analysisFingerprint);
-    setSelectedKeys(
-      analysisFingerprint
-        ? new Set(missingItems.map((item) => item.suggestionKey))
-        : new Set(),
-    );
+  if (resultsFingerprint !== analysisFingerprint) {
+    setResultsFingerprint(analysisFingerprint);
+    setSelectedKeys(new Set());
+    setStatusFilter("all");
+    setSearchQuery("");
   }
 
   useEffect(() => {
@@ -162,8 +182,10 @@ export function DrawingExperimentalAutoTakeoff({
     });
   }
 
-  function selectAllMissing() {
-    setSelectedKeys(new Set(missingItems.map((item) => item.suggestionKey)));
+  function selectVisibleMissing() {
+    setSelectedKeys((current) =>
+      mergeSelectionWithVisibleMissing(current, visibleMissingKeys),
+    );
   }
 
   function clearSelection() {
@@ -171,15 +193,13 @@ export function DrawingExperimentalAutoTakeoff({
   }
 
   function handleImportSubmit(event: React.FormEvent<HTMLFormElement>) {
-    const count = selectedKeys.size;
-
-    if (count === 0) {
+    if (!importPreview) {
       event.preventDefault();
       return;
     }
 
     const confirmed = window.confirm(
-      `Se crearán ${count} línea(s) reales de palillería. Esta acción invalidará la revisión de palillería si estaba marcada. ¿Continuar?`,
+      formatExperimentalImportConfirmMessage(importPreview),
     );
 
     if (!confirmed) {
@@ -187,15 +207,18 @@ export function DrawingExperimentalAutoTakeoff({
     }
   }
 
+  const hasImportableMissing = suggestedItems.some(
+    (item) => item.comparisonStatus === "missing",
+  );
+
   return (
     <div
       className="space-y-4"
       data-testid="experimental-auto-takeoff-section"
     >
       <p className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-4 py-3 text-sm text-sky-950 dark:text-sky-100">
-        <strong>Extracción e importación experimental.</strong> Puedes analizar la
-        relación de materiales del PDF y, con selección explícita, crear líneas
-        reales de palillería. Revisa siempre antes de importar.
+        <strong>Extracción e importación experimental.</strong> Filtra, revisa y
+        selecciona sugerencias antes de crear líneas reales de palillería.
       </p>
 
       <p className="text-xs text-muted-foreground">
@@ -236,12 +259,27 @@ export function DrawingExperimentalAutoTakeoff({
       ) : null}
 
       {importState.success ? (
-        <p
-          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400"
+        <div
+          className="space-y-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400"
           data-testid="experimental-auto-takeoff-import-success"
         >
-          {importState.success} Vuelve a analizar para actualizar la comparación.
-        </p>
+          <p>{importState.success}</p>
+          {importState.importedCount != null ? (
+            <p data-testid="experimental-auto-takeoff-import-success-count">
+              Líneas creadas: <strong>{importState.importedCount}</strong>
+            </p>
+          ) : null}
+          {importState.takeoffReviewInvalidated ? (
+            <p data-testid="experimental-auto-takeoff-import-review-reset">
+              La revisión de palillería se invalidó. Vuelve a marcarla cuando
+              termines de revisar.
+            </p>
+          ) : null}
+          <p className="text-xs">
+            Reanaliza la relación de materiales o revisa la palillería para
+            confirmar los cambios.
+          </p>
+        </div>
       ) : null}
 
       {noEmbeddedText ? (
@@ -289,7 +327,52 @@ export function DrawingExperimentalAutoTakeoff({
             </div>
           </dl>
 
-          {missingItems.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label htmlFor="experimental-auto-takeoff-status-filter">
+                Estado
+              </Label>
+              <select
+                id="experimental-auto-takeoff-status-filter"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(
+                    event.target.value as ExperimentalSuggestionStatusFilter,
+                  )
+                }
+                data-testid="experimental-auto-takeoff-status-filter"
+              >
+                {EXPERIMENTAL_SUGGESTION_STATUS_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="experimental-auto-takeoff-search">
+                Buscar referencia o descripción
+              </Label>
+              <Input
+                id="experimental-auto-takeoff-search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Ej. 1000937596 o TUBERIA"
+                data-testid="experimental-auto-takeoff-search"
+              />
+            </div>
+          </div>
+
+          <p
+            className="text-xs text-muted-foreground"
+            data-testid="experimental-auto-takeoff-filtered-count"
+          >
+            Mostrando <strong>{filteredItems.length}</strong> de{" "}
+            {suggestedItems.length} sugerencia(s)
+          </p>
+
+          {hasImportableMissing ? (
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span
                 className="font-medium text-foreground"
@@ -302,9 +385,11 @@ export function DrawingExperimentalAutoTakeoff({
                 variant="ghost"
                 size="sm"
                 className="h-7 px-2"
-                onClick={selectAllMissing}
+                onClick={selectVisibleMissing}
+                disabled={visibleMissingKeys.length === 0}
+                data-testid="experimental-auto-takeoff-select-visible-missing"
               >
-                Seleccionar todas las faltantes
+                Seleccionar faltantes visibles
               </Button>
               <Button
                 type="button"
@@ -333,56 +418,69 @@ export function DrawingExperimentalAutoTakeoff({
                 </tr>
               </thead>
               <tbody>
-                {suggestedItems.map((row, index) => {
-                  const importable = row.comparisonStatus === "missing";
-
-                  return (
-                    <tr
-                      key={`${row.suggestionKey}-${index}`}
-                      className="border-b border-border/60 last:border-0"
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="px-3 py-6 text-center text-xs text-muted-foreground"
                     >
-                      <td className="px-3 py-2 align-top">
-                        {importable ? (
-                          <input
-                            type="checkbox"
-                            className="size-4 rounded border border-input"
-                            checked={selectedKeys.has(row.suggestionKey)}
-                            onChange={(event) =>
-                              toggleSelection(
-                                row.suggestionKey,
-                                event.target.checked,
-                              )
-                            }
-                            data-testid="experimental-auto-takeoff-select-row"
-                            aria-label={`Seleccionar sugerencia ${row.item ?? index + 1}`}
-                          />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 align-top">{formatCell(row.item)}</td>
-                      <td className="px-3 py-2 align-top font-mono text-xs">
-                        {formatCell(row.reference)}
-                      </td>
-                      <td className="px-3 py-2 align-top">{formatCell(row.quantity)}</td>
-                      <td className="px-3 py-2 align-top">{formatCell(row.unit)}</td>
-                      <td className="px-3 py-2 align-top text-xs">
-                        {formatCell(row.description)}
-                      </td>
-                      <td className="px-3 py-2 align-top text-xs">
-                        {formatConfidence(row.confidence)}
-                      </td>
-                      <td className="px-3 py-2 align-top">
-                        <ComparisonStatusBadge status={row.comparisonStatus} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                      Ninguna sugerencia coincide con el filtro actual.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredItems.map((row, index) => {
+                    const importable = row.comparisonStatus === "missing";
+
+                    return (
+                      <tr
+                        key={`${row.suggestionKey}-${index}`}
+                        className="border-b border-border/60 last:border-0"
+                        data-testid="experimental-auto-takeoff-result-row"
+                        data-suggestion-reference={row.reference ?? ""}
+                      >
+                        <td className="px-3 py-2 align-top">
+                          {importable ? (
+                            <input
+                              type="checkbox"
+                              className="size-4 rounded border border-input"
+                              checked={selectedKeys.has(row.suggestionKey)}
+                              onChange={(event) =>
+                                toggleSelection(
+                                  row.suggestionKey,
+                                  event.target.checked,
+                                )
+                              }
+                              data-testid="experimental-auto-takeoff-select-row"
+                              aria-label={`Seleccionar sugerencia ${row.item ?? index + 1}`}
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 align-top">{formatCell(row.item)}</td>
+                        <td className="px-3 py-2 align-top font-mono text-xs">
+                          {formatCell(row.reference)}
+                        </td>
+                        <td className="px-3 py-2 align-top">{formatCell(row.quantity)}</td>
+                        <td className="px-3 py-2 align-top">{formatCell(row.unit)}</td>
+                        <td className="px-3 py-2 align-top text-xs">
+                          {formatCell(row.description)}
+                        </td>
+                        <td className="px-3 py-2 align-top text-xs">
+                          {formatConfidence(row.confidence)}
+                        </td>
+                        <td className="px-3 py-2 align-top">
+                          <ComparisonStatusBadge status={row.comparisonStatus} />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
-          {missingItems.length > 0 ? (
+          {hasImportableMissing ? (
             <form action={importAction} onSubmit={handleImportSubmit}>
               <input type="hidden" name="companyId" value={companyId} />
               <input type="hidden" name="jobId" value={jobId} />
@@ -392,6 +490,41 @@ export function DrawingExperimentalAutoTakeoff({
                 name="selectedSuggestionKeys"
                 value={JSON.stringify([...selectedKeys])}
               />
+
+              {importPreview ? (
+                <div
+                  className="mb-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-xs text-amber-950 dark:text-amber-100"
+                  data-testid="experimental-auto-takeoff-import-preview"
+                >
+                  <p className="font-medium text-foreground">
+                    Resumen antes de importar
+                  </p>
+                  <p>
+                    Se crearán{" "}
+                    <strong>{importPreview.lineCount}</strong> línea(s) reales.
+                  </p>
+                  {importPreview.quantityByUnit.length > 0 ? (
+                    <p data-testid="experimental-auto-takeoff-import-preview-quantities">
+                      Totales por unidad:{" "}
+                      {importPreview.quantityByUnit
+                        .map((entry) => `${entry.total} ${entry.unit}`)
+                        .join(" · ")}
+                    </p>
+                  ) : null}
+                  {importPreview.previewLines.length > 0 ? (
+                    <ul className="list-disc space-y-1 pl-4">
+                      {importPreview.previewLines.map((line, index) => (
+                        <li key={`${line.reference ?? "ref"}-${index}`}>
+                          {formatCell(line.reference)} —{" "}
+                          {formatCell(line.description)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <p className="font-medium">{importPreview.warningMessage}</p>
+                </div>
+              ) : null}
+
               <p className="mb-2 text-xs text-muted-foreground">
                 Comparación experimental. No importa filas ya existentes ni
                 dudosas. Solo se validan sugerencias que sigan faltando tras

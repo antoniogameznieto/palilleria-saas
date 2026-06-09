@@ -48,11 +48,11 @@ El seed **resetea** `takeoffReviewedAt` del plano E2E en cada ejecución para qu
 | `protected-pdf.spec.ts` | API PDF 401 / 200 / 403 cross-tenant |
 | `ready-flow.spec.ts` | Marcar revisada → Listo → KPI + consolidado solo listos |
 | `ocr-flag.spec.ts` | Sin bloque OCR experimental; detección productiva visible |
-| `experimental-auto-takeoff-import.spec.ts` | Análisis BOM → import 1 missing → invalidación revisión → re-análisis; viewer sin bloque experimental |
+| `experimental-auto-takeoff-import.spec.ts` | Filtros/búsqueda/selección visible → import 1 missing → invalidación revisión → matched sin checkbox; viewer sin bloque |
 
 ## `data-testid` añadidos (mínimos)
 
-`login-form`, `job-upload-drawings`, `detect-metadata`, `takeoff-add-line`, `takeoff-import-csv`, `export-job-csv`, `export-job-excel`, `confirm-takeoff-review`, `delete-drawing`, `ocr-experimental-section`, `experimental-auto-takeoff-section`, `experimental-auto-takeoff-run`, `experimental-auto-takeoff-import`, `experimental-auto-takeoff-import-success`, `experimental-auto-takeoff-comparison-summary`, `experimental-auto-takeoff-select-row`, `experimental-auto-takeoff-selected-count`.
+`login-form`, `job-upload-drawings`, `detect-metadata`, `takeoff-add-line`, `takeoff-import-csv`, `export-job-csv`, `export-job-excel`, `confirm-takeoff-review`, `delete-drawing`, `ocr-experimental-section`, `experimental-auto-takeoff-section`, `experimental-auto-takeoff-run`, `experimental-auto-takeoff-import`, `experimental-auto-takeoff-import-preview`, `experimental-auto-takeoff-import-success`, `experimental-auto-takeoff-import-success-count`, `experimental-auto-takeoff-import-review-reset`, `experimental-auto-takeoff-comparison-summary`, `experimental-auto-takeoff-status-filter`, `experimental-auto-takeoff-search`, `experimental-auto-takeoff-filtered-count`, `experimental-auto-takeoff-select-visible-missing`, `experimental-auto-takeoff-select-row`, `experimental-auto-takeoff-selected-count`.
 
 ## Limitaciones / fuera de alcance 12A
 

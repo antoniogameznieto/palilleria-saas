@@ -397,6 +397,56 @@ Constantes: `EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS` en `experimental-auto-take
 
 ---
 
+## Fase 14F — Importación asistida (implementado)
+
+### UI — filtros y búsqueda
+
+| Filtro | Valor |
+|--------|-------|
+| Todas | `all` |
+| Faltan | `missing` |
+| Ya existen | `matched` |
+| Cantidad distinta | `differentQuantity` |
+| Dudosas | `uncertain` |
+
+- Búsqueda por referencia o descripción (normalizada).
+- Contador: *Mostrando X de Y sugerencia(s)* (`experimental-auto-takeoff-filtered-count`).
+
+Helpers puros: `lib/drawings/experimental-auto-takeoff-ui.ts`.
+
+### Selección masiva controlada
+
+- **Seleccionar faltantes visibles:** añade solo `missing` del resultado filtrado actual (no matched ni uncertain).
+- **Deseleccionar todo:** limpia la selección.
+- Tras un nuevo análisis: selección vacía por defecto (sin auto-seleccionar todas las faltantes).
+- Checkboxes manuales solo en filas `missing`.
+
+### Resumen previo e importación
+
+Panel `experimental-auto-takeoff-import-preview` antes de importar:
+
+- Número de líneas a crear.
+- Totales por unidad (si cantidad parseable).
+- Primeras 5 referencias/descripciones.
+- Aviso de invalidación de revisión.
+
+`window.confirm` repite el resumen ampliado. La validación servidor (14D/14E) no cambia.
+
+### Feedback posterior
+
+La action devuelve `takeoffReviewInvalidated`. La UI muestra:
+
+- Líneas creadas (`importedCount`).
+- Si se invalidó la revisión.
+- Sugerencia de reanalizar o revisar palillería.
+
+### Cobertura
+
+- `verify:auto-takeoff`: filtros, selección visible, resumen previo.
+- E2E: filtro Faltan, selección masiva, búsqueda por referencia, import 1, matched sin checkbox.
+
+---
+
 ## Comandos
 
 ```bash
@@ -413,7 +463,8 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | `scripts/verify-auto-takeoff-parse.ts` | Verificación parser + import (14B–14E) |
 | `scripts/validate-14d-dms703-ui.ts` | Validación manual UI DMS-703 (local) |
 | `tests/fixtures/e2e-dms-703-bom.pdf` | PDF BOM para E2E |
-| `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E) |
+| `tests/e2e/experimental-auto-takeoff-import.spec.ts` | E2E import experimental (14E–14F) |
+| `lib/drawings/experimental-auto-takeoff-ui.ts` | Filtros/selección/resumen UI (14F) |
 | `lib/drawings/experimental-auto-takeoff-parse.ts` | Parser puro experimental |
 | `lib/drawings/experimental-auto-takeoff-config.ts` | Permisos preview UI |
 | `lib/actions/experimental-auto-takeoff.ts` | Analyze + import experimental |
@@ -439,3 +490,4 @@ npm run inspect:pdf -- ./ruta/plano.pdf    # diagnóstico general de texto embeb
 | 2026-06-08 | 14C | Comparación vs palillería existente | DMS-703: 0 matched, 21 missing (palillería manual sin SAP) |
 | 2026-06-08 | 14D | Importación seleccionada | DMS-703: 8→10 líneas; import 2 → 2 matched, 19 missing |
 | 2026-06-09 | 14E | Hardening + E2E | Límites 200/duplicados; E2E seed BOM; verify + CI |
+| 2026-06-09 | 14F | Importación asistida | Filtros, selección visible, resumen previo, feedback |

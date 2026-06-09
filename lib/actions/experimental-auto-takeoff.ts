@@ -106,6 +106,7 @@ export type ExperimentalAutoTakeoffImportActionState = {
   error?: string;
   success?: string;
   importedCount?: number;
+  takeoffReviewInvalidated?: boolean;
 };
 
 export async function analyzeExperimentalAutoTakeoffAction(
@@ -275,6 +276,8 @@ export async function importExperimentalAutoTakeoffSuggestionsAction(
       return { error: resolved.error };
     }
 
+    let takeoffReviewInvalidated = false;
+
     await prisma.$transaction(async (tx) => {
       for (const row of resolved.rows) {
         await tx.drawingTakeoffItem.create({
@@ -312,13 +315,16 @@ export async function importExperimentalAutoTakeoffSuggestionsAction(
         },
       });
 
-      await invalidateDrawingTakeoffReviewInTransaction(tx, {
-        drawingId,
-        companyId,
-        jobId,
-        actorUserId: user.id,
-        reason: "takeoff_changed",
-      });
+      takeoffReviewInvalidated = await invalidateDrawingTakeoffReviewInTransaction(
+        tx,
+        {
+          drawingId,
+          companyId,
+          jobId,
+          actorUserId: user.id,
+          reason: "takeoff_changed",
+        },
+      );
     });
 
     revalidateDrawingPage(companyId, jobId, drawingId);
@@ -326,6 +332,7 @@ export async function importExperimentalAutoTakeoffSuggestionsAction(
     return {
       success: `Se importaron ${resolved.rows.length} línea(s) reales de palillería desde sugerencias experimentales.`,
       importedCount: resolved.rows.length,
+      takeoffReviewInvalidated,
     };
   } catch {
     return {

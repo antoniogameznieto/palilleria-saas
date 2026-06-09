@@ -17,6 +17,13 @@ import {
   toImportableTakeoffRow,
 } from "../lib/drawings/experimental-auto-takeoff-import";
 import {
+  buildExperimentalImportPreviewSummary,
+  filterExperimentalSuggestions,
+  formatExperimentalImportConfirmMessage,
+  getVisibleImportableMissingKeys,
+  mergeSelectionWithVisibleMissing,
+} from "../lib/drawings/experimental-auto-takeoff-ui";
+import {
   findBomSections,
   parseTakeoffRowsFromEmbeddedText,
 } from "../lib/drawings/experimental-auto-takeoff-parse";
@@ -333,6 +340,77 @@ function main(): void {
     !invalidRowImport.ok &&
       invalidRowImport.error === EXPERIMENTAL_AUTO_TAKEOFF_IMPORT_ERRORS.invalidRow,
     "Fila inválida devuelve invalidRow",
+  );
+
+  const uiItems = [
+    {
+      item: 1,
+      reference: "1000937601",
+      description: '1.1/2" TUBERIA',
+      quantity: "0.2",
+      unit: "M",
+      confidence: 1,
+      comparisonStatus: "matched" as const,
+      suggestionKey: "k-matched",
+    },
+    {
+      item: 2,
+      reference: "1000937596",
+      description: '3/4" TUBERIA',
+      quantity: "2.4",
+      unit: "M",
+      confidence: 1,
+      comparisonStatus: "missing" as const,
+      suggestionKey: "k-missing",
+    },
+    {
+      item: 3,
+      reference: null,
+      description: "texto corto",
+      quantity: "1",
+      unit: null,
+      confidence: 0.4,
+      comparisonStatus: "uncertain" as const,
+      suggestionKey: "k-uncertain",
+    },
+  ];
+
+  const missingOnly = filterExperimentalSuggestions(uiItems, {
+    statusFilter: "missing",
+    searchQuery: "",
+  });
+  assert(missingOnly.length === 1, "Filtro Faltan devuelve solo missing");
+
+  const searchRef = filterExperimentalSuggestions(uiItems, {
+    statusFilter: "all",
+    searchQuery: "1000937596",
+  });
+  assert(searchRef.length === 1, "Búsqueda por referencia");
+
+  const visibleMissing = getVisibleImportableMissingKeys(missingOnly);
+  assert(visibleMissing.length === 1, "Visible missing keys");
+
+  const merged = mergeSelectionWithVisibleMissing(new Set(["k-matched"]), visibleMissing);
+  assert(merged.size === 2 && merged.has("k-missing"), "Selección masiva añade missing visibles");
+
+  const preview = buildExperimentalImportPreviewSummary(
+    uiItems,
+    new Set(["k-missing"]),
+  );
+
+  if (!preview || preview.lineCount !== 1) {
+    throw new Error("Resumen previo cuenta líneas");
+  }
+
+  assert(
+    preview.quantityByUnit.some((entry) => entry.unit === "m" && entry.total === 2.4),
+    "Resumen previo suma por unidad",
+  );
+  assert(
+    formatExperimentalImportConfirmMessage(preview).includes(
+      "Se crearán 1 línea(s) reales",
+    ),
+    "Mensaje de confirmación incluye conteo",
   );
 
   console.log("verify-auto-takeoff-parse: all checks passed");
