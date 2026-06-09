@@ -138,6 +138,20 @@ Ver [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md).
 
 Para demo manual con datos reales, usa tu cuenta local o el plano de referencia en el [informe de demo](docs/internal-demo-run-2026-06-09.md).
 
+## CI
+
+GitHub Actions ejecuta en cada **push a `main`** y en **pull requests** el workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+1. `npm ci` + Chromium (Playwright)
+2. `prisma migrate deploy` sobre PostgreSQL 16 (service container)
+3. `npm run lint`
+4. `npm run build`
+5. `npm run verify:takeoff`
+6. `npm run verify:title-block-crop`
+7. `npm run test:e2e` (seed E2E vía `global-setup` de Playwright)
+
+Sin deploy. Ver [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md) para detalles y limitaciones en CI.
+
 ## Comandos de verificación
 
 Ejecutar antes de una demo o release interno:

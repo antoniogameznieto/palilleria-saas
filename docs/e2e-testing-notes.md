@@ -60,7 +60,29 @@ El seed **resetea** `takeoffReviewedAt` del plano E2E en cada ejecución para qu
 - Descarga verificada de CSV/Excel (solo botones habilitados)
 - OCR con Tesseract o flag `true`
 - Múltiples workers en paralelo (BD compartida; `workers: 1`)
-- CI/CD pipeline (configurar `CI=1` en fase posterior)
+- Cobertura E2E ampliada (subida PDF, detección completa, etc.)
+
+## CI (GitHub Actions)
+
+Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Fase 12B).
+
+| Aspecto | Detalle |
+|---------|---------|
+| Trigger | `push` a `main`, `pull_request` |
+| PostgreSQL | Service container `postgres:16` |
+| Migraciones | `npx prisma migrate deploy` antes de los tests |
+| Seed E2E | Automático en `global-setup` de Playwright (no hace falta en el workflow) |
+| Playwright | `npx playwright install --with-deps chromium`; `workers: 1`; `CI=true` |
+| Build E2E | `build` + `start` en puerto 3100 (el job también ejecuta `npm run build` antes) |
+
+Variables de entorno en CI (ver workflow): `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `E2E_PORT`, `EXPERIMENTAL_TITLE_BLOCK_OCR=false`, storage local.
+
+Limitaciones en CI:
+
+- Sin Tesseract ni OCR con flag `true`
+- Un solo worker (BD compartida)
+- `test:e2e` vuelve a hacer `build` al arrancar el servidor (doble build por diseño actual)
+- Timeout del job: 30 min
 
 ## Depuración
 
