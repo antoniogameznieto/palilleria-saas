@@ -13,6 +13,7 @@
     "verify:title-block-crop": "tsx scripts/verify-title-block-crop.ts",
     "check:tesseract": "tsx scripts/check-tesseract.ts",
     "benchmark:ocr": "tsx scripts/benchmark-title-block-ocr.ts",
+    "research:auto-takeoff": "tsx scripts/research-auto-takeoff-from-pdf.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
