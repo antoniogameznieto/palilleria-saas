@@ -121,22 +121,28 @@ Columnas:
 
 ## 9. Fases sugeridas
 
-### 18B — MVP manual (producto mínimo)
+### 18B — Modelo técnico (completado)
 
-- Schema: `TrameadoSheet`, `TrameadoSegment`.
+- Schema: `DrawingTrameadoSheet`, `DrawingTrameadoSegment` (ver [trameado-technical-model.md](./trameado-technical-model.md)).
+- Validaciones Zod, helpers de formato, server actions CRUD + revisión.
+- Permisos: owner/admin/engineer editan; viewer lectura.
+- Script `npm run verify:trameado`.
+- **Sin UI** en esta fase.
+
+### 18C — MVP manual con UI
+
 - UI: tabla manual + visor PDF en detalle de plano.
 - Export CSV/Excel hoja de palilleo.
-- Permisos alineados con `canManageTakeoffItems`.
 - E2E: crear tramos, exportar, permisos viewer.
 
-### 18C — Semiautomático asistido
+### 18D — Semiautomático asistido
 
 - Hints desde BOM (Ø, SCH., cantidad tubería vs suma tramos).
 - Reglas de corte desde `JobSettings` (bridas, válvulas, codos).
 - Sugerencia de longitudes desde cotas extraídas (si texto embebido).
 - Alertas de discrepancia; sin autoaplicar.
 
-### 18D — Iso trameado y export PDF
+### 18E — Iso trameado y export PDF
 
 - Capa `Annotation` (líneas, círculos, etiquetas Tramo A/B).
 - Export PDF iso marcado.
@@ -154,9 +160,9 @@ Columnas:
 ## 11. Referencias
 
 - Análisis funcional: [trameado-functional-analysis.md](./trameado-functional-analysis.md)
+- Modelo técnico 18B: [trameado-technical-model.md](./trameado-technical-model.md)
 - Beta BOM: [auto-takeoff-research.md](./auto-takeoff-research.md)
-- Modelo original PipeSegment: `cursor-palilleria-docs/docs/02-modelo-datos-prisma.md`
 
 ---
 
-*Propuesta Fase 18A — pendiente de validación antes de commit e implementación.*
+*Propuesta Fase 18A; modelo técnico 18B implementado en backend.*

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "verify:takeoff": "tsx scripts/verify-takeoff-pure.ts",
+    "verify:trameado": "tsx scripts/verify-trameado-model.ts",
     "inspect:pdf": "tsx scripts/inspect-pdf-pages.ts",
     "verify:title-block-crop": "tsx scripts/verify-title-block-crop.ts",
     "check:tesseract": "tsx scripts/check-tesseract.ts",

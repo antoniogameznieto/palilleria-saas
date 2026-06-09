@@ -34,3 +34,10 @@ export {
   getJobDrawings,
   requireDrawingAccess,
 } from "@/lib/permissions/drawing";
+
+export {
+  canManageTrameado,
+  canViewTrameado,
+  requireTrameadoSegmentAccess,
+  requireTrameadoSheetAccess,
+} from "@/lib/permissions/trameado";
