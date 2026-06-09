@@ -21,7 +21,10 @@ Desde el repo:
 
 ```bash
 npm run check:tesseract
+npm run benchmark:ocr -- ./ruta/local/plano.pdf
 ```
+
+El benchmark (`benchmark:ocr`) usa el mismo pipeline experimental que la UI; registra resultados en [ocr-benchmark-results.md](./ocr-benchmark-results.md). **No se ejecuta en build ni CI.**
 
 Ese script sale siempre con código **0** (no rompe CI). Si Tesseract no está, muestra un warning con enlace a esta guía.
 

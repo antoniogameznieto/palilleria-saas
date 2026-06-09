@@ -342,10 +342,10 @@ Reutilizar patrón de **metadatos detectados**:
 - No hay botón «Aplicar» — candidatos no se guardan.
 - Reutiliza patrones de `parse-pdf-text` pensados para texto embebido; OCR ruidoso puede no matchear.
 
-### Próximos pasos (10F+)
+### Próximos pasos (10G+)
 
 1. Botón «Aplicar candidatos seleccionados» con revisión humana explícita.
-2. Templates de ROI por cliente/proyecto (persistidos) tras validar con 10D.
+2. Templates de ROI por cliente/proyecto (persistidos) tras validar con 10D/10F.
 3. Cola background + timeout para PDFs grandes.
 4. Evaluar cloud OCR / multimodal solo tras baseline local validada.
 5. Trazabilidad en `drawingActivity` cuando exista diseño de schema.
@@ -472,6 +472,44 @@ npm run build
 ### Verificación local
 
 ```bash
+npm run check:tesseract
+npm run verify:title-block-crop
+npm run lint
+npm run build
+```
+
+---
+
+## Fase 10F — Benchmark real OCR experimental (implementado)
+
+> **Estado:** experimental, herramienta dev/local. **No** integra OCR productivo ni autoaplica metadatos.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| [docs/ocr-benchmark-results.md](./ocr-benchmark-results.md) | Plantilla para registrar pruebas (calidad, tiempos, candidatos) |
+| `scripts/benchmark-title-block-ocr.ts` | CLI: PDF local + recorte opcional → mismo pipeline que la server action |
+| `npm run benchmark:ocr` | Benchmark manual; **no** corre en build/CI |
+
+### Uso
+
+```bash
+npm run benchmark:ocr -- ./samples/plano.pdf
+npm run benchmark:ocr -- ./samples/plano.pdf --preset bottom-left
+npm run benchmark:ocr -- ./samples/plano.pdf --x 65 --y 75 --width 35 --height 25
+```
+
+Salida: duración, texto OCR preview, candidatos, warnings. Sin BD ni upload.
+
+### Sin Tesseract
+
+Render + recorte + warnings; **exit 0** (como `check:tesseract`). Instalación: [tesseract-ocr-setup.md](./tesseract-ocr-setup.md).
+
+### Verificación local
+
+```bash
+npm run benchmark:ocr -- --help
 npm run check:tesseract
 npm run verify:title-block-crop
 npm run lint
