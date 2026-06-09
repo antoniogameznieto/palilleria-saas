@@ -26,7 +26,7 @@ Otros aspectos:
 | | |
 |---|---|
 | **Demo interna guiada** | Apta |
-| **Último commit base** | `a6d8d12` |
+| **Último commit base** | `9cefef5` |
 | **Release interno** | OK — observaciones menores cerradas (Fases 11A–11C) |
 
 Informe de la última demo: [docs/internal-demo-run-2026-06-09.md](docs/internal-demo-run-2026-06-09.md).
@@ -124,16 +124,19 @@ Abre [http://localhost:3000](http://localhost:3000) (o el puerto que uses).
 | Empresa | Empresa Demo |
 | Trabajo | Trabajo Demo |
 
-### Solo en BD local (creados en sesiones de demo 11B/11C)
+### E2E (`npm run db:seed:e2e`)
 
-No forman parte del seed ni deben usarse en producción. Solo existen si se crearon manualmente en tu PostgreSQL local:
+Usuarios y datos fijos para tests Playwright (empresa `seed-company-e2e`, trabajo `seed-job-e2e`):
 
-| Usuario | Contraseña | Rol | Notas |
-|---------|------------|-----|-------|
-| `viewer-demo@palilleria.local` | `demo1234` | `viewer` | Lectura y export; sin edición |
-| `engineer-demo@palilleria.local` | `demo1234` | `engineer` | Palillería y metadatos |
+| Usuario | Contraseña | Rol |
+|---------|------------|-----|
+| `e2e-owner@palilleria.local` | `demo1234` | `owner` |
+| `e2e-engineer@palilleria.local` | `demo1234` | `engineer` |
+| `e2e-viewer@palilleria.local` | `demo1234` | `viewer` |
 
-Para una demo guiada con datos reales de palillería, puedes usar tu cuenta local o el plano de referencia documentado en el [informe de demo](docs/internal-demo-run-2026-06-09.md) (p. ej. DMS-703 en estado **Listo**).
+Ver [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md).
+
+Para demo manual con datos reales, usa tu cuenta local o el plano de referencia en el [informe de demo](docs/internal-demo-run-2026-06-09.md).
 
 ## Comandos de verificación
 
@@ -144,12 +147,14 @@ npm run lint
 npm run build
 npm run verify:takeoff
 npm run verify:title-block-crop   # funciones puras OCR experimental
+npm run test:e2e                  # Playwright (requiere BD + migraciones)
 ```
 
-Opcional (solo si vas a probar OCR experimental en local):
+Opcional:
 
 ```bash
-npm run check:tesseract
+npm run check:tesseract           # OCR experimental en local
+npm run test:e2e:ui               # Playwright modo UI
 ```
 
 ## Scripts disponibles
@@ -168,6 +173,9 @@ npm run check:tesseract
 | `npm run verify:title-block-crop` | Verificación recorte cajetín (OCR exp.) |
 | `npm run check:tesseract` | Comprueba Tesseract CLI (OCR exp.) |
 | `npm run benchmark:ocr` | Benchmark OCR experimental |
+| `npm run db:seed:e2e` | Seed datos fijos para E2E |
+| `npm run test:e2e` | Tests E2E Playwright |
+| `npm run test:e2e:ui` | Tests E2E (modo UI) |
 
 ## Documentación útil
 
@@ -179,6 +187,7 @@ npm run check:tesseract
 | [docs/ocr-ai-research.md](docs/ocr-ai-research.md) | Investigación OCR (experimental, no productivo) |
 | [docs/ocr-benchmark-results.md](docs/ocr-benchmark-results.md) | Resultados benchmark OCR |
 | [docs/tesseract-ocr-setup.md](docs/tesseract-ocr-setup.md) | Instalación Tesseract (solo OCR exp.) |
+| [docs/e2e-testing-notes.md](docs/e2e-testing-notes.md) | Tests E2E Playwright (Fase 12A) |
 | `cursor-palilleria-docs/` | Especificación funcional del producto |
 
 ## Limitaciones conocidas
@@ -187,7 +196,7 @@ npm run check:tesseract
 - **Revisión manual obligatoria** de metadatos y palillería (por diseño).
 - **Export CSV client-side:** se genera en el navegador desde el snapshot de la página; refrescar tras editar si necesitas datos al día. Excel usa API servidor (datos frescos).
 - **Storage local** (`STORAGE_DRIVER=local`): adecuado para dev; no listo para producción multi-nodo (S3 previsto en configuración).
-- **Sin E2E automatizado** de roles y flujo completo (checklist manual + scripts `verify:*`).
+- **E2E parcial (Playwright):** auth, permisos viewer/engineer, PDF API, flujo Listo, OCR oculto con flag off. Sin subida PDF ni detección completa por UI. Ver [e2e-testing-notes.md](docs/e2e-testing-notes.md).
 - **Middleware deprecated (Next.js 16):** convención `middleware` pendiente de migrar a `proxy`; no bloquea demo interna.
 - **README:** actualizado en Fase 11D (`a6d8d12`).
 

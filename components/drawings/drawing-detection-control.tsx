@@ -103,7 +103,7 @@ export function DrawingDetectionControl({
             <input type="hidden" name="companyId" value={companyId} />
             <input type="hidden" name="jobId" value={jobId} />
             <input type="hidden" name="drawingId" value={drawingId} />
-            <Button type="submit" disabled={isStarting}>
+            <Button type="submit" disabled={isStarting} data-testid="detect-metadata">
               {isStarting ? "Iniciando..." : "Detectar metadatos"}
             </Button>
           </form>

@@ -39,6 +39,7 @@ export function ExportJobTakeoffCsvButton({
       variant="outline"
       size={size}
       disabled={!hasItems}
+      data-testid="export-job-csv"
       onClick={handleExport}
       title={
         hasItems

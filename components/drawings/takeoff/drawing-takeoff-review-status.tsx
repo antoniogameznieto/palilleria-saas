@@ -124,7 +124,12 @@ export function DrawingTakeoffReviewStatus({
       {canManage ? (
         <form action={confirmAction}>
           {hiddenFields}
-          <Button type="submit" size="sm" disabled={isConfirmPending}>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isConfirmPending}
+            data-testid="confirm-takeoff-review"
+          >
             {isConfirmPending
               ? "Marcando..."
               : "Marcar palillería como revisada"}

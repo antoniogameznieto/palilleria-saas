@@ -157,6 +157,7 @@ export function DrawingTakeoffSection({
             <Button
               type="button"
               variant={showCreateForm ? "outline" : "default"}
+              data-testid="takeoff-add-line"
               onClick={() => {
                 setShowCreateForm((current) => !current);
                 setEditingItemId(null);

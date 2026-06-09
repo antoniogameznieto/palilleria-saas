@@ -46,6 +46,7 @@ export function ExportTakeoffCsvButton({
         variant="outline"
         size={size}
         disabled={!hasItems}
+        data-testid="export-drawing-csv"
         onClick={handleExport}
         aria-label={hasItems ? enabledTitle : disabledTitle}
       >

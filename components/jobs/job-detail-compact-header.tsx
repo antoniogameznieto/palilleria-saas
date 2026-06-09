@@ -92,7 +92,9 @@ export function JobDetailCompactHeader({
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           {canUpload ? (
             <Link href={`/companies/${companyId}/jobs/${jobId}/drawings/upload`}>
-              <Button size="sm">Subir planos</Button>
+              <Button size="sm" data-testid="job-upload-drawings">
+                Subir planos
+              </Button>
             </Link>
           ) : null}
 

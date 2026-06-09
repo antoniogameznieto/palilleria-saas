@@ -1,0 +1,286 @@
+/**
+ * Seed estable para tests E2E (ids fijos, datos reproducibles).
+ * Ejecutar antes de `npm run test:e2e` (también vía global-setup de Playwright).
+ */
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+import { buildDrawingStoragePath } from "../lib/storage/paths";
+
+const prisma = new PrismaClient();
+
+export const E2E_PASSWORD = "demo1234";
+
+export const E2E_IDS = {
+  company: "seed-company-e2e",
+  job: "seed-job-e2e",
+  drawingPending: "seed-drawing-e2e-pending",
+  ownerUser: "seed-user-e2e-owner",
+  engineerUser: "seed-user-e2e-engineer",
+  viewerUser: "seed-user-e2e-viewer",
+  otherCompany: "seed-company-demo",
+  otherJob: "seed-job-demo",
+} as const;
+
+export const E2E_USERS = {
+  owner: "e2e-owner@palilleria.local",
+  engineer: "e2e-engineer@palilleria.local",
+  viewer: "e2e-viewer@palilleria.local",
+  other: "demo@palilleria.local",
+} as const;
+
+const MINIMAL_PDF = Buffer.from(
+  `%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/MediaBox[0 0 300 144]/Parent 2 0 R>>endobj
+xref
+0 4
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+trailer<</Size 4/Root 1 0 R>>
+startxref
+190
+%%EOF`,
+);
+
+async function upsertUser(
+  id: string,
+  email: string,
+  name: string,
+  passwordHash: string,
+) {
+  return prisma.user.upsert({
+    where: { email },
+    update: { name, passwordHash },
+    create: { id, email, name, passwordHash },
+  });
+}
+
+async function main() {
+  const passwordHash = await bcrypt.hash(E2E_PASSWORD, 12);
+  const storageRoot =
+    process.env.LOCAL_STORAGE_PATH?.trim() || path.join(process.cwd(), "storage");
+
+  const owner = await upsertUser(
+    E2E_IDS.ownerUser,
+    E2E_USERS.owner,
+    "E2E Owner",
+    passwordHash,
+  );
+  const engineer = await upsertUser(
+    E2E_IDS.engineerUser,
+    E2E_USERS.engineer,
+    "E2E Engineer",
+    passwordHash,
+  );
+  const viewer = await upsertUser(
+    E2E_IDS.viewerUser,
+    E2E_USERS.viewer,
+    "E2E Viewer",
+    passwordHash,
+  );
+
+  // Empresa y trabajo E2E
+  const company = await prisma.company.upsert({
+    where: { id: E2E_IDS.company },
+    update: { name: "Empresa E2E", taxName: "Empresa E2E S.L." },
+    create: {
+      id: E2E_IDS.company,
+      name: "Empresa E2E",
+      taxName: "Empresa E2E S.L.",
+    },
+  });
+
+  for (const [userId, role] of [
+    [owner.id, "owner"],
+    [engineer.id, "engineer"],
+    [viewer.id, "viewer"],
+  ] as const) {
+    await prisma.companyMember.upsert({
+      where: {
+        companyId_userId: { companyId: company.id, userId },
+      },
+      update: { role },
+      create: { companyId: company.id, userId, role },
+    });
+  }
+
+  const job = await prisma.job.upsert({
+    where: { id: E2E_IDS.job },
+    update: {
+      name: "Trabajo E2E",
+      clientName: "Cliente E2E",
+      projectCode: "E2E-001",
+      description: "Trabajo para tests E2E.",
+      status: "draft",
+      createdById: owner.id,
+    },
+    create: {
+      id: E2E_IDS.job,
+      companyId: company.id,
+      name: "Trabajo E2E",
+      clientName: "Cliente E2E",
+      projectCode: "E2E-001",
+      description: "Trabajo para tests E2E.",
+      status: "draft",
+      createdById: owner.id,
+    },
+  });
+
+  await prisma.jobSettings.upsert({
+    where: { jobId: job.id },
+    update: { companyId: company.id },
+    create: { companyId: company.id, jobId: job.id },
+  });
+
+  const originalFileName = "e2e-dms-701-pl1-l-r01.pdf";
+  const storagePath = buildDrawingStoragePath(
+    company.id,
+    job.id,
+    E2E_IDS.drawingPending,
+    originalFileName,
+  );
+  const absolutePath = path.join(storageRoot, storagePath);
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, MINIMAL_PDF);
+
+  await prisma.drawing.upsert({
+    where: { id: E2E_IDS.drawingPending },
+    update: {
+      companyId: company.id,
+      jobId: job.id,
+      fileName: originalFileName,
+      originalFileName,
+      storagePath,
+      fileSize: BigInt(MINIMAL_PDF.length),
+      mimeType: "application/pdf",
+      status: "reviewed",
+      drawingNumber: "E2E-701",
+      lineNumber: "PL1-L",
+      revision: "R01",
+      takeoffReviewedAt: null,
+      takeoffReviewedById: null,
+      createdById: owner.id,
+    },
+    create: {
+      id: E2E_IDS.drawingPending,
+      companyId: company.id,
+      jobId: job.id,
+      fileName: originalFileName,
+      originalFileName,
+      storagePath,
+      fileSize: BigInt(MINIMAL_PDF.length),
+      mimeType: "application/pdf",
+      status: "reviewed",
+      drawingNumber: "E2E-701",
+      lineNumber: "PL1-L",
+      revision: "R01",
+      createdById: owner.id,
+    },
+  });
+
+  await prisma.drawingTakeoffItem.deleteMany({
+    where: { drawingId: E2E_IDS.drawingPending },
+  });
+
+  await prisma.drawingTakeoffItem.createMany({
+    data: [
+      {
+        companyId: company.id,
+        jobId: job.id,
+        drawingId: E2E_IDS.drawingPending,
+        reference: "E2E-A1",
+        description: "Línea E2E uno",
+        quantity: 2,
+        unit: "ud",
+        createdById: engineer.id,
+      },
+      {
+        companyId: company.id,
+        jobId: job.id,
+        drawingId: E2E_IDS.drawingPending,
+        reference: "E2E-A2",
+        description: "Línea E2E dos",
+        quantity: 3.5,
+        unit: "m",
+        createdById: engineer.id,
+      },
+    ],
+  });
+
+  // Empresa demo (cross-tenant): solo demo@ como owner
+  const demoHash = await bcrypt.hash(E2E_PASSWORD, 12);
+  const demoUser = await upsertUser(
+    "seed-user-demo",
+    E2E_USERS.other,
+    "Usuario Demo",
+    demoHash,
+  );
+
+  const otherCompany = await prisma.company.upsert({
+    where: { id: E2E_IDS.otherCompany },
+    update: { name: "Empresa Demo", taxName: "Empresa Demo S.L." },
+    create: {
+      id: E2E_IDS.otherCompany,
+      name: "Empresa Demo",
+      taxName: "Empresa Demo S.L.",
+    },
+  });
+
+  await prisma.companyMember.upsert({
+    where: {
+      companyId_userId: {
+        companyId: otherCompany.id,
+        userId: demoUser.id,
+      },
+    },
+    update: { role: "owner" },
+    create: {
+      companyId: otherCompany.id,
+      userId: demoUser.id,
+      role: "owner",
+    },
+  });
+
+  await prisma.job.upsert({
+    where: { id: E2E_IDS.otherJob },
+    update: {
+      name: "Trabajo Demo",
+      companyId: otherCompany.id,
+      createdById: demoUser.id,
+    },
+    create: {
+      id: E2E_IDS.otherJob,
+      companyId: otherCompany.id,
+      name: "Trabajo Demo",
+      clientName: "Cliente Demo",
+      projectCode: "DEMO-001",
+      description: "Trabajo de ejemplo.",
+      status: "draft",
+      createdById: demoUser.id,
+    },
+  });
+
+  console.log("E2E seed completado:");
+  console.log(`- Empresa E2E: ${company.id}`);
+  console.log(`- Trabajo E2E: ${job.id}`);
+  console.log(`- Plano pendiente revisión takeoff: ${E2E_IDS.drawingPending}`);
+  console.log(`- Owner: ${E2E_USERS.owner}`);
+  console.log(`- Engineer: ${E2E_USERS.engineer}`);
+  console.log(`- Viewer: ${E2E_USERS.viewer}`);
+}
+
+main()
+  .catch((error) => {
+    console.error("Error en seed E2E:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

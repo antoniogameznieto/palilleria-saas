@@ -25,6 +25,7 @@ npm run lint
 npm run build
 npm run verify:takeoff
 npm run verify:title-block-crop   # OCR experimental (funciones puras)
+npm run test:e2e                  # Playwright — auth, roles, PDF API, Listo (Fase 12A)
 ```
 
 Opcional (solo si se va a probar OCR en la demo):
@@ -288,6 +289,7 @@ Consideramos el MVP **demo-ready** para revisión interna cuando se cumple **tod
 - [ ] `npm run build` sin errores  
 - [ ] `npm run verify:takeoff` pasa  
 - [ ] `npm run verify:title-block-crop` pasa  
+- [ ] `npm run test:e2e` pasa (requiere BD local y Chromium)  
 
 ### Flujo productivo (obligatorio, manual)
 

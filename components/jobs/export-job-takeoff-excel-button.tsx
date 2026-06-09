@@ -93,6 +93,7 @@ export function ExportJobTakeoffExcelButton({
       variant="outline"
       size={size}
       disabled={!hasItems || isExporting}
+      data-testid="export-job-excel"
       onClick={() => {
         void handleExport();
       }}

@@ -28,14 +28,16 @@ function AutomationBlock({
   description,
   children,
   className,
+  "data-testid": dataTestId,
 }: {
   title: string;
   description: string;
   children: ReactNode;
   className?: string;
+  "data-testid"?: string;
 }) {
   return (
-    <section className={cn("space-y-3", className)}>
+    <section className={cn("space-y-3", className)} data-testid={dataTestId}>
       <div className="space-y-1">
         <h3 className="text-sm font-medium">{title}</h3>
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -131,6 +133,7 @@ export function DrawingAutomationPanel({
           title="Herramientas experimentales (OCR del cajetín)"
           description="Fuera del flujo productivo de detección. Sirve para diagnóstico visual y pruebas internas con Tesseract; los resultados son parciales y requieren revisión manual."
           className="border-t border-amber-500/30 pt-6"
+          data-testid="ocr-experimental-section"
         >
           <p className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-950 dark:text-amber-100">
             No sustituye «Detectar metadatos» ni la extracción de texto embebido.

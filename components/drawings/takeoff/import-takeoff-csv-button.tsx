@@ -100,6 +100,7 @@ export function ImportTakeoffCsvButton({
         type="button"
         variant="outline"
         disabled={isImporting}
+        data-testid="takeoff-import-csv"
         onClick={handlePickFile}
       >
         {isImporting ? "Importando..." : "Importar CSV"}

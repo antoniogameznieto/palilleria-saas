@@ -15,7 +15,13 @@ function DeleteSubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="outline" size="sm" disabled={pending}>
+    <Button
+      type="submit"
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      data-testid="delete-drawing"
+    >
       {pending ? "Eliminando..." : "Eliminar"}
     </Button>
   );
