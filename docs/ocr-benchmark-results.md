@@ -42,7 +42,7 @@ Copia una fila por PDF probado. Rellena **candidatos correctos/incorrectos** tra
 | 3 | 1601GB16A-PL1-L-DMS-703-01-R03.pdf | pendiente | top-right | 65 / 0 / 35 / 25 | spa+eng → eng → spa | `RELACIÓN DE MATERIALES...` | — / — / — | ✗ todos | 654 | Detecta tabla de materiales, no cajetín |
 | 4 | 1601GB16A-PL1-L-DMS-703-01-R03.pdf | pendiente | top-left | 0 / 0 / 35 / 25 | spa+eng → eng → spa | _(sin texto legible)_ | — / — / — | ✗ todos | 526 | Zona no útil |
 | 5 | 1601GB16A-PL1-L-DMS-703-01-R03.pdf | pendiente | _(manual)_ | 45 / 65 / 55 / 35 | spa+eng → eng → spa | `1601GB16A PLI-L-OMS-709-01` | DMS-709 / — / — | ✗ nº (debería DMS-703) / ✗ línea / ✗ rev | 750 | Mejora respecto al preset; detecta mal el número por OCR/recorte |
-| 6 | 1601GB16A-PL1-L-DMS-703-01-R03.pdf | pendiente | _(manual)_ | 35 / 60 / 65 / 40 | spa+eng → eng → spa | `*1601GB16A-PL1-3/4'-DMS-703-CO90AHT-N-01` | DMS-703 / — / — | ✓ nº DMS-703 / ✗ línea / ✗ rev | 790 | **Mejor resultado.** Nº plano correcto; línea y revisión aún sin detectar |
+| 6 | 1601GB16A-PL1-L-DMS-703-01-R03.pdf | pendiente | bottom-wide _(10G)_ | 35 / 60 / 65 / 40 | spa+eng → eng → spa | `*1601GB16A-PL1-3/4'-DMS-703-CO90AHT-N-01` | DMS-703 / — / — | ✓ nº DMS-703 / ✗ línea / ✗ rev | 790 | **Mejor resultado (origen del preset 10G).** Nº plano correcto; línea/revisión pendientes |
 
 ### Leyenda — tipo de PDF
 
@@ -130,7 +130,7 @@ RELACIÓN DE MATERIALES...
 - La calidad depende **mucho del ROI**; el preset default `bottom-right` 35×25 % es insuficiente para este formato.
 - La zona **X 35 / Y 60 / ancho 65 / alto 40** detecta correctamente el nº de plano **DMS-703**.
 - Línea y revisión no se extraen aún con los patrones actuales de `parse-pdf-text`.
-- **Próximo paso recomendado:** añadir preset experimental «Franja inferior derecha amplia» (35/60/65/40) y mejorar el parser para códigos OCR ruidosos (línea/revisión).
+- **Fase 10G:** preset `bottom-wide` («Franja inferior amplia», 35/60/65/40) incorporado como recomendado experimental (no default). Parser tolerante OCR añadido para ruido acotado (OMS→DMS, PLI→PL1, etc.).
 
 ---
 

@@ -16,6 +16,7 @@ import {
   computeTitleBlockCropRect,
   computeTitleBlockCropRectFromPercents,
 } from "../lib/drawings/experimental-title-block-crop";
+import { parseDrawingMetadataFromOcrText } from "../lib/drawings/parse-ocr-text-tolerant";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -107,10 +108,20 @@ function verifyTitleBlockCropValidation(): void {
     }) != null,
     "Y + height above 100 should fail",
   );
+
+  assert(
+    validateTitleBlockCropPercents({
+      xPercent: 35,
+      yPercent: 60,
+      widthPercent: 65,
+      heightPercent: 40,
+    }) === null,
+    "x + width = 100 and y + height = 100 should be accepted",
+  );
 }
 
 function verifyTitleBlockCropPresets(): void {
-  assert(TITLE_BLOCK_CROP_PRESETS.length === 5, "Expected five crop presets");
+  assert(TITLE_BLOCK_CROP_PRESETS.length === 6, "Expected six crop presets");
 
   for (const preset of TITLE_BLOCK_CROP_PRESETS) {
     assert(
@@ -142,6 +153,62 @@ function verifyTitleBlockCropPresets(): void {
   assert(
     zoneLabel === "Zona: X 65%, Y 75%, ancho 35%, alto 25%",
     "Zone label should use expected format",
+  );
+
+  const bottomWide = TITLE_BLOCK_CROP_PRESETS.find(
+    (preset) => preset.id === "bottom-wide",
+  );
+
+  if (!bottomWide) {
+    throw new Error("bottom-wide preset should exist");
+  }
+
+  assert(
+    bottomWide.params.xPercent === 35 &&
+      bottomWide.params.yPercent === 60 &&
+      bottomWide.params.widthPercent === 65 &&
+      bottomWide.params.heightPercent === 40,
+    "bottom-wide preset should match benchmark ROI",
+  );
+  assert(
+    bottomWide.recommendedFor != null,
+    "bottom-wide should be marked as recommended for extended title blocks",
+  );
+}
+
+function verifyOcrTolerantParsing(): void {
+  const benchmarkText = "*1601GB16A-PL1-3/4'-DMS-703-CO90AHT-N-01";
+  const benchmarkResult = parseDrawingMetadataFromOcrText(benchmarkText);
+
+  assert(
+    benchmarkResult.drawingNumber === "DMS-703",
+    "Tolerant parser should extract DMS-703 from benchmark OCR text",
+  );
+
+  const omsNoise = "1601GB16A PLI-L-OMS-709-01";
+  const omsResult = parseDrawingMetadataFromOcrText(omsNoise);
+
+  assert(
+    omsResult.drawingNumber === "DMS-709",
+    "OMS should normalize to DMS in drawing code context",
+  );
+  assert(
+    omsResult.lineNumber === "PL1-L",
+    "PLI-L should normalize to PL1-L in line context",
+  );
+
+  const noInvention = parseDrawingMetadataFromOcrText("TABLA DE MATERIALES SIN CODIGO");
+  assert(
+    noInvention.drawingNumber == null &&
+      noInvention.lineNumber == null &&
+      noInvention.revision == null,
+    "Tolerant parser should not invent metadata without confidence",
+  );
+
+  const revisionSuffix = parseDrawingMetadataFromOcrText("PLANO DMS-703 REV R03");
+  assert(
+    revisionSuffix.revision === "R03",
+    "Tolerant parser should keep revision from labeled text",
   );
 }
 
@@ -182,5 +249,6 @@ function verifyCropPreviewLimits(): void {
 verifyTitleBlockCropRect();
 verifyTitleBlockCropValidation();
 verifyTitleBlockCropPresets();
+verifyOcrTolerantParsing();
 verifyCropPreviewLimits();
 console.log("verify-title-block-crop: all checks passed");

@@ -16,6 +16,8 @@ export type TitleBlockCropPreset = {
   id: string;
   label: string;
   params: TitleBlockCropPercents;
+  /** Hint for extended title blocks; not the default ROI. */
+  recommendedFor?: string;
 };
 
 /** Experimental ROI presets for comparing title block layouts. */
@@ -44,6 +46,12 @@ export const TITLE_BLOCK_CROP_PRESETS: TitleBlockCropPreset[] = [
     id: "bottom-center",
     label: "Centro inferior",
     params: { xPercent: 32, yPercent: 75, widthPercent: 35, heightPercent: 25 },
+  },
+  {
+    id: "bottom-wide",
+    label: "Franja inferior amplia",
+    params: { xPercent: 35, yPercent: 60, widthPercent: 65, heightPercent: 40 },
+    recommendedFor: "Cajetines extendidos (benchmark 10F)",
   },
 ];
 

@@ -18,7 +18,7 @@ import {
 } from "@/lib/drawings/experimental-title-block-crop-params";
 import { encodeTitleBlockCropPreview } from "@/lib/drawings/experimental-title-block-crop-preview";
 import { PDF_TEXT_PREVIEW_MAX_CHARS } from "@/lib/drawings/pdf-text-constants";
-import { parseDrawingMetadataFromPdfText } from "@/lib/drawings/parse-pdf-text";
+import { parseDrawingMetadataFromOcrText } from "@/lib/drawings/parse-ocr-text-tolerant";
 import type { ParsedDrawingMetadata } from "@/lib/drawings/parse-filename";
 import {
   buildTesseractMissingLanguageWarning,
@@ -251,7 +251,7 @@ export async function analyzeTitleBlockFromPdfBuffer(
   }
 
   const metadataCandidates = extractedText
-    ? parseDrawingMetadataFromPdfText(extractedText)
+    ? parseDrawingMetadataFromOcrText(extractedText)
     : {
         drawingNumber: null,
         lineNumber: null,
@@ -265,7 +265,7 @@ export async function analyzeTitleBlockFromPdfBuffer(
     !metadataCandidates.revision
   ) {
     warnings.push(
-      "El OCR devolvió texto, pero no se detectaron metadatos con los patrones actuales de parse-pdf-text.",
+      "El OCR devolvió texto, pero no se detectaron metadatos con el parser tolerante experimental.",
     );
   }
 

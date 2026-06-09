@@ -516,3 +516,35 @@ npm run lint
 npm run build
 ```
 
+---
+
+## Fase 10G — Preset franja inferior amplia y parser tolerante (implementado)
+
+> **Estado:** experimental, misma feature flag `EXPERIMENTAL_TITLE_BLOCK_OCR`.
+
+### Qué añade
+
+| Pieza | Descripción |
+|-------|-------------|
+| Preset `bottom-wide` | «Franja inferior amplia» — X 35 / Y 60 / ancho 65 / alto 40 (★ recomendado, **no** default) |
+| `lib/drawings/parse-ocr-text-tolerant.ts` | Parser tolerante solo para OCR experimental/benchmark |
+| `verify:title-block-crop` | Valida preset `bottom-wide` y límites x+w=100, y+h=100 |
+
+### Parser tolerante — alcance y límites
+
+- Reutiliza `parseDrawingMetadataFromPdfText` primero; solo aplica fallbacks si faltan campos.
+- **Nº plano:** DW/DMS/HL + 3–5 dígitos; tolera OMS/0MS→DMS; OWS→DMS solo en contexto de código de plano.
+- **Línea:** PLI→PL1 con contexto claro (p. ej. `PLI-L`); patrones `PLn-L` en códigos con guiones.
+- **Revisión:** etiquetas REV estándar o sufijo `-Rnn` conservador.
+- **No** modifica `parse-pdf-text` productivo ni `detection-apply`.
+- Si no hay confianza → `null` (no inventa datos).
+
+### Verificación local
+
+```bash
+npm run benchmark:ocr -- ./storage/.../plano.pdf --preset bottom-wide
+npm run verify:title-block-crop
+npm run lint
+npm run build
+```
+

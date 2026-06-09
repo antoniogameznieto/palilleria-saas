@@ -108,12 +108,21 @@ export function DrawingExperimentalTitleBlockOcr({
               type="button"
               variant="outline"
               size="sm"
+              title={preset.recommendedFor}
               onClick={() => setCropParams({ ...preset.params })}
             >
               {preset.label}
+              {preset.recommendedFor ? (
+                <span className="ml-1 text-[10px] text-amber-700 dark:text-amber-300">
+                  ★
+                </span>
+              ) : null}
             </Button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground">
+          ★ Preset recomendado para cajetines extendidos (no es el default).
+        </p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {CROP_FIELDS.map(({ key, label, min, max }) => (
