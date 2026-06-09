@@ -20,6 +20,11 @@ export type TrameadoStickySegmentValues = {
   heatNumber: string;
 };
 
+export type TrameadoAssistedSegmentDraft = {
+  palilloLength: string;
+  token: number;
+};
+
 type TrameadoSegmentFormProps = {
   companyId: string;
   jobId: string;
@@ -29,7 +34,8 @@ type TrameadoSegmentFormProps = {
   segment?: SerializedTrameadoSegment;
   nextSegmentNumber?: string;
   stickyValues?: TrameadoStickySegmentValues;
-  prefilledPalilloLength?: string;
+  assistedDraft?: TrameadoAssistedSegmentDraft | null;
+  onAssistedDraftClear?: () => void;
   onCancel?: () => void;
   onSubmitCapture?: (sticky: TrameadoStickySegmentValues) => void;
   onSuccess?: () => void;
@@ -41,14 +47,14 @@ function resolveInitialValues(
   segment: SerializedTrameadoSegment | undefined,
   nextSegmentNumber: string | undefined,
   stickyValues: TrameadoStickySegmentValues | undefined,
-  prefilledPalilloLength?: string,
+  assistedPalilloLength?: string,
 ) {
   if (segment) {
     return {
       segmentNumber: formatSegmentLabel(segment.segmentNumber),
       diameter: segment.diameter,
       schedule: segment.schedule,
-      palilloLength: prefilledPalilloLength ?? segment.palilloLength,
+      palilloLength: segment.palilloLength,
       heatNumber: segment.heatNumber ?? "",
       notes: segment.notes ?? "",
     };
@@ -60,10 +66,26 @@ function resolveInitialValues(
       : "",
     diameter: stickyValues?.diameter ?? "",
     schedule: stickyValues?.schedule ?? "",
-    palilloLength: prefilledPalilloLength ?? "",
+    palilloLength: assistedPalilloLength ?? "",
     heatNumber: stickyValues?.heatNumber ?? "",
     notes: "",
   };
+}
+
+function resolveInitialFocusTarget(
+  assistedDraft: TrameadoAssistedSegmentDraft | null | undefined,
+  diameter: string,
+  schedule: string,
+): "diameter" | "segmentNumber" | "submit" {
+  if (!assistedDraft) {
+    return "segmentNumber";
+  }
+
+  if (!diameter.trim() || !schedule.trim()) {
+    return "diameter";
+  }
+
+  return "segmentNumber";
 }
 
 export function TrameadoSegmentForm({
@@ -75,32 +97,60 @@ export function TrameadoSegmentForm({
   segment,
   nextSegmentNumber,
   stickyValues,
-  prefilledPalilloLength,
+  assistedDraft,
+  onAssistedDraftClear,
   onCancel,
   onSubmitCapture,
   onSuccess,
 }: TrameadoSegmentFormProps) {
   const router = useRouter();
-  const formKey = segment?.id ?? `new-${nextSegmentNumber ?? "segment"}-${prefilledPalilloLength ?? "base"}`;
+  const formKey =
+    segment?.id ??
+    `new-${nextSegmentNumber ?? "segment"}-${assistedDraft?.token ?? "base"}`;
+  const segmentNumberInputRef = useRef<HTMLInputElement>(null);
+  const diameterInputRef = useRef<HTMLInputElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const palilloInputRef = useRef<HTMLInputElement>(null);
   const handledSuccessRef = useRef(false);
-  const [values, setValues] = useState(() =>
-    resolveInitialValues(
-      segment,
-      nextSegmentNumber,
-      stickyValues,
-      prefilledPalilloLength,
-    ),
+  const initialValues = resolveInitialValues(
+    segment,
+    nextSegmentNumber,
+    stickyValues,
+    assistedDraft?.palilloLength,
   );
+  const [values, setValues] = useState(() => initialValues);
   const action =
     mode === "edit" ? updateTrameadoSegmentAction : createTrameadoSegmentAction;
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   useEffect(() => {
-    if (mode === "create") {
-      palilloInputRef.current?.focus();
+    if (mode !== "create") {
+      return;
     }
-  }, [mode]);
+
+    if (assistedDraft) {
+      const focusTarget = resolveInitialFocusTarget(
+        assistedDraft,
+        initialValues.diameter,
+        initialValues.schedule,
+      );
+
+      if (focusTarget === "diameter") {
+        diameterInputRef.current?.focus();
+        return;
+      }
+
+      if (focusTarget === "segmentNumber") {
+        segmentNumberInputRef.current?.focus();
+        return;
+      }
+
+      submitButtonRef.current?.focus();
+      return;
+    }
+
+    palilloInputRef.current?.focus();
+  }, [assistedDraft, formKey, initialValues.diameter, initialValues.schedule, mode]);
 
   useEffect(() => {
     if (!state.success) {
@@ -113,9 +163,15 @@ export function TrameadoSegmentForm({
     }
 
     handledSuccessRef.current = true;
+    onAssistedDraftClear?.();
     router.refresh();
     onSuccess?.();
-  }, [mode, onSuccess, router, state.success]);
+  }, [mode, onAssistedDraftClear, onSuccess, router, state.success]);
+
+  const handleCancel = () => {
+    onAssistedDraftClear?.();
+    onCancel?.();
+  };
 
   const handleSubmit = () => {
     if (mode !== "create") {
@@ -157,10 +213,26 @@ export function TrameadoSegmentForm({
       ) : null}
       <input type="hidden" name="lengthUnit" value="mm" />
 
-      {mode === "create" ? (
+      {mode === "create" && assistedDraft ? (
+        <p
+          className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-sm text-sky-900 dark:text-sky-100"
+          data-testid="trameado-assisted-segment-notice"
+        >
+          Cota {assistedDraft.palilloLength} mm usada como PALILLO. Revisa contra
+          el isométrico antes de guardar.
+        </p>
+      ) : null}
+
+      {mode === "create" && !assistedDraft ? (
         <p className="text-xs text-muted-foreground">
           Entrada rápida: tras añadir un tramo se mantienen Ø, SCH. y COLADA para
           el siguiente. Pulsa Enter para guardar.
+        </p>
+      ) : null}
+
+      {mode === "create" && assistedDraft ? (
+        <p className="text-xs text-muted-foreground">
+          El tramo no se guarda hasta pulsar Confirmar tramo.
         </p>
       ) : null}
 
@@ -168,6 +240,7 @@ export function TrameadoSegmentForm({
         <div className="space-y-1">
           <Label htmlFor={`trameado-segment-number-${formKey}`}>Nº tramo</Label>
           <Input
+            ref={segmentNumberInputRef}
             id={`trameado-segment-number-${formKey}`}
             name="segmentNumber"
             required
@@ -191,6 +264,7 @@ export function TrameadoSegmentForm({
         <div className="space-y-1">
           <Label htmlFor={`trameado-diameter-${formKey}`}>Ø</Label>
           <Input
+            ref={diameterInputRef}
             id={`trameado-diameter-${formKey}`}
             name="diameter"
             required
@@ -310,6 +384,7 @@ export function TrameadoSegmentForm({
 
       <div className="flex flex-wrap gap-2">
         <Button
+          ref={submitButtonRef}
           type="submit"
           disabled={isPending}
           data-testid={
@@ -321,13 +396,15 @@ export function TrameadoSegmentForm({
           {isPending
             ? mode === "edit"
               ? "Guardando..."
-              : "Añadiendo..."
+              : "Confirmando..."
             : mode === "edit"
               ? "Guardar tramo"
-              : "Añadir tramo"}
+              : assistedDraft
+                ? "Confirmar tramo"
+                : "Añadir tramo"}
         </Button>
         {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>
         ) : null}

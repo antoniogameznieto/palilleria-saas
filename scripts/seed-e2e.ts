@@ -141,6 +141,11 @@ async function main() {
   });
 
   const originalFileName = "e2e-dms-701-pl1-l-r01.pdf";
+  const trameadoCandidatesFixturePath = path.join(
+    process.cwd(),
+    "tests/fixtures/e2e-trameado-candidates.pdf",
+  );
+  const drawingPdf = await readFile(trameadoCandidatesFixturePath);
   const storagePath = buildDrawingStoragePath(
     company.id,
     job.id,
@@ -149,7 +154,7 @@ async function main() {
   );
   const absolutePath = path.join(storageRoot, storagePath);
   await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, MINIMAL_PDF);
+  await writeFile(absolutePath, drawingPdf);
 
   await prisma.drawing.upsert({
     where: { id: E2E_IDS.drawingPending },
@@ -159,7 +164,7 @@ async function main() {
       fileName: originalFileName,
       originalFileName,
       storagePath,
-      fileSize: BigInt(MINIMAL_PDF.length),
+      fileSize: BigInt(drawingPdf.length),
       mimeType: "application/pdf",
       status: "reviewed",
       drawingNumber: "E2E-701",
@@ -176,7 +181,7 @@ async function main() {
       fileName: originalFileName,
       originalFileName,
       storagePath,
-      fileSize: BigInt(MINIMAL_PDF.length),
+      fileSize: BigInt(drawingPdf.length),
       mimeType: "application/pdf",
       status: "reviewed",
       drawingNumber: "E2E-701",

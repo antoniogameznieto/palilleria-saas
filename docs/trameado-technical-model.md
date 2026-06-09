@@ -131,6 +131,7 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 | Export Excel básico hoja cliente | 18G ✅ |
 | Asistente BOM/metadatos | 18I-A ✅ |
 | Panel cotas candidatas | 18K-A ✅ |
+| Tramo asistido desde cota | 18K-B ✅ |
 | Export Excel formateado / PDF plantilla | posterior |
 | Hints desde BOM (Ø, SCH.) | 18E |
 | Anotaciones iso trameado | 18F |
@@ -227,6 +228,21 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 - Permisos: viewer ve panel y copia; engineer además «Usar en PALILLO».
 
 **Verificación:** `verifyCandidateDimensions()` en `scripts/verify-trameado-model.ts`.
+
+## Tramo asistido desde cota (18K-B)
+
+**UI:** botón **Preparar tramo** en `TrameadoCandidateDimensionsPanel`; estado `TrameadoAssistedSegmentDraft` en `TrameadoSection`.
+
+| Automatiza | No automatiza |
+|------------|---------------|
+| Abrir formulario create con PALILLO desde cota | Guardar segmento en BD |
+| Sugerir Nº siguiente (`getNextSegmentNumber`) | Auto-confirmar tramo |
+| Mantener Ø/SCH/COLADA sticky (18E) | Crear tramo al pulsar cota |
+| Aviso contextual + foco en campo pendiente | Acciones para viewer |
+
+- Sin hoja activa: botón deshabilitado + aviso «Crea o selecciona una hoja…».
+- Submit del formulario asistido: **Confirmar tramo** (misma action create existente).
+- Aviso desaparece al guardar, cancelar o preparar otra cota.
 
 ## Archivos tocados en 18B
 

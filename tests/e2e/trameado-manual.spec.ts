@@ -217,6 +217,54 @@ test.describe("trameado manual", () => {
     await expect(page.getByTestId("trameado-edit-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-duplicate-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-mark-reviewed")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-candidate-dimension-prepare")).toHaveCount(
+      0,
+    );
     await viewerContext.close();
+  });
+
+  test("engineer prepara tramo desde cota candidata y confirma manualmente", async ({
+    page,
+  }) => {
+    await login(page, E2E_USERS.engineer);
+    await page.goto(drawingPath());
+
+    await page.getByRole("button", { name: "Trameado", exact: true }).click();
+    await expect(page.getByTestId("trameado-candidate-dimensions-list")).toBeVisible();
+
+    await page.getByTestId("trameado-create-sheet").click();
+    await page.locator("#trameado-line-identifier").fill("HL-E2E-CAND-01");
+    await page.getByTestId("trameado-create-sheet-submit").click();
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+      "HL-E2E-CAND-01",
+    );
+
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(0);
+
+    const candidateItem = page
+      .getByTestId("trameado-candidate-dimension-item")
+      .filter({ hasText: "361 mm" });
+    await expect(candidateItem).toBeVisible();
+    await candidateItem.getByTestId("trameado-candidate-dimension-prepare").click();
+
+    await expect(page.getByTestId("trameado-segment-form")).toBeVisible();
+    await expect(page.getByTestId("trameado-assisted-segment-notice")).toContainText(
+      "361 mm",
+    );
+    await expect(page.getByTestId("trameado-palillo-input")).toHaveValue("361");
+    await expect(page.getByTestId("trameado-segment-number-input")).toHaveValue(
+      "<1>",
+    );
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(0);
+
+    await page.getByTestId("trameado-diameter-input").fill('4"');
+    await page.getByTestId("trameado-schedule-input").fill("40");
+    await page.getByRole("button", { name: "Confirmar tramo" }).click();
+
+    await expect(page.getByTestId("trameado-segment-row")).toHaveCount(1);
+    await expect(page.getByTestId("trameado-segment-row")).toContainText("361");
+    await expect(page.getByTestId("trameado-assisted-segment-notice")).toHaveCount(
+      0,
+    );
   });
 });

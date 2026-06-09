@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 
 type TrameadoCandidateDimensionsPanelProps = {
   result: SerializedCandidateDimensionsResult;
-  onApplyPalillo?: (value: string) => void;
+  canPrepareSegment: boolean;
+  onPrepareSegment?: (value: string) => void;
 };
 
 function confidenceBadgeVariant(
@@ -43,7 +44,8 @@ function confidenceLabel(confidence: CandidateDimension["confidence"]): string {
 
 export function TrameadoCandidateDimensionsPanel({
   result,
-  onApplyPalillo,
+  canPrepareSegment,
+  onPrepareSegment,
 }: TrameadoCandidateDimensionsPanelProps) {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
@@ -59,16 +61,13 @@ export function TrameadoCandidateDimensionsPanel({
     }
   }, []);
 
-  const handleUseValue = useCallback(
+  const handlePrepareSegment = useCallback(
     (value: string) => {
-      if (onApplyPalillo) {
-        onApplyPalillo(value);
-        return;
+      if (onPrepareSegment && canPrepareSegment) {
+        onPrepareSegment(value);
       }
-
-      void handleCopy(value);
     },
-    [handleCopy, onApplyPalillo],
+    [canPrepareSegment, onPrepareSegment],
   );
 
   return (
@@ -79,10 +78,19 @@ export function TrameadoCandidateDimensionsPanel({
       <div className="space-y-1">
         <h3 className="text-sm font-semibold">Cotas candidatas</h3>
         <p className="text-xs text-muted-foreground">
-          Estas cotas se han extraído del texto del plano. Úsalas como ayuda; no
-          se crean palillos automáticamente.
+          Estas cotas se han extraído del texto del plano. Puedes preparar un
+          tramo con una cota; no se guarda hasta que confirmes.
         </p>
       </div>
+
+      {onPrepareSegment && !canPrepareSegment ? (
+        <p
+          className="mt-3 text-xs text-amber-700 dark:text-amber-400"
+          data-testid="trameado-candidate-dimensions-no-sheet"
+        >
+          Crea o selecciona una hoja antes de usar cotas.
+        </p>
+      ) : null}
 
       {result.insufficientText ? (
         <p
@@ -145,14 +153,20 @@ export function TrameadoCandidateDimensionsPanel({
                 >
                   {copyFeedback === candidate.displayValue ? "Copiado" : "Copiar"}
                 </Button>
-                {onApplyPalillo ? (
+                {onPrepareSegment ? (
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => handleUseValue(candidate.displayValue)}
-                    data-testid="trameado-candidate-dimension-apply"
+                    disabled={!canPrepareSegment}
+                    onClick={() => handlePrepareSegment(candidate.displayValue)}
+                    data-testid="trameado-candidate-dimension-prepare"
+                    title={
+                      canPrepareSegment
+                        ? "Preparar formulario de tramo con esta cota como PALILLO"
+                        : "Crea o selecciona una hoja antes de usar cotas"
+                    }
                   >
-                    Usar en PALILLO
+                    Preparar tramo
                   </Button>
                 ) : null}
               </div>

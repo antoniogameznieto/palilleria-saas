@@ -218,11 +218,18 @@ Columnas:
 - Helper: `lib/trameado/candidate-dimensions.ts` + loader server `load-candidate-dimensions.ts`.
 - UI: `TrameadoCandidateDimensionsPanel` debajo del visor PDF en pestaña Trameado.
 - Extrae cotas del texto embebido del PDF original; **no** crea palillos ni tramos.
-- Engineer: copiar o «Usar en PALILLO» (abre/rellena formulario activo).
-- Viewer: ve panel y puede copiar; sin «Usar en PALILLO».
+- Engineer: copiar o preparar formulario; viewer solo copia.
 - Sin posición X/Y; lista filtrada con avisos de confianza.
 
-### 18K-B — Prepropuesta experimental palillos (condicional)
+### 18K-B — Tramo asistido desde cota candidata (completado)
+
+- Botón **Preparar tramo** en panel de cotas (solo engineer, con hoja activa).
+- Abre formulario de nuevo tramo con PALILLO pre-rellenado, Nº siguiente y Ø/SCH/COLADA sticky.
+- Aviso contextual hasta guardar, cancelar o elegir otra cota.
+- Botón **Confirmar tramo** — **no** guarda automáticamente; el ingeniero revisa y confirma.
+- Deshabilitado sin hoja: «Crea o selecciona una hoja antes de usar cotas».
+
+### 18K-C — Prepropuesta experimental palillos (condicional)
 
 - Solo tras validar reglas en golden set; prioritario para planos `-02`.
 

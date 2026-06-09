@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
 import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
-import { TrameadoSegmentForm } from "@/components/trameado/trameado-segment-form";
-import type { TrameadoStickySegmentValues } from "@/components/trameado/trameado-segment-form";
+import {
+  TrameadoSegmentForm,
+  type TrameadoAssistedSegmentDraft,
+  type TrameadoStickySegmentValues,
+} from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
 import { TrameadoSheetAssistant } from "@/components/trameado/trameado-sheet-assistant";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
@@ -76,10 +79,15 @@ export function TrameadoSection({
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [stickyCreateValues, setStickyCreateValues] =
     useState<TrameadoStickySegmentValues | undefined>();
-  const [palilloPrefill, setPalilloPrefill] = useState<{
-    value: string;
-    token: number;
-  } | null>(null);
+  const [assistedSegmentDraft, setAssistedSegmentDraft] =
+    useState<TrameadoAssistedSegmentDraft | null>(null);
+  const [segmentFormResetKey, setSegmentFormResetKey] = useState(0);
+  const trackedSheetIdRef = useRef<string | null>(null);
+  const trackedSegmentCountRef = useRef(0);
+
+  const clearAssistedSegmentDraft = () => {
+    setAssistedSegmentDraft(null);
+  };
 
   const handleSegmentStickyCapture = (sticky: TrameadoStickySegmentValues) => {
     setStickyCreateValues(sticky);
@@ -126,18 +134,44 @@ export function TrameadoSection({
     sheetSuggestions,
   ).length;
 
-  const handleApplyCandidatePalillo = (value: string) => {
-    if (!canManage) {
+  const handlePrepareSegmentFromCandidate = (value: string) => {
+    if (!canManage || !selectedSheet) {
       return;
     }
 
-    if (!showAddSegment && !editingSegmentId) {
-      setShowAddSegment(true);
-      setEditingSegmentId(null);
+    setEditingSegmentId(null);
+    setShowAddSegment(true);
+    setAssistedSegmentDraft({
+      palilloLength: value,
+      token: Date.now(),
+    });
+  };
+
+  useEffect(() => {
+    if (!selectedSheet) {
+      trackedSheetIdRef.current = null;
+      return;
     }
 
-    setPalilloPrefill({ value, token: Date.now() });
-  };
+    if (trackedSheetIdRef.current !== selectedSheet.id) {
+      trackedSheetIdRef.current = selectedSheet.id;
+      trackedSegmentCountRef.current = selectedSheet.segments.length;
+      return;
+    }
+
+    const previousCount = trackedSegmentCountRef.current;
+    const currentCount = selectedSheet.segments.length;
+
+    if (currentCount > previousCount) {
+      if (assistedSegmentDraft) {
+        clearAssistedSegmentDraft();
+      }
+
+      setSegmentFormResetKey((current) => current + 1);
+    }
+
+    trackedSegmentCountRef.current = currentCount;
+  }, [assistedSegmentDraft, selectedSheet]);
 
   const handleSuggestedSheetsCreated = (sheetIds: string[]) => {
     const lastSheetId = sheetIds[sheetIds.length - 1];
@@ -354,7 +388,13 @@ export function TrameadoSection({
                       type="button"
                       data-testid="trameado-add-segment"
                       onClick={() => {
-                        setShowAddSegment((current) => !current);
+                        setShowAddSegment((current) => {
+                          if (current) {
+                            clearAssistedSegmentDraft();
+                          }
+
+                          return !current;
+                        });
                         setEditingSegmentId(null);
                       }}
                     >
@@ -365,7 +405,7 @@ export function TrameadoSection({
 
                 {canManage && showAddSegment ? (
                   <TrameadoSegmentForm
-                    key={`create-${selectedSheet.id}-${selectedSheet.segments.length}-${palilloPrefill?.token ?? "base"}`}
+                    key={`create-${selectedSheet.id}-${segmentFormResetKey}-${assistedSegmentDraft?.token ?? "base"}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
@@ -373,22 +413,25 @@ export function TrameadoSection({
                     mode="create"
                     nextSegmentNumber={nextSegmentNumber}
                     stickyValues={stickyCreateValues}
-                    prefilledPalilloLength={palilloPrefill?.value}
-                    onCancel={() => setShowAddSegment(false)}
+                    assistedDraft={assistedSegmentDraft}
+                    onAssistedDraftClear={clearAssistedSegmentDraft}
+                    onCancel={() => {
+                      clearAssistedSegmentDraft();
+                      setShowAddSegment(false);
+                    }}
                     onSubmitCapture={handleSegmentStickyCapture}
                   />
                 ) : null}
 
                 {canManage && editingSegment ? (
                   <TrameadoSegmentForm
-                    key={`edit-${editingSegment.id}-${palilloPrefill?.token ?? "base"}`}
+                    key={`edit-${editingSegment.id}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
                     sheetId={selectedSheet.id}
                     mode="edit"
                     segment={editingSegment}
-                    prefilledPalilloLength={palilloPrefill?.value}
                     onCancel={() => setEditingSegmentId(null)}
                     onSuccess={() => setEditingSegmentId(null)}
                   />
@@ -407,6 +450,7 @@ export function TrameadoSection({
                     onEdit={(segmentId) => {
                       setEditingSegmentId(segmentId);
                       setShowAddSegment(false);
+                      clearAssistedSegmentDraft();
                     }}
                   />
                 </div>
@@ -456,8 +500,11 @@ export function TrameadoSection({
             />
             <TrameadoCandidateDimensionsPanel
               result={candidateDimensions}
-              onApplyPalillo={
-                canManage ? handleApplyCandidatePalillo : undefined
+              canPrepareSegment={Boolean(selectedSheet)}
+              onPrepareSegment={
+                canManage && selectedSheet
+                  ? handlePrepareSegmentFromCandidate
+                  : undefined
               }
             />
           </div>
