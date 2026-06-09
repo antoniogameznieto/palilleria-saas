@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
@@ -81,9 +81,6 @@ export function TrameadoSection({
     useState<TrameadoStickySegmentValues | undefined>();
   const [assistedSegmentDraft, setAssistedSegmentDraft] =
     useState<TrameadoAssistedSegmentDraft | null>(null);
-  const [segmentFormResetKey, setSegmentFormResetKey] = useState(0);
-  const trackedSheetIdRef = useRef<string | null>(null);
-  const trackedSegmentCountRef = useRef(0);
 
   const clearAssistedSegmentDraft = () => {
     setAssistedSegmentDraft(null);
@@ -134,6 +131,21 @@ export function TrameadoSection({
     sheetSuggestions,
   ).length;
 
+  const activeAssistedSegmentDraft = useMemo(() => {
+    if (!assistedSegmentDraft || !selectedSheet) {
+      return null;
+    }
+
+    if (
+      selectedSheet.segments.length !==
+      assistedSegmentDraft.segmentCountAtPrepare
+    ) {
+      return null;
+    }
+
+    return assistedSegmentDraft;
+  }, [assistedSegmentDraft, selectedSheet]);
+
   const handlePrepareSegmentFromCandidate = (value: string) => {
     if (!canManage || !selectedSheet) {
       return;
@@ -144,34 +156,9 @@ export function TrameadoSection({
     setAssistedSegmentDraft({
       palilloLength: value,
       token: Date.now(),
+      segmentCountAtPrepare: selectedSheet.segments.length,
     });
   };
-
-  useEffect(() => {
-    if (!selectedSheet) {
-      trackedSheetIdRef.current = null;
-      return;
-    }
-
-    if (trackedSheetIdRef.current !== selectedSheet.id) {
-      trackedSheetIdRef.current = selectedSheet.id;
-      trackedSegmentCountRef.current = selectedSheet.segments.length;
-      return;
-    }
-
-    const previousCount = trackedSegmentCountRef.current;
-    const currentCount = selectedSheet.segments.length;
-
-    if (currentCount > previousCount) {
-      if (assistedSegmentDraft) {
-        clearAssistedSegmentDraft();
-      }
-
-      setSegmentFormResetKey((current) => current + 1);
-    }
-
-    trackedSegmentCountRef.current = currentCount;
-  }, [assistedSegmentDraft, selectedSheet]);
 
   const handleSuggestedSheetsCreated = (sheetIds: string[]) => {
     const lastSheetId = sheetIds[sheetIds.length - 1];
@@ -405,7 +392,7 @@ export function TrameadoSection({
 
                 {canManage && showAddSegment ? (
                   <TrameadoSegmentForm
-                    key={`create-${selectedSheet.id}-${segmentFormResetKey}-${assistedSegmentDraft?.token ?? "base"}`}
+                    key={`create-${selectedSheet.id}-${selectedSheet.segments.length}-${activeAssistedSegmentDraft?.token ?? "base"}`}
                     companyId={companyId}
                     jobId={jobId}
                     drawingId={drawingId}
@@ -413,7 +400,7 @@ export function TrameadoSection({
                     mode="create"
                     nextSegmentNumber={nextSegmentNumber}
                     stickyValues={stickyCreateValues}
-                    assistedDraft={assistedSegmentDraft}
+                    assistedDraft={activeAssistedSegmentDraft}
                     onAssistedDraftClear={clearAssistedSegmentDraft}
                     onCancel={() => {
                       clearAssistedSegmentDraft();

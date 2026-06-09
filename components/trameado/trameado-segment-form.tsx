@@ -23,6 +23,7 @@ export type TrameadoStickySegmentValues = {
 export type TrameadoAssistedSegmentDraft = {
   palilloLength: string;
   token: number;
+  segmentCountAtPrepare: number;
 };
 
 type TrameadoSegmentFormProps = {
