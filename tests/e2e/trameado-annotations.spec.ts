@@ -47,33 +47,52 @@ async function createSheetWithSegment(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("trameado-segment-row")).toHaveCount(1);
 }
 
+async function markFirstSegmentOnDrawing(page: import("@playwright/test").Page) {
+  await page
+    .getByTestId("trameado-segments-table")
+    .getByTestId("trameado-mark-on-drawing")
+    .click();
+
+  await expect(page.getByTestId("trameado-iso-marking-hint")).toContainText(
+    "Haz clic en el isométrico para marcar el tramo Nº 1",
+  );
+
+  const overlay = page.getByTestId("trameado-pdf-annotation-overlay");
+  await expect(overlay).toHaveAttribute("data-marking-active", "true");
+
+  await overlay.click({
+    position: { x: 120, y: 120 },
+  });
+
+  await expect(page.getByTestId("trameado-pdf-annotation-label")).toContainText(
+    "Nº 1",
+  );
+  await expect(page.getByTestId("trameado-iso-marking-summary")).toContainText(
+    "Tramos marcados: 1/1",
+  );
+  await expect(page.getByTestId("trameado-iso-marking-panel")).toHaveAttribute(
+    "data-saving",
+    "false",
+  );
+}
+
 test.describe("trameado pdf annotations", () => {
   test.beforeEach(() => {
     resetTrameadoE2EData();
   });
 
-  test("engineer marca tramo en plano y puede borrar marca", async ({ page }) => {
+  test("engineer marca tramo en plano, persiste tras recarga y puede borrar", async ({
+    page,
+  }) => {
     await login(page, E2E_USERS.engineer);
     await page.goto(drawingPath());
     await page.getByRole("button", { name: "Trameado", exact: true }).click();
 
     await createSheetWithSegment(page);
+    await markFirstSegmentOnDrawing(page);
 
-    await page
-      .getByTestId("trameado-segments-table")
-      .getByTestId("trameado-mark-on-drawing")
-      .click();
-
-    await expect(page.getByTestId("trameado-iso-marking-hint")).toContainText(
-      "Haz clic en el isométrico para marcar el tramo Nº 1",
-    );
-
-    const overlay = page.getByTestId("trameado-pdf-annotation-overlay");
-    await expect(overlay).toHaveAttribute("data-marking-active", "true");
-
-    await overlay.click({
-      position: { x: 120, y: 120 },
-    });
+    await page.reload();
+    await page.getByRole("button", { name: "Trameado", exact: true }).click();
 
     await expect(page.getByTestId("trameado-pdf-annotation-label")).toContainText(
       "Nº 1",
@@ -87,13 +106,26 @@ test.describe("trameado pdf annotations", () => {
       .getByTestId("trameado-delete-annotation")
       .click();
 
+    await expect(page.getByTestId("trameado-iso-marking-panel")).toHaveAttribute(
+      "data-saving",
+      "false",
+    );
+
+    await expect(page.getByTestId("trameado-pdf-annotation")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-iso-marking-summary")).toContainText(
+      "Tramos marcados: 0/1",
+    );
+
+    await page.reload();
+    await page.getByRole("button", { name: "Trameado", exact: true }).click();
+
     await expect(page.getByTestId("trameado-pdf-annotation")).toHaveCount(0);
     await expect(page.getByTestId("trameado-iso-marking-summary")).toContainText(
       "Tramos marcados: 0/1",
     );
   });
 
-  test("viewer no puede marcar tramos en plano", async ({ browser }) => {
+  test("viewer ve marcas persistidas pero no puede editar", async ({ browser }) => {
     const engineerContext = await browser.newContext();
     const engineerPage = await engineerContext.newPage();
 
@@ -101,6 +133,7 @@ test.describe("trameado pdf annotations", () => {
     await engineerPage.goto(drawingPath());
     await engineerPage.getByRole("button", { name: "Trameado", exact: true }).click();
     await createSheetWithSegment(engineerPage);
+    await markFirstSegmentOnDrawing(engineerPage);
     await engineerContext.close();
 
     const viewerContext = await browser.newContext();
@@ -110,11 +143,20 @@ test.describe("trameado pdf annotations", () => {
     await page.getByRole("button", { name: "Trameado", exact: true }).click();
 
     await expect(page.getByTestId("trameado-iso-marking-panel")).toBeVisible();
+    await expect(page.getByTestId("trameado-pdf-annotation-label")).toContainText(
+      "Nº 1",
+    );
+    await expect(page.getByTestId("trameado-iso-marking-summary")).toContainText(
+      "Tramos marcados: 1/1",
+    );
     await expect(
       page.getByTestId("trameado-segments-table").getByTestId("trameado-mark-on-drawing"),
     ).toHaveCount(0);
     await expect(
       page.getByTestId("trameado-iso-marking-panel").getByTestId("trameado-mark-on-drawing"),
+    ).toHaveCount(0);
+    await expect(
+      page.getByTestId("trameado-iso-marking-panel").getByTestId("trameado-delete-annotation"),
     ).toHaveCount(0);
 
     await viewerContext.close();

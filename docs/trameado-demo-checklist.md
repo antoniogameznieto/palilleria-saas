@@ -186,14 +186,15 @@ npm run validate:trameado-functional
 
 ---
 
-### Paso 5c — Marcado del isométrico (18O-C)
+### Paso 5c — Marcado del isométrico (18O-C / 18O-D)
 
 1. Con tramos confirmados, pulsa **Marcar en plano** en un tramo.
 2. Haz **clic** en el PDF para un punto, o **arrastra** para un rectángulo.
 3. Comprueba etiqueta **Nº X** y resumen **Tramos marcados: X/Y**.
 4. Prueba **Borrar marca** / **Volver a marcar**.
+5. Recarga la página: las marcas deben seguir visibles (18O-D).
 
-**Qué decir:** «Es una prueba visual de esta sesión. Asocia cada tramo de la hoja con una zona del isométrico; aún no es trameado automático ni persistido en BD.»
+**Qué decir:** «Las marcas se guardan con la hoja. Asocia cada tramo con una zona del isométrico; aún no es trameado automático ni coordenadas PDF reales.»
 
 ---
 

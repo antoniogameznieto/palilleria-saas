@@ -17,7 +17,9 @@ import {
   parseTrameadoSegmentScopeFormData,
   parseTrameadoSheetScopeFormData,
 } from "@/lib/trameado/scope";
+import { formatAnnotationSegmentLabel } from "@/lib/trameado/pdf-annotations";
 import {
+  parseTrameadoAnnotationFormData,
   trameadoSegmentFormSchema,
   trameadoSegmentUpdateSchema,
   trameadoSheetFormSchema,
@@ -481,6 +483,160 @@ export async function markTrameadoSheetReviewedAction(
 
   revalidateDrawingPage(companyId, jobId, drawingId);
   return { success: "Hoja de trameado marcada como revisada." };
+}
+
+function parseTrameadoAnnotationScopeFormData(formData: FormData):
+  | { error: string }
+  | {
+      companyId: string;
+      jobId: string;
+      drawingId: string;
+      sheetId: string;
+      segmentId: string;
+    } {
+  const scope = parseTrameadoSegmentScopeFormData(formData);
+
+  if ("error" in scope) {
+    return scope;
+  }
+
+  const sheetId = formData.get("sheetId");
+
+  if (typeof sheetId !== "string" || sheetId.length === 0) {
+    return { error: "Hoja de trameado no válida." };
+  }
+
+  return { ...scope, sheetId };
+}
+
+export async function upsertTrameadoAnnotationAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseTrameadoAnnotationScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId, sheetId, segmentId } = scope;
+  const access = await requireTrameadoSegmentAccess(
+    companyId,
+    jobId,
+    drawingId,
+    segmentId,
+  );
+
+  if ("error" in access) {
+    return { error: access.error };
+  }
+
+  if (!canManageTrameado(access.membership.role)) {
+    return { error: "No tienes permiso para gestionar el trameado." };
+  }
+
+  if (access.segment.sheetId !== sheetId) {
+    return { error: "El tramo no pertenece a la hoja indicada." };
+  }
+
+  const parsed = parseTrameadoAnnotationFormData(formData);
+
+  if (!parsed.success) {
+    return {
+      error: "Revisa los datos de la marca.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const segmentLabel = formatAnnotationSegmentLabel({
+    id: access.segment.id,
+    segmentNumber: access.segment.segmentNumber,
+    segmentLabel: access.segment.segmentLabel,
+    palilloLength: access.segment.palilloLength.toString(),
+  });
+
+  const annotationData =
+    parsed.data.type === "rect"
+      ? {
+          type: parsed.data.type,
+          pageNumber: parsed.data.pageNumber,
+          x: parsed.data.x,
+          y: parsed.data.y,
+          width: parsed.data.width,
+          height: parsed.data.height,
+          segmentLabel,
+        }
+      : {
+          type: parsed.data.type,
+          pageNumber: parsed.data.pageNumber,
+          x: parsed.data.x,
+          y: parsed.data.y,
+          width: null,
+          height: null,
+          segmentLabel,
+        };
+
+  const annotation = await prisma.drawingTrameadoAnnotation.upsert({
+    where: { segmentId },
+    create: {
+      companyId,
+      jobId,
+      drawingId,
+      sheetId,
+      segmentId,
+      createdById: access.user.id,
+      ...annotationData,
+    },
+    update: {
+      ...annotationData,
+      createdById: access.user.id,
+    },
+  });
+
+  revalidateDrawingPage(companyId, jobId, drawingId);
+  return {
+    success: "Marca guardada en el isométrico.",
+    trameadoAnnotationId: annotation.id,
+  };
+}
+
+export async function deleteTrameadoAnnotationAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const scope = parseTrameadoSegmentScopeFormData(formData);
+
+  if ("error" in scope) {
+    return { error: scope.error };
+  }
+
+  const { companyId, jobId, drawingId, segmentId } = scope;
+  const access = await requireTrameadoSegmentAccess(
+    companyId,
+    jobId,
+    drawingId,
+    segmentId,
+  );
+
+  if ("error" in access) {
+    return { error: access.error };
+  }
+
+  if (!canManageTrameado(access.membership.role)) {
+    return { error: "No tienes permiso para gestionar el trameado." };
+  }
+
+  await prisma.drawingTrameadoAnnotation.deleteMany({
+    where: {
+      segmentId,
+      companyId,
+      jobId,
+      drawingId,
+    },
+  });
+
+  revalidateDrawingPage(companyId, jobId, drawingId);
+  return { success: "Marca eliminada del isométrico." };
 }
 
 export async function createSuggestedTrameadoSheetsAction(

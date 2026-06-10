@@ -17,6 +17,7 @@ export type AuthActionState = {
   success?: string;
   trameadoSheetId?: string;
   trameadoSheetIds?: string[];
+  trameadoAnnotationId?: string;
 };
 
 export async function loginAction(

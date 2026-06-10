@@ -10,6 +10,8 @@ type TrameadoIsoMarkingPanelProps = {
   hasActiveSheet: boolean;
   canManage: boolean;
   markingSegmentLabel: string | null;
+  annotationError?: string | null;
+  isSaving?: boolean;
   onCancelMarking?: () => void;
   onMarkSegment?: (segmentId: string) => void;
   onDeleteAnnotation?: (segmentId: string) => void;
@@ -20,6 +22,8 @@ export function TrameadoIsoMarkingPanel({
   hasActiveSheet,
   canManage,
   markingSegmentLabel,
+  annotationError = null,
+  isSaving = false,
   onCancelMarking,
   onMarkSegment,
   onDeleteAnnotation,
@@ -56,6 +60,7 @@ export function TrameadoIsoMarkingPanel({
     <section
       className="rounded-lg border bg-card p-4"
       data-testid="trameado-iso-marking-panel"
+      data-saving={isSaving ? "true" : "false"}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="space-y-1">
@@ -65,6 +70,9 @@ export function TrameadoIsoMarkingPanel({
             data-testid="trameado-iso-marking-summary"
           >
             Tramos marcados: {summary.markedCount}/{summary.totalCount}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Las marcas se guardan con la hoja. Coordenadas relativas al visor.
           </p>
         </div>
         {markingSegmentLabel ? (
@@ -90,6 +98,15 @@ export function TrameadoIsoMarkingPanel({
             Cancelar marcado
           </Button>
         </div>
+      ) : null}
+
+      {annotationError ? (
+        <p
+          className="mt-3 text-sm text-destructive"
+          data-testid="trameado-iso-marking-error"
+        >
+          {annotationError}
+        </p>
       ) : null}
 
       <ul className="mt-3 space-y-2">
@@ -118,6 +135,7 @@ export function TrameadoIsoMarkingPanel({
                   variant="outline"
                   size="sm"
                   data-testid="trameado-mark-on-drawing"
+                  disabled={isSaving}
                   onClick={() => onMarkSegment?.(item.segmentId)}
                 >
                   {item.marked ? "Volver a marcar" : "Marcar en plano"}
@@ -129,6 +147,7 @@ export function TrameadoIsoMarkingPanel({
                     size="sm"
                     className="text-muted-foreground"
                     data-testid="trameado-delete-annotation"
+                    disabled={isSaving}
                     onClick={() => onDeleteAnnotation?.(item.segmentId)}
                   >
                     Borrar marca

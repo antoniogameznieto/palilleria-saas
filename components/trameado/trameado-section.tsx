@@ -1,6 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+import {
+  deleteTrameadoAnnotationAction,
+  upsertTrameadoAnnotationAction,
+} from "@/lib/actions/trameado";
 
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
@@ -45,8 +51,7 @@ import {
   buildTrameadoPdfAnnotationSummary,
   formatAnnotationSegmentLabel,
   pruneAnnotationsForSegments,
-  removeAnnotationById,
-  removeAnnotationForSegment,
+  toTrameadoPdfAnnotation,
   upsertAnnotationForSegment,
   type TrameadoPdfAnnotation,
 } from "@/lib/trameado/pdf-annotations";
@@ -133,6 +138,7 @@ export function TrameadoSection({
   suggestedLineIdentifier,
   variant = "workspace",
 }: TrameadoSectionProps) {
+  const router = useRouter();
   const isWorkspace = variant === "workspace";
   const [userSheetId, setUserSheetId] = useState<string | null>(null);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
@@ -142,10 +148,11 @@ export function TrameadoSection({
     useState<TrameadoStickySegmentValues | undefined>();
   const [assistedSegmentDraft, setAssistedSegmentDraft] =
     useState<TrameadoAssistedSegmentDraft | null>(null);
-  const [annotationsBySheet, setAnnotationsBySheet] = useState<
-    Record<string, TrameadoPdfAnnotation[]>
-  >({});
   const [markingSegmentId, setMarkingSegmentId] = useState<string | null>(null);
+  const [annotationError, setAnnotationError] = useState<string | null>(null);
+  const [isSavingAnnotation, setIsSavingAnnotation] = useState(false);
+  const [pendingAnnotation, setPendingAnnotation] =
+    useState<TrameadoPdfAnnotation | null>(null);
   const previousSheetCountRef = useRef(sheets.length);
 
   const clearAssistedSegmentDraft = () => {
@@ -260,6 +267,19 @@ export function TrameadoSection({
     };
   }, [selectedSheet, sheetSuggestions, stickyCreateValues, takeoffItems]);
 
+  const annotationsBySheet = useMemo(
+    () =>
+      Object.fromEntries(
+        sheets.map((sheet) => [
+          sheet.id,
+          sheet.annotations.map((annotation) =>
+            toTrameadoPdfAnnotation(annotation),
+          ),
+        ]),
+      ),
+    [sheets],
+  );
+
   const sheetAnnotations = useMemo(() => {
     if (!selectedSheet) {
       return [];
@@ -267,7 +287,7 @@ export function TrameadoSection({
 
     const stored = annotationsBySheet[selectedSheet.id] ?? [];
 
-    return pruneAnnotationsForSegments(
+    const pruned = pruneAnnotationsForSegments(
       stored,
       selectedSheet.segments.map((segment) => ({
         id: segment.id,
@@ -276,7 +296,13 @@ export function TrameadoSection({
         palilloLength: segment.palilloLength,
       })),
     );
-  }, [annotationsBySheet, selectedSheet]);
+
+    if (pendingAnnotation) {
+      return upsertAnnotationForSegment(pruned, pendingAnnotation);
+    }
+
+    return pruned;
+  }, [annotationsBySheet, pendingAnnotation, selectedSheet]);
 
   const annotationSummary = useMemo(
     () =>
@@ -338,53 +364,86 @@ export function TrameadoSection({
     clearAssistedSegmentDraft();
   };
 
-  const handleAnnotationCreated = (annotation: TrameadoPdfAnnotation) => {
-    if (!selectedSheet) {
+  const buildAnnotationScopeFormData = (segmentId: string) => {
+    const formData = new FormData();
+    formData.append("companyId", companyId);
+    formData.append("jobId", jobId);
+    formData.append("drawingId", drawingId);
+    formData.append("sheetId", selectedSheet!.id);
+    formData.append("segmentId", segmentId);
+    return formData;
+  };
+
+  const handleAnnotationCreated = async (annotation: TrameadoPdfAnnotation) => {
+    if (!selectedSheet || !canManage || isSavingAnnotation) {
       return;
     }
 
-    setAnnotationsBySheet((current) => ({
-      ...current,
-      [selectedSheet.id]: upsertAnnotationForSegment(
-        current[selectedSheet.id] ?? [],
-        annotation,
-      ),
-    }));
+    setIsSavingAnnotation(true);
+    setAnnotationError(null);
+    setPendingAnnotation(annotation);
+
+    const formData = buildAnnotationScopeFormData(annotation.segmentId);
+    formData.append("type", annotation.type);
+    formData.append("pageNumber", String(annotation.pageNumber));
+    formData.append("x", String(annotation.x));
+    formData.append("y", String(annotation.y));
+
+    if (
+      annotation.type === "rect" &&
+      annotation.width !== undefined &&
+      annotation.height !== undefined
+    ) {
+      formData.append("width", String(annotation.width));
+      formData.append("height", String(annotation.height));
+    }
+
+    const result = await upsertTrameadoAnnotationAction({}, formData);
+    setIsSavingAnnotation(false);
+
+    if (result.error) {
+      setAnnotationError(result.error);
+      setPendingAnnotation(null);
+      return;
+    }
+
     setMarkingSegmentId(null);
+    setPendingAnnotation(null);
+    router.refresh();
   };
 
-  const handleAnnotationDelete = (segmentId: string) => {
-    if (!selectedSheet || !canManage) {
+  const handleAnnotationDelete = async (segmentId: string) => {
+    if (!selectedSheet || !canManage || isSavingAnnotation) {
       return;
     }
 
-    setAnnotationsBySheet((current) => ({
-      ...current,
-      [selectedSheet.id]: removeAnnotationForSegment(
-        current[selectedSheet.id] ?? [],
-        segmentId,
-      ),
-    }));
-  };
+    setIsSavingAnnotation(true);
+    setAnnotationError(null);
 
-  const handleAnnotationDeleteById = (annotationId: string) => {
-    if (!selectedSheet || !canManage) {
+    const formData = buildAnnotationScopeFormData(segmentId);
+    const result = await deleteTrameadoAnnotationAction({}, formData);
+    setIsSavingAnnotation(false);
+
+    if (result.error) {
+      setAnnotationError(result.error);
       return;
     }
 
-    const annotation = sheetAnnotations.find((item) => item.id === annotationId);
-
-    setAnnotationsBySheet((current) => ({
-      ...current,
-      [selectedSheet.id]: removeAnnotationById(
-        current[selectedSheet.id] ?? [],
-        annotationId,
-      ),
-    }));
-
-    if (annotation && markingSegmentId === annotation.segmentId) {
+    if (markingSegmentId === segmentId) {
       setMarkingSegmentId(null);
     }
+
+    router.refresh();
+  };
+
+  const handleAnnotationDeleteById = async (annotationId: string) => {
+    const annotation = sheetAnnotations.find((item) => item.id === annotationId);
+
+    if (!annotation) {
+      return;
+    }
+
+    await handleAnnotationDelete(annotation.segmentId);
   };
 
   const sheetValidation = useMemo(
@@ -791,6 +850,8 @@ export function TrameadoSection({
         hasActiveSheet={Boolean(selectedSheet)}
         canManage={canManage}
         markingSegmentLabel={markingSegmentLabel}
+        annotationError={annotationError}
+        isSaving={isSavingAnnotation}
         onCancelMarking={() => setMarkingSegmentId(null)}
         onMarkSegment={handleStartMarkingSegment}
         onDeleteAnnotation={handleAnnotationDelete}
@@ -850,7 +911,7 @@ export function TrameadoSection({
               fileName={drawingFileName}
               annotations={sheetAnnotations}
               markingSegment={markingSegment}
-              canManage={canManage}
+              canManage={canManage && !isSavingAnnotation}
               onAnnotationCreated={handleAnnotationCreated}
               onAnnotationDelete={handleAnnotationDeleteById}
             />

@@ -16,7 +16,8 @@ function createPrismaClient(): PrismaClient {
 function isPrismaClientCompatible(client: PrismaClient): boolean {
   return (
     typeof client.drawingTrameadoSheet?.findMany === "function" &&
-    typeof client.drawingTrameadoSegment?.findMany === "function"
+    typeof client.drawingTrameadoSegment?.findMany === "function" &&
+    typeof client.drawingTrameadoAnnotation?.findMany === "function"
   );
 }
 
@@ -35,7 +36,7 @@ function resolvePrismaClient(): PrismaClient {
 
   if (!isPrismaClientCompatible(client)) {
     throw new Error(
-      "Prisma Client no incluye modelos de trameado. Ejecuta `npm run db:generate` y reinicia el servidor de desarrollo.",
+      "Prisma Client desactualizado (faltan modelos de trameado). Ejecuta `npm run db:generate` y reinicia el servidor de desarrollo.",
     );
   }
 

@@ -259,13 +259,25 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 
 **No bloquea** export CSV/XLSX ni marcar revisada.
 
-## Marcado manual del isométrico (18O-C)
+## Marcado manual del isométrico (18O-C / 18O-D)
 
 **Helper:** `lib/trameado/pdf-annotations.ts` — tipos y resumen marcado/pendiente.
 
 **UI:** overlay en `TrameadoPdfPanel`; panel `TrameadoIsoMarkingPanel`; acción en `TrameadoSegmentsTable`.
 
-**Persistencia:** ninguna en esta fase (estado React por hoja en `TrameadoSection`).
+**Modelo (18O-D):** `DrawingTrameadoAnnotation` — `segmentId` unique (máx. 1 marca por tramo).
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| sheetId, segmentId | FK | segment → cascade on delete |
+| type | `point` \| `rect` | enum Prisma |
+| x, y, width?, height? | Float | coords relativas 0–1 |
+| segmentLabel | String? | snapshot etiqueta |
+| createdById | FK User | engineer al guardar |
+
+**Actions:** `upsertTrameadoAnnotationAction` (reemplazo por tramo), `deleteTrameadoAnnotationAction`.
+
+**Validación:** `lib/validations/trameado.ts` → `trameadoAnnotationFormSchema`.
 
 **Coordenadas:** relativas al contenedor del visor (0–1), no espacio PDF.
 

@@ -111,3 +111,86 @@ export const trameadoSegmentUpdateSchema = trameadoSegmentFormSchema
 
 export type TrameadoSheetFormInput = z.infer<typeof trameadoSheetFormSchema>;
 export type TrameadoSegmentFormInput = z.infer<typeof trameadoSegmentFormSchema>;
+
+const MIN_RELATIVE_COORD = 0;
+const MAX_RELATIVE_COORD = 1;
+const MIN_RECT_SIZE = 0.01;
+
+function isRelativeCoordinateInRange(value: number): boolean {
+  return (
+    Number.isFinite(value) &&
+    value >= MIN_RELATIVE_COORD &&
+    value <= MAX_RELATIVE_COORD
+  );
+}
+
+const relativeCoordinateField = z.coerce
+  .number()
+  .refine(isRelativeCoordinateInRange, "Coordenada fuera del rango 0–1.");
+
+const annotationPageNumberField = z.coerce
+  .number()
+  .int("La página debe ser un entero.")
+  .min(1, "La página debe ser mayor o igual que 1.");
+
+const trameadoPointAnnotationSchema = z.object({
+  type: z.literal("point"),
+  pageNumber: annotationPageNumberField,
+  x: relativeCoordinateField,
+  y: relativeCoordinateField,
+});
+
+const trameadoRectAnnotationSchema = z
+  .object({
+    type: z.literal("rect"),
+    pageNumber: annotationPageNumberField,
+    x: relativeCoordinateField,
+    y: relativeCoordinateField,
+    width: relativeCoordinateField.refine(
+      (value) => value >= MIN_RECT_SIZE,
+      "El ancho del rectángulo es demasiado pequeño.",
+    ),
+    height: relativeCoordinateField.refine(
+      (value) => value >= MIN_RECT_SIZE,
+      "El alto del rectángulo es demasiado pequeño.",
+    ),
+  })
+  .refine(
+    (value) => value.x + value.width <= MAX_RELATIVE_COORD + 0.0001,
+    "El rectángulo se sale del visor horizontalmente.",
+  )
+  .refine(
+    (value) => value.y + value.height <= MAX_RELATIVE_COORD + 0.0001,
+    "El rectángulo se sale del visor verticalmente.",
+  );
+
+export const trameadoAnnotationFormSchema = z.discriminatedUnion("type", [
+  trameadoPointAnnotationSchema,
+  trameadoRectAnnotationSchema,
+]);
+
+export type TrameadoAnnotationFormInput = z.infer<
+  typeof trameadoAnnotationFormSchema
+>;
+
+export function parseTrameadoAnnotationFormData(formData: FormData) {
+  const type = formData.get("type");
+
+  if (type === "rect") {
+    return trameadoAnnotationFormSchema.safeParse({
+      type,
+      pageNumber: formData.get("pageNumber") ?? "1",
+      x: formData.get("x") ?? undefined,
+      y: formData.get("y") ?? undefined,
+      width: formData.get("width") ?? undefined,
+      height: formData.get("height") ?? undefined,
+    });
+  }
+
+  return trameadoAnnotationFormSchema.safeParse({
+    type: type === "point" ? "point" : type,
+    pageNumber: formData.get("pageNumber") ?? "1",
+    x: formData.get("x") ?? undefined,
+    y: formData.get("y") ?? undefined,
+  });
+}

@@ -1,6 +1,8 @@
+import type { DrawingTrameadoAnnotation } from "@prisma/client";
 import type { Decimal } from "@prisma/client/runtime/library";
 
 import { prisma } from "@/lib/db";
+import { formatAnnotationSegmentLabel } from "@/lib/trameado/pdf-annotations";
 
 export type SerializedTrameadoSegment = {
   id: string;
@@ -20,6 +22,22 @@ export type SerializedTrameadoSegment = {
   updatedAt: string;
 };
 
+export type SerializedTrameadoAnnotation = {
+  id: string;
+  sheetId: string;
+  segmentId: string;
+  segmentNumber: string;
+  segmentLabel: string;
+  palilloLength: string;
+  pageNumber: number;
+  type: "point" | "rect";
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  createdAt: string;
+};
+
 export type SerializedTrameadoSheet = {
   id: string;
   lineIdentifier: string;
@@ -28,12 +46,48 @@ export type SerializedTrameadoSheet = {
   reviewedAt: string | null;
   reviewedByLabel: string | null;
   segments: SerializedTrameadoSegment[];
+  annotations: SerializedTrameadoAnnotation[];
   createdAt: string;
   updatedAt: string;
 };
 
 function serializeDecimal(value: Decimal): string {
   return value.toString();
+}
+
+type AnnotationWithSegment = DrawingTrameadoAnnotation & {
+  segment: {
+    segmentNumber: string;
+    segmentLabel: string | null;
+    palilloLength: Decimal;
+  };
+};
+
+function serializeAnnotation(
+  annotation: AnnotationWithSegment,
+): SerializedTrameadoAnnotation {
+  const segmentSource = {
+    id: annotation.segmentId,
+    segmentNumber: annotation.segment.segmentNumber,
+    segmentLabel: annotation.segment.segmentLabel,
+    palilloLength: serializeDecimal(annotation.segment.palilloLength),
+  };
+
+  return {
+    id: annotation.id,
+    sheetId: annotation.sheetId,
+    segmentId: annotation.segmentId,
+    segmentNumber: segmentSource.segmentNumber,
+    segmentLabel: formatAnnotationSegmentLabel(segmentSource),
+    palilloLength: segmentSource.palilloLength,
+    pageNumber: annotation.pageNumber,
+    type: annotation.type,
+    x: annotation.x,
+    y: annotation.y,
+    width: annotation.width ?? undefined,
+    height: annotation.height ?? undefined,
+    createdAt: annotation.createdAt.toISOString(),
+  };
 }
 
 function formatReviewedByLabel(
@@ -68,6 +122,17 @@ export async function getDrawingTrameadoSheets(
       segments: {
         orderBy: [{ sortOrder: "asc" }, { segmentNumber: "asc" }],
       },
+      annotations: {
+        include: {
+          segment: {
+            select: {
+              segmentNumber: true,
+              segmentLabel: true,
+              palilloLength: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -80,6 +145,7 @@ export async function getDrawingTrameadoSheets(
     reviewedByLabel: formatReviewedByLabel(sheet.reviewedBy),
     createdAt: sheet.createdAt.toISOString(),
     updatedAt: sheet.updatedAt.toISOString(),
+    annotations: sheet.annotations.map(serializeAnnotation),
     segments: sheet.segments.map((segment) => ({
       id: segment.id,
       sheetId: segment.sheetId,

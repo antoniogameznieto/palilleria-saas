@@ -115,7 +115,8 @@ model User {
   drawingActivities      DrawingActivity[] @relation("DrawingActivityActor")
   takeoffItems           DrawingTakeoffItem[] @relation("TakeoffItemCreatedBy")
   takeoffReviewedDrawings Drawing[] @relation("DrawingTakeoffReviewedBy")
-  trameadoReviewedSheets DrawingTrameadoSheet[] @relation("TrameadoSheetReviewedBy")
+  trameadoReviewedSheets      DrawingTrameadoSheet[]       @relation("TrameadoSheetReviewedBy")
+  createdTrameadoAnnotations  DrawingTrameadoAnnotation[] @relation("TrameadoAnnotationCreatedBy")
 }
 
 model Company {
@@ -133,8 +134,9 @@ model Company {
   annotations   Annotation[]
   exports       Export[]
   takeoffItems      DrawingTakeoffItem[]
-  trameadoSheets    DrawingTrameadoSheet[]
-  trameadoSegments  DrawingTrameadoSegment[]
+  trameadoSheets       DrawingTrameadoSheet[]
+  trameadoSegments     DrawingTrameadoSegment[]
+  trameadoAnnotations  DrawingTrameadoAnnotation[]
 }
 
 model CompanyMember {
@@ -171,8 +173,9 @@ model Job {
   annotations  Annotation[]
   exports      Export[]
   takeoffItems     DrawingTakeoffItem[]
-  trameadoSheets   DrawingTrameadoSheet[]
-  trameadoSegments DrawingTrameadoSegment[]
+  trameadoSheets       DrawingTrameadoSheet[]
+  trameadoSegments     DrawingTrameadoSegment[]
+  trameadoAnnotations  DrawingTrameadoAnnotation[]
 
   @@index([companyId])
   @@index([createdById])
@@ -205,13 +208,19 @@ model Drawing {
   annotations  Annotation[]
   activities   DrawingActivity[]
   takeoffItems     DrawingTakeoffItem[]
-  trameadoSheets   DrawingTrameadoSheet[]
-  trameadoSegments DrawingTrameadoSegment[]
+  trameadoSheets       DrawingTrameadoSheet[]
+  trameadoSegments     DrawingTrameadoSegment[]
+  trameadoAnnotations  DrawingTrameadoAnnotation[]
 
   @@index([companyId])
   @@index([jobId])
   @@index([createdById])
   @@index([takeoffReviewedById])
+}
+
+enum TrameadoAnnotationType {
+  point
+  rect
 }
 
 model DrawingTrameadoSheet {
@@ -230,8 +239,9 @@ model DrawingTrameadoSheet {
   company    Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   job        Job                      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   drawing    Drawing                  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
-  reviewedBy User?                    @relation("TrameadoSheetReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
-  segments   DrawingTrameadoSegment[]
+  reviewedBy  User?                        @relation("TrameadoSheetReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  segments    DrawingTrameadoSegment[]
+  annotations DrawingTrameadoAnnotation[]
 
   @@index([companyId, jobId, drawingId])
   @@index([drawingId])
@@ -261,11 +271,43 @@ model DrawingTrameadoSegment {
   company Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
   job     Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
   drawing Drawing            @relation(fields: [drawingId], references: [id], onDelete: Cascade)
-  sheet   DrawingTrameadoSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  sheet      DrawingTrameadoSheet       @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  annotation DrawingTrameadoAnnotation?
 
   @@index([companyId, jobId, drawingId])
   @@index([sheetId, sortOrder])
   @@index([drawingId])
+}
+
+model DrawingTrameadoAnnotation {
+  id            String                 @id @default(cuid())
+  companyId     String
+  jobId         String
+  drawingId     String
+  sheetId       String
+  segmentId     String                 @unique
+  pageNumber    Int                    @default(1)
+  type          TrameadoAnnotationType
+  x             Float
+  y             Float
+  width         Float?
+  height        Float?
+  segmentLabel  String?
+  createdById   String
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  company   Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  job       Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  drawing   Drawing                @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  sheet     DrawingTrameadoSheet   @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  segment   DrawingTrameadoSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  createdBy User                   @relation("TrameadoAnnotationCreatedBy", fields: [createdById], references: [id])
+
+  @@index([companyId, jobId, drawingId])
+  @@index([sheetId])
+  @@index([drawingId])
+  @@index([createdById])
 }
 
 model DrawingTakeoffItem {

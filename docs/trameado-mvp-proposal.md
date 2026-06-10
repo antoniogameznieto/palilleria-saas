@@ -291,8 +291,15 @@ Columnas:
 
 - Helper: `lib/trameado/pdf-annotations.ts` — marcas punto/rect con coords relativas 0–1.
 - UI: overlay en `TrameadoPdfPanel`, panel **Marcado del isométrico**, acción **Marcar en plano** en tabla.
-- Estado **temporal en sesión**; sin Prisma ni migraciones en esta fase.
+- Prototipo en estado temporal de sesión (sustituido por 18O-D).
+
+### 18O-D — Persistencia de marcas del isométrico (completado)
+
+- Modelo Prisma `DrawingTrameadoAnnotation` (1 marca activa por tramo, `segmentId` unique).
+- Actions: `upsertTrameadoAnnotationAction`, `deleteTrameadoAnnotationAction`.
+- Carga con `getDrawingTrameadoSheets`; viewer en lectura.
 - **No** trameado automático, **no** coordenadas PDF reales, **no** geometría vectorial.
+- Base para exportar/generar iso trameado en fases posteriores.
 
 ### 18M-F — Export/plantilla cliente (backlog)
 
@@ -327,7 +334,7 @@ Columnas:
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
-- Marcado isométrico 18O-C: `lib/trameado/pdf-annotations.ts`
+- Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
 
 ---
 

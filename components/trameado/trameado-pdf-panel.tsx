@@ -89,8 +89,8 @@ export function TrameadoPdfPanel({
         >
           ábrelo en una nueva pestaña
         </Link>
-        . Las marcas usan coordenadas relativas sobre el visor, no coordenadas
-        PDF reales.
+        . Las marcas se guardan con la hoja y usan coordenadas relativas al
+        visor, no coordenadas PDF reales.
       </p>
     </div>
   );

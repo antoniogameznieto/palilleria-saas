@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "npm run db:generate && next dev --turbopack",
     "build": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/palilleria?schema=public} prisma generate && next build",
     "db:generate": "DATABASE_URL=${DATABASE_URL:-postgresql://user:password@localhost:5432/palilleria?schema=public} prisma generate",
     "postinstall": "npm run db:generate",

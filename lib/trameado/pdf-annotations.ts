@@ -195,6 +195,17 @@ export function buildTrameadoPdfAnnotationSummary(
   };
 }
 
+export function toTrameadoPdfAnnotation(
+  annotation: Omit<TrameadoPdfAnnotation, "palilloLength"> & {
+    palilloLength?: string;
+  },
+): TrameadoPdfAnnotation {
+  return {
+    ...annotation,
+    palilloLength: annotation.palilloLength,
+  };
+}
+
 export function pruneAnnotationsForSegments(
   annotations: TrameadoPdfAnnotation[],
   segments: TrameadoPdfAnnotationSegmentSource[],

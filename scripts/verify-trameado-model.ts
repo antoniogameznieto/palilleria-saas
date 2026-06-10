@@ -43,6 +43,10 @@ import {
 } from "../lib/trameado/pdf-annotations";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
+  parseTrameadoAnnotationFormData,
+  trameadoAnnotationFormSchema,
+} from "../lib/validations/trameado";
+import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
   formatTrameadoSheetSummary,
@@ -907,6 +911,57 @@ function verifyTrameadoSheetValidation(): void {
   );
 }
 
+function verifyTrameadoAnnotationValidation(): void {
+  const point = trameadoAnnotationFormSchema.safeParse({
+    type: "point",
+    pageNumber: 1,
+    x: 0.4,
+    y: 0.6,
+  });
+
+  assert(point.success, "Valid point annotation should pass validation");
+
+  const outOfRange = trameadoAnnotationFormSchema.safeParse({
+    type: "point",
+    pageNumber: 1,
+    x: 1.2,
+    y: 0.5,
+  });
+
+  assert(!outOfRange.success, "Out-of-range coordinates should be rejected");
+
+  const rectWithoutSize = trameadoAnnotationFormSchema.safeParse({
+    type: "rect",
+    pageNumber: 1,
+    x: 0.1,
+    y: 0.1,
+    width: 0.005,
+    height: 0.02,
+  });
+
+  assert(!rectWithoutSize.success, "Rect smaller than minimum should be rejected");
+
+  const validRect = trameadoAnnotationFormSchema.safeParse({
+    type: "rect",
+    pageNumber: 1,
+    x: 0.1,
+    y: 0.1,
+    width: 0.2,
+    height: 0.15,
+  });
+
+  assert(validRect.success, "Valid rect annotation should pass validation");
+
+  const formData = new FormData();
+  formData.append("type", "point");
+  formData.append("pageNumber", "1");
+  formData.append("x", "0.5");
+  formData.append("y", "0.5");
+
+  const parsedForm = parseTrameadoAnnotationFormData(formData);
+  assert(parsedForm.success, "FormData parser should accept valid point");
+}
+
 function verifyPdfAnnotations(): void {
   assert(isValidRelativeCoordinate(0.5), "0.5 should be valid relative coordinate");
   assert(!isValidRelativeCoordinate(1.2), "1.2 should be invalid relative coordinate");
@@ -1042,6 +1097,7 @@ async function main(): Promise<void> {
   verifySegmentSuggestions();
   verifyTrameadoSheetValidation();
   verifyPdfAnnotations();
+  verifyTrameadoAnnotationValidation();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }
