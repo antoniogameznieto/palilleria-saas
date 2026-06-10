@@ -255,7 +255,22 @@ Columnas:
 - **Límites:** sin X/Y, sin agrupación por tramo, sin suma automática.
 - Validación: `verify:trameado` + `validate:trameado-functional` — mejora ruido en -01 (17→14 ranked, sin 45/17/1290 en top); -02 mantiene 100/120 en primary; 1289-02 golden 3/3.
 
-### 18M-B — Export/plantilla cliente (backlog)
+### 18M-B — UX pestaña Trameado (completado)
+
+- Jerarquía visual, layout izquierda/derecha, asistente compacto con hoja, tabla tipo taller.
+- Documentado en commit `style(trameado): clarify empty sheet workflow` (incl. 18M-B2 estado sin hoja).
+
+### 18M-B2 — Estado sin hoja y CTA principal (completado)
+
+- Tarjeta «Crea una hoja de palilleo para empezar»; CTA principal; cotas con Preparar tramo deshabilitado + aviso.
+
+### 18N-A — Checklist demo interna (completado)
+
+- Documento: [trameado-demo-checklist.md](./trameado-demo-checklist.md).
+- **Demo recomendada:** `HL-1289-02` (golden 3/3 en panel); alternativa `HL-1291-02`.
+- **Objetivo:** validar entendimiento del flujo asistido antes de más automatización.
+
+### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
 
@@ -285,6 +300,7 @@ Columnas:
 - Research automático (escaneos): [trameado-auto-research.md](./trameado-auto-research.md)
 - Research vectorial (input real): [trameado-vector-research.md](./trameado-vector-research.md)
 - Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
+- Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 
 ---
 
