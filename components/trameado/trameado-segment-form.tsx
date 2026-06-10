@@ -200,7 +200,7 @@ export function TrameadoSegmentForm({
     <form
       key={formKey}
       action={formAction}
-      className="space-y-4 rounded-lg border bg-muted/15 p-4"
+      className="space-y-4 rounded-lg border border-primary/20 bg-card p-4 shadow-sm"
       data-testid="trameado-segment-form"
       onSubmit={handleSubmit}
       onKeyDown={handleFormKeyDown}
@@ -215,13 +215,17 @@ export function TrameadoSegmentForm({
       <input type="hidden" name="lengthUnit" value="mm" />
 
       {mode === "create" && assistedDraft ? (
-        <p
-          className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-sm text-sky-900 dark:text-sky-100"
+        <div
+          className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2.5"
           data-testid="trameado-assisted-segment-notice"
         >
-          Cota {assistedDraft.palilloLength} mm usada como PALILLO. Revisa contra
-          el isométrico antes de guardar.
-        </p>
+          <p className="text-sm font-medium text-sky-950 dark:text-sky-50">
+            Preparando tramo desde cota {assistedDraft.palilloLength} mm
+          </p>
+          <p className="mt-1 text-xs text-sky-900/80 dark:text-sky-100/80">
+            Revisa contra el isométrico antes de confirmar.
+          </p>
+        </div>
       ) : null}
 
       {mode === "create" && !assistedDraft ? (

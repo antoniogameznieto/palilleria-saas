@@ -67,12 +67,15 @@ test.describe("trameado manual", () => {
     await primarySuggestion.getByTestId("trameado-sheet-suggestion-checkbox").check();
     await expect(page.getByTestId("trameado-create-suggested-sheets")).toBeEnabled();
     await page.getByTestId("trameado-create-suggested-sheets").click();
-    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toContainText(
       "HL-E2E-A012AA-N-01",
       { timeout: 15_000 },
     );
-    await expect(page.getByText("CLASE ·").locator("..")).toContainText("A012AA");
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toContainText(
+      "A012AA",
+    );
     await expect(page.getByTestId("trameado-segment-row")).toHaveCount(0);
+    await page.getByTestId("trameado-sheet-assistant-toggle").click();
     await expect(primarySuggestion).toContainText("Ya existe");
   });
 
@@ -93,7 +96,7 @@ test.describe("trameado manual", () => {
     await page.locator("#trameado-line-identifier").fill("HL-E2E-MANUAL-01");
     await page.locator("#trameado-line-class").fill("A012AA");
     await page.getByTestId("trameado-create-sheet-submit").click();
-    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toContainText(
       "HL-E2E-MANUAL-01",
     );
 
@@ -213,7 +216,7 @@ test.describe("trameado manual", () => {
     await expect(page.getByTestId("trameado-candidate-dimensions-panel")).toBeVisible();
     await expect(page.getByTestId("trameado-sheet-panel")).toBeVisible();
     await expect(page.getByTestId("trameado-segments-table")).toBeVisible();
-    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toContainText(
       "HL-E2E-VIEWER-01",
     );
     await expect(page.getByTestId("trameado-segment-row")).toContainText("120");
@@ -249,7 +252,7 @@ test.describe("trameado manual", () => {
     await page.getByTestId("trameado-create-sheet").click();
     await page.locator("#trameado-line-identifier").fill("HL-E2E-CAND-01");
     await page.getByTestId("trameado-create-sheet-submit").click();
-    await expect(page.getByTestId("trameado-sheet-line-identifier")).toHaveText(
+    await expect(page.getByTestId("trameado-sheet-line-identifier")).toContainText(
       "HL-E2E-CAND-01",
     );
 

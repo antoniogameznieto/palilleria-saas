@@ -50,10 +50,11 @@ export function TrameadoSegmentsTable({
   if (segments.length === 0) {
     return (
       <div
-        className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
+        className="rounded-lg border border-dashed bg-muted/10 px-4 py-5 text-center text-sm text-muted-foreground"
         data-testid="trameado-segments-empty"
       >
-        Todavía no hay tramos en esta hoja. Añade el primero para empezar.
+        Todavía no hay tramos. Usa una cota candidata o introduce un PALILLO
+        manualmente.
       </div>
     );
   }
@@ -76,26 +77,26 @@ export function TrameadoSegmentsTable({
         className="overflow-x-auto rounded-lg border"
         data-testid="trameado-segments-table"
       >
-        <table className="w-full min-w-[40rem] table-fixed text-sm">
+        <table className="w-full min-w-[36rem] table-fixed text-sm">
           <colgroup>
+            <col className="w-[9%]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
-            <col className="w-[10%]" />
+            <col className="w-[14%]" />
             <col className="w-[12%]" />
-            <col className="w-[12%]" />
-            <col className="w-[20%]" />
-            {canManage ? <col className="w-[20%]" /> : null}
+            <col className="w-[18%]" />
+            {canManage ? <col className="w-[18%]" /> : null}
           </colgroup>
-          <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="border-b bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-3 py-2 font-medium">Nº</th>
-              <th className="px-3 py-2 font-medium">Ø</th>
-              <th className="px-3 py-2 font-medium">SCH.</th>
-              <th className="px-3 py-2 font-medium">PALILLO</th>
-              <th className="px-3 py-2 font-medium">COLADA</th>
-              <th className="px-3 py-2 font-medium">Notas</th>
+              <th className="px-2.5 py-2 font-semibold">Nº</th>
+              <th className="px-2.5 py-2 font-semibold">Ø</th>
+              <th className="px-2.5 py-2 font-semibold">SCH.</th>
+              <th className="px-2.5 py-2 font-semibold">PALILLO</th>
+              <th className="px-2.5 py-2 font-medium">COLADA</th>
+              <th className="px-2.5 py-2 font-medium">Notas</th>
               {canManage ? (
-                <th className="px-3 py-2 font-medium">Acciones</th>
+                <th className="px-2.5 py-2 font-medium">Acciones</th>
               ) : null}
             </tr>
           </thead>
@@ -104,42 +105,42 @@ export function TrameadoSegmentsTable({
               <tr
                 key={segment.id}
                 className={cn(
-                  "border-b last:border-b-0 hover:bg-muted/20",
-                  editingSegmentId === segment.id && "bg-muted/30",
+                  "border-b last:border-b-0 hover:bg-muted/15",
+                  editingSegmentId === segment.id && "bg-muted/25",
                 )}
                 data-testid="trameado-segment-row"
               >
-                <td className="px-3 py-2 align-top font-semibold whitespace-nowrap text-foreground">
+                <td className="px-2.5 py-2 align-middle font-bold whitespace-nowrap text-foreground">
                   {formatTrameadoSegmentDisplayLabel(segment)}
                 </td>
-                <td className="px-3 py-2 align-top whitespace-nowrap">
+                <td className="px-2.5 py-2 align-middle font-medium whitespace-nowrap">
                   {segment.diameter}
                 </td>
-                <td className="px-3 py-2 align-top whitespace-nowrap">
+                <td className="px-2.5 py-2 align-middle font-medium whitespace-nowrap">
                   {segment.schedule}
                 </td>
-                <td className="px-3 py-2 align-top whitespace-nowrap tabular-nums">
+                <td className="px-2.5 py-2 align-middle text-base font-semibold tabular-nums whitespace-nowrap">
                   {formatPalilloLength(segment.palilloLength, segment.lengthUnit)}
                 </td>
-                <td className="px-3 py-2 align-top text-muted-foreground whitespace-nowrap">
+                <td className="px-2.5 py-2 align-middle text-xs text-muted-foreground whitespace-nowrap">
                   {formatCell(segment.heatNumber)}
                 </td>
-                <td className="px-3 py-2 align-top text-muted-foreground">
+                <td className="px-2.5 py-2 align-middle text-xs text-muted-foreground">
                   <span
-                    className="line-clamp-2"
+                    className="line-clamp-1"
                     title={segment.notes ?? undefined}
                   >
                     {formatCell(segment.notes)}
                   </span>
                 </td>
                 {canManage ? (
-                  <td className="px-3 py-2 align-top">
-                    <div className="flex flex-wrap gap-1">
+                  <td className="px-2.5 py-2 align-middle">
+                    <div className="flex flex-wrap gap-0.5">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                         data-testid="trameado-edit-segment"
                         onClick={() => onEdit(segment.id)}
                       >

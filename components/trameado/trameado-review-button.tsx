@@ -44,68 +44,65 @@ export function TrameadoReviewButton({
   }, [router, state.success]);
 
   if (segmentCount === 0) {
-    return (
-      <div className="rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-        Añade al menos un tramo para poder marcar la hoja como revisada.
-      </div>
-    );
+    return null;
   }
 
   if (reviewedAt) {
     return (
-      <div className="space-y-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
         <p
           className="text-sm text-emerald-800 dark:text-emerald-300"
           data-testid="trameado-sheet-reviewed-status"
         >
-          Hoja revisada el {formatTakeoffReviewedAt(reviewedAt)} por{" "}
+          Revisada el {formatTakeoffReviewedAt(reviewedAt)} por{" "}
           {reviewedByLabel ?? "Usuario desconocido"}
         </p>
-        <p className="text-xs text-muted-foreground">
-          Si editas o eliminas tramos, la revisión se invalidará automáticamente.
+        <p className="mt-1 text-xs text-muted-foreground">
+          Si editas o eliminas tramos, la revisión se invalidará.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-      <p className="text-sm text-amber-900 dark:text-amber-200">
-        Revisa los tramos antes de marcar la hoja de palilleo como revisada.
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/15 px-4 py-3">
+      <p className="text-sm text-muted-foreground">
+        Cuando los tramos estén correctos, marca la hoja como revisada antes de
+        exportar.
       </p>
 
-      {state.error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {state.error}
-        </p>
-      ) : null}
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        {state.error ? (
+          <p className="text-xs text-destructive">{state.error}</p>
+        ) : null}
 
-      {state.success ? (
-        <p className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-          {state.success}
-        </p>
-      ) : null}
+        {state.success ? (
+          <p className="text-xs text-emerald-700 dark:text-emerald-400">
+            {state.success}
+          </p>
+        ) : null}
 
-      {canManage ? (
-        <form action={formAction}>
-          <input type="hidden" name="companyId" value={companyId} />
-          <input type="hidden" name="jobId" value={jobId} />
-          <input type="hidden" name="drawingId" value={drawingId} />
-          <input type="hidden" name="sheetId" value={sheetId} />
-          <Button
-            type="submit"
-            size="sm"
-            disabled={isPending}
-            data-testid="trameado-mark-reviewed"
-          >
-            {isPending ? "Marcando..." : "Marcar hoja como revisada"}
-          </Button>
-        </form>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Solo ingenieros y administradores pueden marcar la hoja como revisada.
-        </p>
-      )}
+        {canManage ? (
+          <form action={formAction}>
+            <input type="hidden" name="companyId" value={companyId} />
+            <input type="hidden" name="jobId" value={jobId} />
+            <input type="hidden" name="drawingId" value={drawingId} />
+            <input type="hidden" name="sheetId" value={sheetId} />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isPending}
+              data-testid="trameado-mark-reviewed"
+            >
+              {isPending ? "Marcando..." : "Marcar revisada"}
+            </Button>
+          </form>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Solo ingenieros pueden marcar la hoja como revisada.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
