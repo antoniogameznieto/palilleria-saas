@@ -341,6 +341,12 @@ Columnas:
 - E2E: `trameado-permissions.spec.ts` (401/403 APIs, viewer/engineer UI).
 - Conclusión: **listo para push** con smoke documentado; sin cambios de producto.
 
+### 18P-C — Runbook demo post-push (completado)
+
+- Runbook: [trameado-demo-runbook.md](./trameado-demo-runbook.md).
+- Smoke scripts + E2E específicos; migraciones verificadas.
+- Conclusión: **listo para demo interna seria** tras push y `migrate deploy` en destino.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -375,6 +381,7 @@ Columnas:
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
+- Runbook demo 18P-C: [trameado-demo-runbook.md](./trameado-demo-runbook.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
