@@ -58,6 +58,15 @@ Con metadatos confirmados y materiales sin analizar en Propuesta beta:
 - El asistente beta queda plegado en **Detalles del asistente beta** hasta completar el análisis.
 - Tras analizar, la tarjeta desaparece y el asistente beta recupera el flujo normal de revisión e importación.
 
+## Mini guía de flujo dentro del plano (18S-I)
+
+En el detalle de cada plano, encima de las pestañas del workspace:
+
+- Brújula compacta con **Paso X de 8** y el recorrido Trabajo → … → Entrega.
+- El paso actual del plano queda resaltado; nota: «Este es el avance de este plano dentro del trabajo».
+- Acceso a **Ver conceptos básicos** sin volver a la página del trabajo.
+- No añade CTAs ni duplica la tarjeta grande del flujo del trabajo.
+
 ## Contexto de flujo y conceptos básicos (18S-H)
 
 - Numeración **Paso X de 8** en la guía del trabajo, tarjetas protagonistas de plano y wizard de Trameado.

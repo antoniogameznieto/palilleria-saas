@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { DrawingOperationalStatusPanel } from "@/components/drawings/drawing-operational-status-panel";
+import { DrawingWorkflowMiniGuide } from "@/components/drawings/drawing-workflow-mini-guide";
 import {
   useBetaAssistantNotAnalyzed,
   useBetaAssistantStatus,
@@ -47,6 +48,8 @@ type DrawingDetailWorkspaceProps = {
   metadataConfirmation?: ReactNode;
   jobHasOtherMetadataPending?: boolean;
   showMaterialsAnalysisPrompt?: boolean;
+  hasTrameadoSheets?: boolean;
+  hasExportablePackage?: boolean;
 };
 
 export function DrawingDetailWorkspace({
@@ -62,6 +65,8 @@ export function DrawingDetailWorkspace({
   metadataConfirmation,
   jobHasOtherMetadataPending = false,
   showMaterialsAnalysisPrompt = false,
+  hasTrameadoSheets = false,
+  hasExportablePackage = false,
 }: DrawingDetailWorkspaceProps) {
   const metadataAttention = needsMetadataAttention(progress);
   const betaNotAnalyzed = useBetaAssistantNotAnalyzed();
@@ -158,6 +163,13 @@ export function DrawingDetailWorkspace({
 
   return (
     <div className="space-y-4">
+      <DrawingWorkflowMiniGuide
+        progress={progress}
+        showBetaProposal={showBetaProposal}
+        hasTrameadoSheets={hasTrameadoSheets}
+        hasExportablePackage={hasExportablePackage}
+      />
+
       {metadataConfirmation}
 
       {metadataConfirmation || hideOperationalBannerForBetaFocus ? null : (

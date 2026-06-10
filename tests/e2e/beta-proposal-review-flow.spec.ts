@@ -40,7 +40,12 @@ test.describe("beta proposal review flow", () => {
     await expect(page.getByTestId("drawing-materials-analysis-prompt")).toHaveCount(0);
     await expect(page.getByTestId("drawing-operational-status")).toHaveCount(0);
     await expect(page.getByTestId("beta-review-prompt-card")).toBeVisible();
-    await expect(page.getByText("Paso 5 de 8")).toBeVisible();
+    await expect(
+      page.getByTestId("beta-review-prompt-card").getByTestId("workflow-step-badge"),
+    ).toContainText("Paso 5 de 8");
+    await expect(page.getByTestId("drawing-workflow-mini-guide")).toContainText(
+      "Paso 5 de 8",
+    );
     await expect(page.getByText(/pasarán a la palillería/i)).toBeVisible();
     await expect(page.getByText("Revisa la propuesta beta")).toBeVisible();
     await expect(page.getByTestId("beta-review-summary")).toBeVisible();

@@ -1,16 +1,35 @@
 "use client";
 
 import { WORKFLOW_CONCEPTS } from "@/lib/jobs/workflow-concepts";
+import { cn } from "@/lib/utils";
 
-export function WorkflowConceptsHelp() {
+type WorkflowConceptsHelpProps = {
+  testId?: string;
+  toggleTestId?: string;
+  className?: string;
+  summaryClassName?: string;
+};
+
+export function WorkflowConceptsHelp({
+  testId = "workflow-concepts-help",
+  toggleTestId = "workflow-concepts-toggle",
+  className,
+  summaryClassName,
+}: WorkflowConceptsHelpProps = {}) {
   return (
     <details
-      className="rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
-      data-testid="workflow-concepts-help"
+      className={cn(
+        "rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden",
+        className,
+      )}
+      data-testid={testId}
     >
       <summary
-        className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-primary marker:content-none"
-        data-testid="workflow-concepts-toggle"
+        className={cn(
+          "cursor-pointer list-none px-3 py-2 text-sm font-medium text-primary marker:content-none",
+          summaryClassName,
+        )}
+        data-testid={toggleTestId}
       >
         Ver conceptos básicos
       </summary>

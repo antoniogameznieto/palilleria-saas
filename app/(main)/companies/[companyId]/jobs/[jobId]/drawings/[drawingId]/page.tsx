@@ -22,6 +22,7 @@ import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-au
 import { canAccessExperimentalTitleBlockOcr } from "@/lib/drawings/experimental-title-block-ocr-config";
 import { TrameadoSection } from "@/components/trameado/trameado-section";
 import { getDrawingTrameadoSheets } from "@/lib/trameado/db";
+import { canExportTrameadoPackage } from "@/lib/trameado/export-package";
 import { buildSuggestedLineIdentifier } from "@/lib/trameado/suggest-line-identifier";
 import { buildTrameadoSheetSuggestions } from "@/lib/trameado/suggestions";
 import { loadCandidateDimensionsForDrawing } from "@/lib/trameado/load-candidate-dimensions";
@@ -161,6 +162,10 @@ export default async function DrawingDetailPage({
           )
         ? "materials_step"
         : null;
+  const drawingHasTrameadoSheets = trameadoSheets.length > 0;
+  const drawingHasExportablePackage = trameadoSheets.some((sheet) =>
+    canExportTrameadoPackage(sheet.segments.length),
+  );
   const jobHasOtherMetadataPending = jobDrawings.some(
     (jobDrawing) =>
       jobDrawing.id !== drawing.id &&
@@ -225,6 +230,8 @@ export default async function DrawingDetailPage({
       <DrawingDetailWorkspace
         jobHasOtherMetadataPending={jobHasOtherMetadataPending}
         showMaterialsAnalysisPrompt={showMaterialsAnalysisPrompt}
+        hasTrameadoSheets={drawingHasTrameadoSheets}
+        hasExportablePackage={drawingHasExportablePackage}
         metadataConfirmation={
           showMetadataConfirmation ? (
             <DrawingMetadataConfirmationCard

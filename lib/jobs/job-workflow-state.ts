@@ -80,7 +80,7 @@ export type BuildJobWorkflowStateInput = {
   trameado: JobTrameadoWorkflowSummary;
 };
 
-const STEP_ORDER: JobWorkflowStepId[] = [
+export const WORKFLOW_STEP_ORDER: JobWorkflowStepId[] = [
   "job_created",
   "upload_drawings",
   "complete_metadata",
@@ -139,6 +139,17 @@ const STEP_DESCRIPTIONS: Record<JobWorkflowStepId, string> = {
     "Aquí conviertes la palillería en una hoja revisable y marcas en el plano dónde va cada tramo.",
   export_delivery:
     "El paquete reúne la hoja Excel, el PDF marcado y el resumen de validación.",
+};
+
+export const WORKFLOW_MINI_STEP_LABELS: Record<JobWorkflowStepId, string> = {
+  job_created: "Trabajo",
+  upload_drawings: "Planos",
+  complete_metadata: "Metadatos",
+  analyze_materials: "Materiales",
+  review_beta_proposal: "Propuesta",
+  review_palilleria: "Palillería",
+  trameado: "Trameado",
+  export_delivery: "Entrega",
 };
 
 export function formatWorkflowStepBadge(stepNumber: number): string {
@@ -339,7 +350,7 @@ function resolveBaseStatuses(
 function resolveCurrentStep(
   statuses: Record<JobWorkflowStepId, JobWorkflowStepStatus>,
 ): JobWorkflowStepId {
-  for (const stepId of STEP_ORDER) {
+  for (const stepId of WORKFLOW_STEP_ORDER) {
     const status = statuses[stepId];
     if (status !== "complete" && status !== "blocked") {
       return stepId;
@@ -589,7 +600,7 @@ export function buildJobWorkflowState(
   const baseStatuses = resolveBaseStatuses(input, metrics);
   const currentStep = resolveCurrentStep(baseStatuses);
 
-  const steps: JobWorkflowStep[] = STEP_ORDER.map((stepId) => {
+  const steps: JobWorkflowStep[] = WORKFLOW_STEP_ORDER.map((stepId) => {
     const baseStatus = baseStatuses[stepId];
     const status =
       stepId === currentStep &&

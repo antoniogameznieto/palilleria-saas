@@ -390,6 +390,12 @@ Columnas:
 - **Tras analizar:** prompt desaparece; asistente beta vuelve al flujo revisar/importar.
 - **Qué no cambia:** lógica de análisis, propuesta beta, permisos ni exports.
 
+### 18S-I — Mini guía de flujo dentro del plano (completado)
+
+- **Feedback:** en el detalle del plano se pierde el mapa global y el acceso a conceptos.
+- **Qué hace:** `DrawingWorkflowMiniGuide` encima de las tabs; trail compacto de 8 pasos; reutiliza `WorkflowConceptsHelp` y `resolveDrawingWorkflowStepId`.
+- **Qué no cambia:** lógica de negocio, CTAs principales ni tarjeta grande del trabajo.
+
 ### 18S-H — Contexto de flujo y conceptos básicos (completado)
 
 - **Feedback:** el usuario no sabía en qué paso global estaba ni qué significan palillería, trameado y paquete.
