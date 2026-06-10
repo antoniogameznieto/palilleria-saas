@@ -140,6 +140,18 @@ npm run validate:trameado-functional
 
 ---
 
+### Paso 3b — Tramos sugeridos (18O-A)
+
+1. Panel **Tramos sugeridos** en la columna de la hoja.
+2. En **HL-1289-02** aparecen hasta 5 propuestas (incluyen golden 170, 100, 120).
+3. En **-01 largos** el panel indica que las sugerencias automáticas no son fiables todavía.
+
+**Qué decir:** «El sistema propone tramos desde cotas rankeadas. No se guardan hasta Añadir a hoja o Confirmar tras Preparar/editar.»
+
+**Acciones:** Añadir a hoja · Preparar/editar · Descartar.
+
+---
+
 ### Paso 4 — Preparar tramo
 
 1. En una cota (p. ej. **120 mm**): **Preparar tramo**.

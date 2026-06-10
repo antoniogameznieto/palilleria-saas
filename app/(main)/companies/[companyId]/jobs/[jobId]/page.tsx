@@ -8,6 +8,7 @@ import { buildJobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summ
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { buildJobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import { buildJobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
+import { serializeJobSettings } from "@/lib/jobs/serialize-settings";
 import {
   canArchiveJob,
   canDeleteDrawings,
@@ -122,7 +123,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       />
 
       {job.settings ? (
-        <JobSettingsCollapsible settings={job.settings} />
+        <JobSettingsCollapsible settings={serializeJobSettings(job.settings)} />
       ) : null}
     </div>
   );

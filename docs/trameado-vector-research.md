@@ -220,7 +220,7 @@ Para **prepropuesta con revisión obligatoria** en subconjunto `-02`: **marginal
 |-------|-------------|--------|
 | **1** | Precrear hojas + Ø/SCH desde BOM/metadatos | ✅ 18I-A |
 | **2** | Panel de **cotas candidatas** filtradas y rankeadas junto al PDF/hoja | ✅ 18K-A + 18M-A |
-| **3** | Prepropuesta de palillos desde cotas + revisión obligatoria | ⚠️ solo plausible en `-02`; experimental |
+| **3** | **Tramos sugeridos** desde cotas + revisión obligatoria (18O-A) | ✅ `-02` útil; `-01` conservador (`unreliable`) |
 | **4** | Interpretación geométrica vectorial (paths, topología iso) | Research; requiere motor nuevo |
 | **5** | Iso trameado automático completo + marcas `<n>` | No viable MVP; OCR/visión alto riesgo |
 

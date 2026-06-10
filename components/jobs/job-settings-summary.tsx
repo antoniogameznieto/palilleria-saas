@@ -1,12 +1,11 @@
-import type { JobSettings } from "@prisma/client";
-
 import {
   LENGTH_CRITERIA_LABELS,
   LENGTH_UNIT_LABELS,
 } from "@/lib/jobs/labels";
+import type { SerializedJobSettings } from "@/lib/jobs/serialize-settings";
 
 type JobSettingsSummaryProps = {
-  settings: JobSettings;
+  settings: SerializedJobSettings;
   plain?: boolean;
 };
 

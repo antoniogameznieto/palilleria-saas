@@ -29,7 +29,10 @@ import {
   DEFAULT_MAX_CANDIDATE_DIMENSIONS,
   DEFAULT_PRIMARY_CANDIDATE_DIMENSIONS,
   extractCandidateDimensionsFromText,
+  type CandidateDimension,
+  type CandidateDimensionsExtractionResult,
 } from "../lib/trameado/candidate-dimensions";
+import { buildTrameadoSegmentSuggestions } from "../lib/trameado/segment-suggestions";
 import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
@@ -494,6 +497,278 @@ function verifyCandidateDimensions(): void {
   );
 }
 
+function mockCandidateDimension(
+  value: number,
+  confidence: CandidateDimension["confidence"],
+  score: number,
+): CandidateDimension {
+  return {
+    value,
+    displayValue: String(value),
+    raw: String(value),
+    score,
+    category: "drawing_dimension",
+    reason: "Cota candidata en rango de dibujo",
+    reasons: ["test"],
+    confidence,
+    contextSnippet: null,
+    warnings: [],
+  };
+}
+
+function mockCandidateDimensionsResult(
+  candidates: CandidateDimension[],
+): CandidateDimensionsExtractionResult {
+  return {
+    candidates,
+    additionalCandidates: [],
+    totalRankedCount: candidates.length,
+    embeddedTextLength: 1000,
+    hasEmbeddedText: true,
+    insufficientText: false,
+    overallConfidence: "high",
+    warnings: [],
+  };
+}
+
+function verifySegmentSuggestions(): void {
+  const shortIsoCandidates = mockCandidateDimensionsResult([
+    mockCandidateDimension(170, "high", 110),
+    mockCandidateDimension(100, "high", 105),
+    mockCandidateDimension(120, "high", 100),
+  ]);
+
+  const shortIso = buildTrameadoSegmentSuggestions({
+    candidateDimensions: shortIsoCandidates,
+    existingSegments: [],
+    sheetDefaults: { diameter: '3/4"', schedule: "80" },
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      fileName: "2301GB47G-C1-L-HL-1289-02.pdf",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(shortIso.mode === "short_iso", "1289-02-like should use short iso mode");
+  assert(shortIso.suggestions.length === 3, "1289-02-like should suggest 3 tramos");
+  assert(
+    shortIso.suggestions.map((suggestion) => suggestion.palilloLength).join(",") ===
+      "170,100,120",
+    "1289-02-like should suggest golden lengths in score order",
+  );
+  assert(
+    shortIso.suggestions.map((suggestion) => suggestion.suggestedNumber).join(",") ===
+      "1,2,3",
+    "Suggestions should start at segment number 1",
+  );
+  assert(
+    shortIso.suggestions.every((suggestion) => suggestion.diameter === '3/4"'),
+    "Suggestions should inherit sheet defaults",
+  );
+  assert(
+    shortIso.suggestions.every((suggestion) => suggestion.confidence === "high"),
+    "Golden short-iso lengths should use alta confianza",
+  );
+  assert(
+    shortIso.suggestions.every(
+      (suggestion) => suggestion.suggestedLabel === `<${suggestion.suggestedNumber}>`,
+    ),
+    "Suggested label should stay bracketed for persistence",
+  );
+
+  const mixedShortIso = mockCandidateDimensionsResult([
+    mockCandidateDimension(339, "high", 115),
+    mockCandidateDimension(85, "high", 108),
+    mockCandidateDimension(170, "high", 110),
+    mockCandidateDimension(100, "high", 105),
+    mockCandidateDimension(120, "high", 100),
+  ]);
+
+  const mixed = buildTrameadoSegmentSuggestions({
+    candidateDimensions: mixedShortIso,
+    existingSegments: [],
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      fileName: "2301GB47G-C1-L-HL-1289-02.pdf",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(
+    mixed.suggestions.find((suggestion) => suggestion.palilloLength === "100")
+      ?.confidence === "high",
+    "100 mm golden length should stay alta confianza",
+  );
+  assert(
+    mixed.suggestions.find((suggestion) => suggestion.palilloLength === "120")
+      ?.confidence === "high",
+    "120 mm golden length should stay alta confianza",
+  );
+  assert(
+    mixed.suggestions.find((suggestion) => suggestion.palilloLength === "170")
+      ?.confidence === "high",
+    "170 mm golden length should stay alta confianza",
+  );
+  assert(
+    mixed.suggestions.find((suggestion) => suggestion.palilloLength === "85")
+      ?.confidence === "medium",
+    "85 mm should be revisar, not alta confianza",
+  );
+  assert(
+    mixed.suggestions.find((suggestion) => suggestion.palilloLength === "339")
+      ?.confidence === "medium",
+    "339 mm should be revisar when evidence is generic",
+  );
+
+  const withExisting = buildTrameadoSegmentSuggestions({
+    candidateDimensions: shortIsoCandidates,
+    existingSegments: [
+      {
+        segmentNumber: "1",
+        palilloLength: "170",
+        lengthUnit: "mm",
+      },
+    ],
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(
+    withExisting.suggestions.length === 2,
+    "Should skip palillo length already on sheet",
+  );
+  assert(
+    withExisting.suggestions[0]?.suggestedNumber === "2",
+    "Next suggestion should continue numbering after existing segments",
+  );
+  assert(
+    !withExisting.suggestions.some(
+      (suggestion) => suggestion.palilloLength === "170",
+    ),
+    "Should not duplicate existing palillo length",
+  );
+
+  const longIsoMany = mockCandidateDimensionsResult(
+    Array.from({ length: 10 }, (_, index) =>
+      mockCandidateDimension(100 + index * 10, "high", 90 - index),
+    ),
+  );
+
+  const longPlan = buildTrameadoSegmentSuggestions({
+    candidateDimensions: longIsoMany,
+    existingSegments: [],
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1291-01",
+      fileName: "2301GB47G-C1-L-HL-1291-01.pdf",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(
+    longPlan.mode === "unreliable",
+    "Long -01 with many candidates should be unreliable",
+  );
+  assert(
+    longPlan.suggestions.length === 0,
+    "Long -01 with many candidates should not flood suggestions",
+  );
+
+  const lowOnly = buildTrameadoSegmentSuggestions({
+    candidateDimensions: mockCandidateDimensionsResult([
+      mockCandidateDimension(42, "low", 20),
+    ]),
+    existingSegments: [],
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(
+    lowOnly.suggestions.length === 0,
+    "Low confidence candidates should not produce suggestions",
+  );
+
+  const capped = buildTrameadoSegmentSuggestions({
+    candidateDimensions: shortIsoCandidates,
+    existingSegments: [],
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      maxSuggestions: 2,
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(capped.suggestions.length === 2, "maxSuggestions should cap suggestions");
+
+  const noSheet = buildTrameadoSegmentSuggestions({
+    candidateDimensions: shortIsoCandidates,
+    existingSegments: [],
+    options: { hasActiveSheet: false },
+  });
+
+  assert(noSheet.mode === "no_sheet", "Without sheet should return no_sheet mode");
+  assert(noSheet.suggestions.length === 0, "Without sheet should not suggest tramos");
+
+  const fromExtracted = extractCandidateDimensionsFromText(SAMPLE_HL_1291_02_TEXT, {
+    fileName: "2301GB47G-C1-L-HL-1291-02.pdf",
+    drawingNumber: "2301GB47G-C1-L-HL-1291-02",
+    lineNumber: "HL-1291-A012AA-N-02",
+  });
+
+  const extractedSuggestions = buildTrameadoSegmentSuggestions({
+    candidateDimensions: fromExtracted,
+    existingSegments: [],
+    sheetDefaults: { diameter: '3/4"', schedule: "80" },
+    options: {
+      drawingNumber: "2301GB47G-C1-L-HL-1291-02",
+      fileName: "2301GB47G-C1-L-HL-1291-02.pdf",
+      hasActiveSheet: true,
+    },
+  });
+
+  assert(
+    extractedSuggestions.suggestions.length >= 2,
+    "HL-1291-02 extracted candidates should yield short-iso suggestions",
+  );
+  assert(
+    extractedSuggestions.suggestions.some(
+      (suggestion) => suggestion.palilloLength === "100",
+    ),
+    "HL-1291-02 should suggest 100 mm",
+  );
+  assert(
+    extractedSuggestions.suggestions.some(
+      (suggestion) => suggestion.palilloLength === "120",
+    ),
+    "HL-1291-02 should suggest 120 mm",
+  );
+  assert(
+    extractedSuggestions.suggestions.find(
+      (suggestion) => suggestion.palilloLength === "100",
+    )?.confidence === "high",
+    "HL-1291-02 should mark 100 mm as alta confianza",
+  );
+  assert(
+    extractedSuggestions.suggestions.find(
+      (suggestion) => suggestion.palilloLength === "120",
+    )?.confidence === "high",
+    "HL-1291-02 should mark 120 mm as alta confianza",
+  );
+
+  const nonGolden = extractedSuggestions.suggestions.filter((suggestion) =>
+    ["193", "361"].includes(suggestion.palilloLength),
+  );
+
+  assert(
+    nonGolden.length === 0 ||
+      nonGolden.every((suggestion) => suggestion.confidence === "medium"),
+    "HL-1291-02 non-golden lengths like 193/361 should be revisar",
+  );
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -584,6 +859,7 @@ async function main(): Promise<void> {
   verifyCsvExport();
   verifySheetSuggestions();
   verifyCandidateDimensions();
+  verifySegmentSuggestions();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

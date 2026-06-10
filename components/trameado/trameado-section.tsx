@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
@@ -11,6 +11,7 @@ import {
   type TrameadoAssistedSegmentDraft,
   type TrameadoStickySegmentValues,
 } from "@/components/trameado/trameado-segment-form";
+import { TrameadoSegmentSuggestionsPanel } from "@/components/trameado/trameado-segment-suggestions-panel";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
 import { TrameadoSheetAssistant } from "@/components/trameado/trameado-sheet-assistant";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
@@ -33,6 +34,10 @@ import {
   formatTrameadoSheetSummary,
   getNextSegmentNumber,
 } from "@/lib/trameado/segment-helpers";
+import {
+  buildTrameadoSegmentSuggestions,
+  type TrameadoSegmentSuggestion,
+} from "@/lib/trameado/segment-suggestions";
 import { cn } from "@/lib/utils";
 
 type TrameadoSectionProps = {
@@ -121,10 +126,22 @@ export function TrameadoSection({
     useState<TrameadoStickySegmentValues | undefined>();
   const [assistedSegmentDraft, setAssistedSegmentDraft] =
     useState<TrameadoAssistedSegmentDraft | null>(null);
+  const previousSheetCountRef = useRef(sheets.length);
 
   const clearAssistedSegmentDraft = () => {
     setAssistedSegmentDraft(null);
   };
+
+  useEffect(() => {
+    if (sheets.length > previousSheetCountRef.current) {
+      setShowCreateSheet(false);
+      setShowAddSegment(false);
+      setEditingSegmentId(null);
+      setAssistedSegmentDraft(null);
+    }
+
+    previousSheetCountRef.current = sheets.length;
+  }, [sheets.length]);
 
   const handleSegmentStickyCapture = (sticky: TrameadoStickySegmentValues) => {
     setStickyCreateValues(sticky);
@@ -185,15 +202,77 @@ export function TrameadoSection({
     return assistedSegmentDraft;
   }, [assistedSegmentDraft, selectedSheet]);
 
+  const sheetDefaults = useMemo(() => {
+    if (!selectedSheet) {
+      return {
+        diameter: stickyCreateValues?.diameter ?? "",
+        schedule: stickyCreateValues?.schedule ?? "",
+        heatNumber: stickyCreateValues?.heatNumber ?? "",
+      };
+    }
+
+    const matchedSuggestion = sheetSuggestions.find(
+      (suggestion) =>
+        suggestion.lineIdentifier === selectedSheet.lineIdentifier,
+    );
+
+    return {
+      diameter:
+        stickyCreateValues?.diameter ?? matchedSuggestion?.diameter ?? "",
+      schedule:
+        stickyCreateValues?.schedule ?? matchedSuggestion?.schedule ?? "",
+      heatNumber: stickyCreateValues?.heatNumber ?? "",
+    };
+  }, [selectedSheet, sheetSuggestions, stickyCreateValues]);
+
+  const segmentSuggestionsResult = useMemo(
+    () =>
+      buildTrameadoSegmentSuggestions({
+        candidateDimensions,
+        existingSegments: selectedSheet?.segments ?? [],
+        sheetDefaults,
+        options: {
+          hasActiveSheet: Boolean(selectedSheet),
+          fileName: drawingFileName,
+          drawingNumber: selectedSheet?.lineIdentifier ?? drawingFileName,
+        },
+      }),
+    [
+      candidateDimensions,
+      drawingFileName,
+      selectedSheet,
+      sheetDefaults,
+    ],
+  );
+
   const handlePrepareSegmentFromCandidate = (value: string) => {
     if (!canManage || !selectedSheet) {
       return;
     }
 
+    setShowCreateSheet(false);
     setEditingSegmentId(null);
     setShowAddSegment(true);
     setAssistedSegmentDraft({
       palilloLength: value,
+      token: Date.now(),
+      segmentCountAtPrepare: selectedSheet.segments.length,
+    });
+  };
+
+  const handlePrepareSegmentFromSuggestion = (
+    suggestion: TrameadoSegmentSuggestion,
+  ) => {
+    if (!canManage || !selectedSheet) {
+      return;
+    }
+
+    setShowCreateSheet(false);
+    setEditingSegmentId(null);
+    setShowAddSegment(true);
+    setAssistedSegmentDraft({
+      palilloLength: suggestion.palilloLength,
+      segmentNumber: suggestion.suggestedLabel,
       token: Date.now(),
       segmentCountAtPrepare: selectedSheet.segments.length,
     });
@@ -276,6 +355,7 @@ export function TrameadoSection({
                 size="sm"
                 data-testid="trameado-add-segment"
                 onClick={() => {
+                  setShowCreateSheet(false);
                   setShowAddSegment((current) => {
                     if (current) {
                       clearAssistedSegmentDraft();
@@ -320,6 +400,18 @@ export function TrameadoSection({
           </div>
         ) : null}
       </div>
+
+      {canManage ? (
+        <TrameadoSegmentSuggestionsPanel
+          companyId={companyId}
+          jobId={jobId}
+          drawingId={drawingId}
+          sheetId={selectedSheet?.id ?? ""}
+          result={segmentSuggestionsResult}
+          canManage={canManage}
+          onPrepareSuggestion={handlePrepareSegmentFromSuggestion}
+        />
+      ) : null}
 
       {!hasSheet ? (
         <div

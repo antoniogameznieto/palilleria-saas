@@ -270,6 +270,14 @@ Columnas:
 - **Demo recomendada:** `HL-1289-02` (golden 3/3 en panel); alternativa `HL-1291-02`.
 - **Objetivo:** validar entendimiento del flujo asistido antes de más automatización.
 
+### 18O-A — Propuesta automática de tramos candidatos (completado)
+
+- Helper: `lib/trameado/segment-suggestions.ts` — `buildTrameadoSegmentSuggestions`.
+- UI: panel **Tramos sugeridos** (añadir / preparar-editar / descartar); sin persistencia en BD.
+- **No** guarda tramos hasta confirmación del ingeniero (acciones existentes).
+- **-02:** hasta 5 sugerencias desde cotas high/medium; **-01 largos:** modo `unreliable` (0 sugerencias).
+- Sin X/Y, sin iso trameado, sin Σ PALILLO vs BOM.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -301,6 +309,7 @@ Columnas:
 - Research vectorial (input real): [trameado-vector-research.md](./trameado-vector-research.md)
 - Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
+- Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 
 ---
 

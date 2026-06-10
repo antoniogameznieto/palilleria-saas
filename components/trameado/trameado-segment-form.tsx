@@ -22,6 +22,7 @@ export type TrameadoStickySegmentValues = {
 
 export type TrameadoAssistedSegmentDraft = {
   palilloLength: string;
+  segmentNumber?: string;
   token: number;
   segmentCountAtPrepare: number;
 };
@@ -49,6 +50,7 @@ function resolveInitialValues(
   nextSegmentNumber: string | undefined,
   stickyValues: TrameadoStickySegmentValues | undefined,
   assistedPalilloLength?: string,
+  assistedSegmentNumber?: string,
 ) {
   if (segment) {
     return {
@@ -62,9 +64,9 @@ function resolveInitialValues(
   }
 
   return {
-    segmentNumber: nextSegmentNumber
-      ? formatSegmentLabel(nextSegmentNumber)
-      : "",
+    segmentNumber:
+      assistedSegmentNumber ??
+      (nextSegmentNumber ? formatSegmentLabel(nextSegmentNumber) : ""),
     diameter: stickyValues?.diameter ?? "",
     schedule: stickyValues?.schedule ?? "",
     palilloLength: assistedPalilloLength ?? "",
@@ -118,6 +120,7 @@ export function TrameadoSegmentForm({
     nextSegmentNumber,
     stickyValues,
     assistedDraft?.palilloLength,
+    assistedDraft?.segmentNumber,
   );
   const [values, setValues] = useState(() => initialValues);
   const action =

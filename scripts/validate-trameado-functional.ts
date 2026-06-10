@@ -8,6 +8,10 @@ import { PDFParse } from "pdf-parse";
 
 import { extractCandidateDimensionsFromText } from "../lib/trameado/candidate-dimensions";
 import { buildTrameadoSheetSuggestions } from "../lib/trameado/suggestions";
+import {
+  buildTrameadoSegmentSuggestions,
+  type TrameadoSegmentSuggestion,
+} from "../lib/trameado/segment-suggestions";
 
 type CaseSpec = {
   label: string;
@@ -67,6 +71,12 @@ const CASES: CaseSpec[] = [
   },
 ];
 
+function formatSuggestionConfidence(
+  suggestion: TrameadoSegmentSuggestion,
+): string {
+  return suggestion.confidence === "high" ? "alta confianza" : "revisar";
+}
+
 async function main() {
   for (const spec of CASES) {
     const buffer = readFileSync(spec.path);
@@ -106,6 +116,20 @@ async function main() {
       allRanked.includes(value),
     );
 
+    const segmentSuggestions = buildTrameadoSegmentSuggestions({
+      candidateDimensions: candidates,
+      existingSegments: [],
+      sheetDefaults: {
+        diameter: suggestions[0]?.diameter ?? "",
+        schedule: suggestions[0]?.schedule ?? "",
+      },
+      options: {
+        drawingNumber: spec.drawingNumber,
+        fileName,
+        hasActiveSheet: true,
+      },
+    });
+
     console.log(`\n=== ${spec.label} ===`);
     console.log(`embeddedTextLength: ${candidates.embeddedTextLength}`);
     console.log(
@@ -135,6 +159,19 @@ async function main() {
     console.log(
       `golden palillo ${spec.goldenPalilloMm.join(", ")} → hits in panel: ${goldenHits.join(", ") || "ninguno"}`,
     );
+    console.log(
+      `segment suggestions (${segmentSuggestions.mode}, ${segmentSuggestions.suggestions.length}): ${segmentSuggestions.suggestions
+        .map(
+          (suggestion) =>
+            `Nº ${suggestion.suggestedNumber}/${suggestion.palilloLength}[${formatSuggestionConfidence(suggestion)}]`,
+        )
+        .join(", ") || "ninguna"}`,
+    );
+    if (segmentSuggestions.warnings.length > 0) {
+      console.log(
+        `segment suggestion warnings: ${segmentSuggestions.warnings.join(" | ")}`,
+      );
+    }
   }
 }
 

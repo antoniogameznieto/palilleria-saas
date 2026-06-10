@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import type { JobSettings } from "@prisma/client";
-
 import { JobSettingsSummary } from "@/components/jobs/job-settings-summary";
+import type { SerializedJobSettings } from "@/lib/jobs/serialize-settings";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type JobSettingsCollapsibleProps = {
-  settings: JobSettings;
+  settings: SerializedJobSettings;
 };
 
 export function JobSettingsCollapsible({

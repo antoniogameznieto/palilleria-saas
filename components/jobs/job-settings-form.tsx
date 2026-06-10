@@ -1,14 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import type { JobSettings } from "@prisma/client";
-
 import type { AuthActionState } from "@/lib/actions/auth";
 import { updateJobSettingsAction } from "@/lib/actions/job";
 import {
   LENGTH_CRITERIA_OPTIONS,
   LENGTH_UNIT_OPTIONS,
 } from "@/lib/jobs/labels";
+import type { SerializedJobSettings } from "@/lib/jobs/serialize-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +15,7 @@ import { Label } from "@/components/ui/label";
 type JobSettingsFormProps = {
   companyId: string;
   jobId: string;
-  defaultValues: JobSettings;
+  defaultValues: SerializedJobSettings;
 };
 
 const initialState: AuthActionState = {};

@@ -193,7 +193,22 @@ Para **HL-1291-01** con la app actual:
 
 **Siguiente recomendado:** 18M-B export/plantilla cliente o 18M-D vector engine (según prioridad negocio).
 
-## 12. Fase siguiente (backlog)
+## 12. Fase 18O-A — Tramos sugeridos (semiautomático supervisado)
+
+**Implementado (jun 2026).** Helper `buildTrameadoSegmentSuggestions` — sin persistencia en BD.
+
+| Plano | Modo | Sugerencias | Nota |
+|-------|------|-------------|------|
+| HL-1289-02 | `short_iso` | 5 (top score) | Incluye golden 170, 100, 120 + 85, 339 |
+| HL-1291-02 | `short_iso` | 5 | Golden 100, 120; **170 no literal** en PDF |
+| HL-1289-01 | `unreliable` | 0 | Muchas cotas high/medium en -01 |
+| HL-1291-01 | `unreliable` | 0 | Idem |
+
+**Reglas:** solo cotas high/medium con score ≥40; sin duplicar PALILLO ya en hoja; numeración con `getNextSegmentNumber`; acciones **Añadir a hoja** / **Preparar/editar** / **Descartar** (client-side).
+
+**No hace:** iso trameado, Σ vs BOM, X/Y, guardado automático.
+
+## 13. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -203,7 +218,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 12. Criterios MVP — estado tras 18M-A
+## 14. Criterios MVP — estado tras 18O-A
 
 | Criterio | Estado |
 |----------|--------|
@@ -213,7 +228,7 @@ Para **HL-1291-01** con la app actual:
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
 | Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
 
-## 13. Referencias
+## 15. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -222,4 +237,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A — jun 2026. Datos con `validate-trameado-functional.ts` y `research-trameado-vector`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A — jun 2026. Datos con `validate-trameado-functional.ts`.*

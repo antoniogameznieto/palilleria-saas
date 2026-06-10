@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { JobSettingsForm } from "@/components/jobs/job-settings-form";
+import { serializeJobSettings } from "@/lib/jobs/serialize-settings";
 import { canEditJob, requireJobAccess } from "@/lib/permissions";
 
 type JobSettingsPageProps = {
@@ -36,7 +37,7 @@ export default async function JobSettingsPage({ params }: JobSettingsPageProps) 
       <JobSettingsForm
         companyId={companyId}
         jobId={jobId}
-        defaultValues={job.settings}
+        defaultValues={serializeJobSettings(job.settings)}
       />
     </div>
   );
