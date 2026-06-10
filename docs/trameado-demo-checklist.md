@@ -208,6 +208,17 @@ npm run validate:trameado-functional
 
 ---
 
+### Paso 5e — Descargar paquete de trameado (18O-F)
+
+1. Con al menos un tramo, pulsa **Descargar paquete**.
+2. Abre el ZIP: debe contener `hoja-palilleo.xlsx` y `resumen-validacion.txt` (+ `.json`).
+3. Si hay marcas, también `iso-marcado.pdf`; si no, el resumen lo indica.
+4. Sin tramos, el botón está deshabilitado.
+
+**Qué decir:** «Es el primer entregable combinado para taller/cliente: Excel, resumen de validación y PDF marcado cuando procede. Sigue siendo supervisado, no automático.»
+
+---
+
 ### Paso 6 — Exportar
 
 1. Con al menos un tramo: **Exportar CSV** y **Exportar Excel**.
@@ -223,7 +234,7 @@ npm run validate:trameado-functional
 1. Cerrar sesión engineer; entrar como **viewer**.
 2. Mismo plano → pestaña Trameado.
 
-**Debe ver:** PDF, hoja, cotas (solo **Copiar**), tabla, enlaces de export.  
+**Debe ver:** PDF, hoja, cotas (solo **Copiar**), tabla, enlaces de export (CSV, Excel, paquete; PDF marcado si hay marcas).  
 **No debe ver:** crear hoja, añadir tramo, preparar tramo, editar, marcar revisada.
 
 **Qué decir:** «Consulta y exportación sí; edición solo ingeniería.»

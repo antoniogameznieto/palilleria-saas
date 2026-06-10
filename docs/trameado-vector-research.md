@@ -224,6 +224,7 @@ Para **prepropuesta con revisión obligatoria** en subconjunto `-02`: **marginal
 | **3b** | **Validación orientativa** Σ PALILLO vs BOM (18O-B) | ✅ Informativa; no bloquea cierre |
 | **3c** | **Marcado manual** tramo ↔ zona PDF (18O-C/D) | ✅ Punto/rect; persistido en BD; sin geom. auto |
 | **3d** | **PDF marcado exportable** (18O-E) | ✅ pdf-lib; coords visor→página; prudente |
+| **3e** | **Paquete ZIP de entrega** (18O-F) | ✅ Excel + resumen validación + PDF marcado opcional |
 | **4** | Interpretación geométrica vectorial (paths, topología iso) | Research; requiere motor nuevo |
 | **5** | Iso trameado automático completo + marcas `<n>` | No viable MVP; OCR/visión alto riesgo |
 

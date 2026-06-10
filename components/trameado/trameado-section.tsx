@@ -12,6 +12,7 @@ import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
 import { ExportTrameadoMarkedPdfButton } from "@/components/trameado/export-trameado-marked-pdf-button";
+import { ExportTrameadoPackageButton } from "@/components/trameado/export-trameado-package-button";
 import { TrameadoIsoMarkingPanel } from "@/components/trameado/trameado-iso-marking-panel";
 import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
 import {
@@ -632,6 +633,11 @@ export function TrameadoSection({
               />
               <ExportTrameadoMarkedPdfButton
                 sheetId={selectedSheet.id}
+                markedCount={annotationSummary.markedCount}
+              />
+              <ExportTrameadoPackageButton
+                sheetId={selectedSheet.id}
+                segmentCount={selectedSheet.segments.length}
                 markedCount={annotationSummary.markedCount}
               />
             </div>

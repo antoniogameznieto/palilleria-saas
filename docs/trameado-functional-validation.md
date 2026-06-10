@@ -258,7 +258,22 @@ Para **HL-1291-01** con la app actual:
 
 **No hace:** iso trameado perfecto de taller, coordenadas PDF reales, geometría automática.
 
-## 17. Fase siguiente (backlog)
+## 17. Fase 18O-F — Paquete de entrega ZIP
+
+**Implementado (jun 2026).** Empaqueta en un ZIP los exports existentes más un resumen de validación.
+
+| Capacidad | Detalle |
+|-----------|---------|
+| Export | `GET /api/files/trameado/[sheetId]/package` |
+| UI | **Descargar paquete** junto a CSV/Excel/PDF marcado |
+| Requisito | ≥1 tramo confirmado en la hoja |
+| Contenido | `hoja-palilleo.xlsx`, `resumen-validacion.txt`, `resumen-validacion.json`; `iso-marcado.pdf` solo con marcas |
+| Sin marcas | Paquete descargable; resumen indica que no se incluye PDF marcado |
+| Viewer | Puede descargar si hay tramos; no edita |
+
+**No hace:** cierre automático, validación bloqueante, OCR ni APIs externas.
+
+## 18. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -268,7 +283,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 18. Criterios MVP — estado tras 18O-E
+## 19. Criterios MVP — estado tras 18O-F
 
 | Criterio | Estado |
 |----------|--------|
@@ -278,7 +293,7 @@ Para **HL-1291-01** con la app actual:
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
 | Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
 
-## 19. Referencias
+## 20. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -287,4 +302,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D; PDF marcado 18O-E — jun 2026. Datos con `validate-trameado-functional.ts`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D; PDF marcado 18O-E; paquete ZIP 18O-F — jun 2026. Datos con `validate-trameado-functional.ts`.*

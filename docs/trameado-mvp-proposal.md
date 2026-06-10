@@ -314,6 +314,18 @@ Columnas:
 - Estilos escalados con mínimos (`resolveMarkedPdfRenderStyle`, `MARKED_PDF_MIN_SIZES`).
 - Marcas más grandes, mayor contraste, etiquetas bold, halo blanco y leader line.
 
+### 18O-F — Paquete de entrega ZIP (completado)
+
+- Helper: `lib/trameado/export-package.ts` (`jszip`).
+- API: `GET /api/files/trameado/[sheetId]/package`.
+- UI: botón **Descargar paquete** junto a CSV/Excel/PDF marcado.
+- Contenido ZIP:
+  - `hoja-palilleo.xlsx` (reutiliza export XLSX).
+  - `iso-marcado.pdf` solo si hay marcas persistidas.
+  - `resumen-validacion.txt` y `resumen-validacion.json` (validación orientativa, totales, BOM).
+- Primer **entregable combinado** de trameado/palilleo para taller/cliente.
+- Sigue siendo **supervisado**: no sustituye revisión del ingeniero ni cierre automático.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -349,6 +361,7 @@ Columnas:
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
 - PDF marcado 18O-E: `lib/trameado/export-marked-pdf.ts`
+- Paquete ZIP 18O-F: `lib/trameado/export-package.ts`
 
 ---
 

@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "pdf-lib",
     "pdfjs-dist",
     "exceljs",
+    "jszip",
     "@napi-rs/canvas",
   ],
   experimental: {

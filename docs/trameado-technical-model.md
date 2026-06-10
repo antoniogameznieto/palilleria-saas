@@ -293,6 +293,24 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 
 **18O-E2:** `MARKED_PDF_MIN_SIZES` + `resolveMarkedPdfRenderStyle` — marcas/etiquetas más legibles, leader line, halo.
 
+## Paquete de entrega ZIP (18O-F)
+
+**Helper:** `lib/trameado/export-package.ts` — `buildTrameadoDeliveryPackage`, `buildTrameadoValidationSummaryText`, `buildTrameadoPackageFileName` (`jszip`).
+
+**API:** `GET /api/files/trameado/[sheetId]/package` — requiere ≥1 tramo; reutiliza `buildTrameadoXlsxBuffer`, `buildMarkedTrameadoPdf` (si hay anotaciones) y `validateTrameadoSheet`.
+
+**Entradas ZIP:**
+
+| Archivo | Condición |
+|---------|-----------|
+| `hoja-palilleo.xlsx` | Siempre (con tramos) |
+| `iso-marcado.pdf` | Solo si hay `DrawingTrameadoAnnotation` |
+| `resumen-validacion.txt` / `.json` | Siempre |
+
+**UI:** `ExportTrameadoPackageButton` — **Descargar paquete**; viewer puede descargar con tramos.
+
+**Limitación:** entregable supervisado; validación orientativa en resumen, no bloqueante.
+
 ## Archivos tocados en 18B
 
 - `prisma/schema.prisma`

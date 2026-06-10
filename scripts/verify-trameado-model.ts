@@ -53,6 +53,18 @@ import {
   MARKED_PDF_MIN_SIZES,
   resolveMarkedPdfRenderStyle,
 } from "../lib/trameado/export-marked-pdf";
+import {
+  buildTrameadoDeliveryPackage,
+  buildTrameadoPackageExportPath,
+  buildTrameadoPackageFileName,
+  buildTrameadoValidationSummaryText,
+  canExportTrameadoPackage,
+  TRAMEADO_PACKAGE_MARKED_PDF_ENTRY,
+  TRAMEADO_PACKAGE_SUMMARY_JSON_ENTRY,
+  TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY,
+  TRAMEADO_PACKAGE_XLSX_ENTRY,
+} from "../lib/trameado/export-package";
+import JSZip from "jszip";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
   parseTrameadoAnnotationFormData,
@@ -1199,6 +1211,118 @@ async function verifyXlsxExport(): Promise<void> {
   );
 }
 
+async function verifyTrameadoPackageExport(): Promise<void> {
+  assert(!canExportTrameadoPackage(0), "Package export should require segments");
+  assert(canExportTrameadoPackage(1), "Package export should be allowed with segments");
+
+  assert(
+    buildTrameadoPackageFileName("HL-1289-A010AA-N-02") ===
+      "trameado-paquete-HL-1289-A010AA-N-02.zip",
+    "Package file name should sanitize line identifier",
+  );
+  assert(
+    buildTrameadoPackageFileName("", "2301GB47G/C1") ===
+      "trameado-paquete-2301GB47G-C1.zip",
+    "Package file name should fall back to drawing number",
+  );
+  assert(
+    !buildTrameadoPackageFileName("HL/01").includes("/"),
+    "Package file name should not contain path separators",
+  );
+
+  assert(
+    buildTrameadoPackageExportPath("sheet-42") ===
+      "/api/files/trameado/sheet-42/package",
+    "Package export path should match API route",
+  );
+
+  const validation = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [
+      { segmentNumber: "1", palilloLength: "130" },
+      { segmentNumber: "2", palilloLength: "260" },
+    ],
+    takeoffItems: [
+      {
+        description: '2 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "0.4",
+        unit: "M",
+      },
+    ],
+  });
+
+  const summaryText = buildTrameadoValidationSummaryText({
+    generatedAt: new Date("2026-06-10T10:30:00.000Z"),
+    sheetLineIdentifier: "HL-1289-A010AA-N-02",
+    drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+    validation,
+    markedCount: 2,
+    totalSegmentCount: 2,
+    includesMarkedPdf: true,
+  });
+
+  assert(summaryText.includes("Paquete de trameado"), "Summary should include title");
+  assert(
+    summaryText.includes("HL-1289-A010AA-N-02"),
+    "Summary should include sheet line identifier",
+  );
+  assert(
+    summaryText.includes("2301GB47G-C1-L-HL-1289-02"),
+    "Summary should include drawing number",
+  );
+  assert(
+    summaryText.includes(`Tramos confirmados: ${validation.confirmedSegmentCount}`),
+    "Summary should include confirmed segment count",
+  );
+  assert(summaryText.includes("Total PALILLO:"), "Summary should include PALILLO total");
+  assert(summaryText.includes("Tramos marcados: 2/2"), "Summary should include marked ratio");
+  assert(
+    summaryText.includes("Validación orientativa"),
+    "Summary should include disclaimer",
+  );
+
+  const xlsxBuffer = await buildTrameadoXlsxBuffer(buildSampleExportSheet());
+  const zipBuffer = await buildTrameadoDeliveryPackage({
+    xlsxBuffer,
+    markedPdfBuffer: null,
+    summary: {
+      generatedAt: new Date("2026-06-10T10:30:00.000Z"),
+      sheetLineIdentifier: "HL-1289-A010AA-N-02",
+      drawingNumber: "2301GB47G-C1-L-HL-1289-02",
+      validation,
+      markedCount: 0,
+      totalSegmentCount: 2,
+      includesMarkedPdf: false,
+    },
+  });
+
+  assert(zipBuffer.length > 0, "Package ZIP buffer should not be empty");
+
+  const zip = await JSZip.loadAsync(zipBuffer);
+  assert(
+    zip.file(TRAMEADO_PACKAGE_XLSX_ENTRY) !== null,
+    "Package ZIP should include XLSX entry",
+  );
+  assert(
+    zip.file(TRAMEADO_PACKAGE_MARKED_PDF_ENTRY) === null,
+    "Package ZIP should omit marked PDF when no marks",
+  );
+  assert(
+    zip.file(TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY) !== null,
+    "Package ZIP should include validation summary text",
+  );
+  assert(
+    zip.file(TRAMEADO_PACKAGE_SUMMARY_JSON_ENTRY) !== null,
+    "Package ZIP should include validation summary JSON",
+  );
+
+  const txtEntry = await zip.file(TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY)!.async("string");
+  assert(
+    txtEntry.includes("No se incluye PDF marcado porque no hay tramos marcados."),
+    "Summary text should note missing marked PDF",
+  );
+}
+
 async function main(): Promise<void> {
   verifyFormatHelpers();
   verifySheetValidation();
@@ -1214,6 +1338,7 @@ async function main(): Promise<void> {
   verifyTrameadoAnnotationValidation();
   await verifyMarkedPdfExport();
   await verifyXlsxExport();
+  await verifyTrameadoPackageExport();
   console.log("verify-trameado-model: all checks passed");
 }
 
