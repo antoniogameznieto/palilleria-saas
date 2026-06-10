@@ -41,10 +41,15 @@ export type JobWorkflowDrawingInput = {
   takeoffReviewedAt: Date | string | null;
 };
 
+export const WORKFLOW_STEP_TOTAL = 8;
+
 export type JobWorkflowStep = {
   id: JobWorkflowStepId;
   number: number;
+  total: number;
   label: string;
+  shortLabel: string;
+  description: string;
   status: JobWorkflowStepStatus;
   displayStatus: JobWorkflowDisplayStatus;
   summary: string;
@@ -107,6 +112,61 @@ const STEP_NUMBERS: Record<JobWorkflowStepId, number> = {
   trameado: 7,
   export_delivery: 8,
 };
+
+const STEP_SHORT_LABELS: Record<JobWorkflowStepId, string> = {
+  job_created: "Trabajo creado",
+  upload_drawings: "Subir planos",
+  complete_metadata: "Confirmar metadatos",
+  analyze_materials: "Analizar materiales",
+  review_beta_proposal: "Revisar propuesta",
+  review_palilleria: "Revisar palillería",
+  trameado: "Tramear / palillear",
+  export_delivery: "Exportar entrega",
+};
+
+const STEP_DESCRIPTIONS: Record<JobWorkflowStepId, string> = {
+  job_created: "El trabajo ya está creado. Sube los planos para empezar.",
+  upload_drawings: "Añade los PDF del trabajo para poder confirmar metadatos y materiales.",
+  complete_metadata:
+    "Confirma nº plano, línea y revisión antes de analizar materiales.",
+  analyze_materials:
+    "La app lee la relación de materiales del PDF para preparar la propuesta.",
+  review_beta_proposal:
+    "La app ha generado una propuesta beta. Revisa las líneas recomendadas antes de importarlas a la palillería.",
+  review_palilleria:
+    "Revisa las líneas importadas o añadidas antes de pasar a Trameado.",
+  trameado:
+    "Aquí conviertes la palillería en una hoja revisable y marcas en el plano dónde va cada tramo.",
+  export_delivery:
+    "El paquete reúne la hoja Excel, el PDF marcado y el resumen de validación.",
+};
+
+export function formatWorkflowStepBadge(stepNumber: number): string {
+  return `Paso ${stepNumber} de ${WORKFLOW_STEP_TOTAL}`;
+}
+
+export function formatWorkflowStepHeading(
+  stepNumber: number,
+  label: string,
+): string {
+  return `${formatWorkflowStepBadge(stepNumber)} · ${label}`;
+}
+
+export function getWorkflowStepNumber(stepId: JobWorkflowStepId): number {
+  return STEP_NUMBERS[stepId];
+}
+
+export function getWorkflowStepLabel(stepId: JobWorkflowStepId): string {
+  return STEP_LABELS[stepId];
+}
+
+export function getWorkflowStepShortLabel(stepId: JobWorkflowStepId): string {
+  return STEP_SHORT_LABELS[stepId];
+}
+
+export function getWorkflowStepDescription(stepId: JobWorkflowStepId): string {
+  return STEP_DESCRIPTIONS[stepId];
+}
 
 function toDisplayStatus(
   status: JobWorkflowStepStatus,
@@ -541,7 +601,10 @@ export function buildJobWorkflowState(
     return {
       id: stepId,
       number: STEP_NUMBERS[stepId],
+      total: WORKFLOW_STEP_TOTAL,
       label: STEP_LABELS[stepId],
+      shortLabel: STEP_SHORT_LABELS[stepId],
+      description: STEP_DESCRIPTIONS[stepId],
       status,
       displayStatus: toDisplayStatus(status),
       summary: buildStepSummary(stepId, input, metrics, status),

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/actions/auth";
 import { confirmDrawingMetadataAction } from "@/lib/actions/drawing";
+import { WorkflowStepBadgeById } from "@/components/jobs/workflow-step-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,9 +62,10 @@ export function DrawingMetadataConfirmationCard({
       data-testid="drawing-metadata-confirmation-card"
     >
       <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-primary">
-          Paso actual del trabajo
-        </p>
+        <WorkflowStepBadgeById
+          stepId="complete_metadata"
+          className="text-primary"
+        />
         <h2 className="text-lg font-semibold leading-tight">
           Confirma los metadatos del plano
         </h2>

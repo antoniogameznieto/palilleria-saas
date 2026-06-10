@@ -10,10 +10,12 @@ import {
   Minus,
 } from "lucide-react";
 
+import { WorkflowConceptsHelp } from "@/components/jobs/workflow-concepts-help";
 import { Button } from "@/components/ui/button";
-import type {
-  JobWorkflowState,
-  JobWorkflowStepStatus,
+import {
+  formatWorkflowStepHeading,
+  type JobWorkflowState,
+  type JobWorkflowStepStatus,
 } from "@/lib/jobs/job-workflow-state";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +58,7 @@ export function JobWorkflowGuide({
 }: JobWorkflowGuideProps) {
   const { steps, currentStep, summary, recommendedAction, deliveryNote } =
     workflowState;
+  const currentStepMeta = steps.find((step) => step.id === currentStep);
   const showPrimaryCta =
     recommendedAction != null &&
     (canAdvance || !recommendedAction.requiresEditPermission);
@@ -89,6 +92,7 @@ export function JobWorkflowGuide({
             edición.
           </p>
         ) : null}
+        <WorkflowConceptsHelp />
       </header>
 
       <ol
@@ -129,7 +133,27 @@ export function JobWorkflowGuide({
         <p className="text-xs font-medium text-muted-foreground">
           Siguiente paso recomendado
         </p>
-        <p className="mt-1 text-sm">{summary}</p>
+        {currentStepMeta ? (
+          <>
+            <p
+              className="mt-1 text-sm font-medium"
+              data-testid="job-workflow-recommended-step"
+            >
+              {formatWorkflowStepHeading(
+                currentStepMeta.number,
+                currentStepMeta.shortLabel,
+              )}
+            </p>
+            <p
+              className="mt-1 text-sm text-muted-foreground"
+              data-testid="job-workflow-recommended-description"
+            >
+              {currentStepMeta.description}
+            </p>
+          </>
+        ) : (
+          <p className="mt-1 text-sm">{summary}</p>
+        )}
         {showPrimaryCta && recommendedAction?.href ? (
           <div className="mt-3">
             <Link href={recommendedAction.href}>

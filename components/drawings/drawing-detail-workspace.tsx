@@ -29,6 +29,7 @@ export type { DrawingWorkspaceTab as DrawingDetailTab };
 type TabOption = {
   id: DrawingWorkspaceTab;
   label: string;
+  subtitle?: string;
   visible: boolean;
   emphasis?: boolean;
 };
@@ -114,11 +115,24 @@ export function DrawingDetailWorkspace({
       {
         id: "propuesta-beta",
         label: "Propuesta beta",
+        subtitle:
+          "Propuesta previa para generar la palillería. Nada se importa hasta que confirmes.",
         visible: showBetaProposal && propuestaBeta != null,
         emphasis: showBetaProposal && !metadataAttention,
       },
-      { id: "palilleria", label: "Palillería", visible: true },
-      { id: "trameado", label: "Trameado", visible: true },
+      {
+        id: "palilleria",
+        label: "Palillería",
+        subtitle: "Lista de tramos que se van a cortar o preparar.",
+        visible: true,
+      },
+      {
+        id: "trameado",
+        label: "Trameado",
+        subtitle:
+          "Marcado del plano para localizar cada tramo de la palillería.",
+        visible: true,
+      },
       { id: "pdf", label: "Plano PDF", visible: true },
       {
         id: "metadatos",
@@ -205,6 +219,14 @@ export function DrawingDetailWorkspace({
               )}
               aria-hidden={activeTab !== tab.id}
             >
+              {tab.subtitle ? (
+                <p
+                  className="mb-4 text-sm text-muted-foreground"
+                  data-testid={`drawing-workspace-tab-subtitle-${tab.id}`}
+                >
+                  {tab.subtitle}
+                </p>
+              ) : null}
               {tabPanels[tab.id]}
             </div>
           ))}

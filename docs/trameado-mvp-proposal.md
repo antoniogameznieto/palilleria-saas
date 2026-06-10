@@ -390,6 +390,12 @@ Columnas:
 - **Tras analizar:** prompt desaparece; asistente beta vuelve al flujo revisar/importar.
 - **Qué no cambia:** lógica de análisis, propuesta beta, permisos ni exports.
 
+### 18S-H — Contexto de flujo y conceptos básicos (completado)
+
+- **Feedback:** el usuario no sabía en qué paso global estaba ni qué significan palillería, trameado y paquete.
+- **Qué hace:** numeración «Paso X de 8» en guía, tarjetas protagonistas y wizard; acordeón de conceptos; microcopy en pestañas y revisión beta.
+- **Qué no cambia:** lógica de negocio, permisos ni automatización.
+
 ### 18S-G — Foco único en revisión de propuesta beta (completado)
 
 - **Feedback:** tras analizar, seguía visible el foco de análisis y demasiados bloques abiertos (KPIs, listas, acordeones).

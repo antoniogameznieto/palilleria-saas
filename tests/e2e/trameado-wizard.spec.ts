@@ -40,6 +40,15 @@ test.describe("trameado guided wizard", () => {
 
     const wizard = page.getByTestId("trameado-guided-wizard");
     await expect(wizard).toBeVisible();
+    await expect(page.getByTestId("trameado-wizard-global-step")).toContainText(
+      "Paso 7 de 8",
+    );
+    await expect(page.getByTestId("trameado-wizard-global-step")).toContainText(
+      "Tramear / palillear",
+    );
+    await expect(
+      page.getByTestId("trameado-wizard-global-description"),
+    ).toContainText(/palillería/i);
     await expect(page.getByTestId("trameado-wizard-title")).toHaveText(
       "Modo guiado de palilleo",
     );

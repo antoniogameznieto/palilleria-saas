@@ -69,6 +69,13 @@ test.describe("job workflow guide", () => {
 
     const guide = page.getByTestId("job-workflow-guide");
     await expect(guide).toBeVisible();
+    await expect(guide).toContainText("Paso");
+    await expect(guide).toContainText("de 8");
+    await expect(page.getByTestId("workflow-concepts-toggle")).toBeVisible();
+    await page.getByTestId("workflow-concepts-toggle").click();
+    await expect(page.getByTestId("workflow-concept-palilleria")).toBeVisible();
+    await expect(page.getByTestId("workflow-concept-trameado")).toBeVisible();
+    await expect(page.getByTestId("workflow-concept-paquete")).toBeVisible();
     await expect(page.getByTestId("job-workflow-checklist")).toBeVisible();
     await expect(page.getByTestId("job-workflow-check-job_created")).toContainText(
       "Completo",
@@ -130,9 +137,12 @@ test.describe("job workflow guide", () => {
     await expect(page.getByTestId("job-workflow-check-analyze_materials")).toContainText(
       "Bloqueado",
     );
-    await expect(guide).toContainText(
-      "Confirma la propuesta de metadatos detectada en cada plano",
+    await expect(page.getByTestId("job-workflow-recommended-step")).toContainText(
+      "Paso 3 de 8",
     );
+    await expect(
+      page.getByTestId("job-workflow-recommended-description"),
+    ).toContainText("Confirma nº plano, línea y revisión");
   });
 
   test("tras confirmar el último plano pendiente marca metadatos como completos", async ({

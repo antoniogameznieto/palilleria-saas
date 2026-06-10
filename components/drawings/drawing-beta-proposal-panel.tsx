@@ -28,9 +28,8 @@ export function DrawingBetaProposalPanel({
         <div className="space-y-1">
           <h3 className="text-base font-semibold">Propuesta beta supervisada</h3>
           <p className="text-sm text-muted-foreground">
-            Analiza la relación de materiales del PDF, revisa la propuesta
-            clasificada e importa solo las líneas que confirmes. No es palillería
-            final automática.
+            Propuesta previa para generar la palillería. Nada se importa hasta
+            que confirmes la importación revisada.
           </p>
         </div>
       )}

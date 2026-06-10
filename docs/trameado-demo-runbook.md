@@ -58,6 +58,13 @@ Con metadatos confirmados y materiales sin analizar en Propuesta beta:
 - El asistente beta queda plegado en **Detalles del asistente beta** hasta completar el análisis.
 - Tras analizar, la tarjeta desaparece y el asistente beta recupera el flujo normal de revisión e importación.
 
+## Contexto de flujo y conceptos básicos (18S-H)
+
+- Numeración **Paso X de 8** en la guía del trabajo, tarjetas protagonistas de plano y wizard de Trameado.
+- Acordeón **Ver conceptos básicos** en el flujo del trabajo: palillería, trameado y paquete.
+- Subtítulos breves en pestañas Propuesta beta, Palillería y Trameado.
+- No cambia lógica de análisis, importación ni exports; reduce explicación verbal en demo.
+
 ## Foco único en revisión de propuesta beta (18S-G)
 
 Tras analizar materiales:

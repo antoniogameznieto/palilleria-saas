@@ -1,5 +1,6 @@
 "use client";
 
+import { WorkflowStepBadgeById } from "@/components/jobs/workflow-step-badge";
 import { Button } from "@/components/ui/button";
 import {
   useBetaAssistantNotAnalyzed,
@@ -34,9 +35,10 @@ export function DrawingMaterialsAnalysisPromptCard({
       data-testid="drawing-materials-analysis-prompt"
     >
       <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-sky-800 dark:text-sky-200">
-          Paso actual del trabajo
-        </p>
+        <WorkflowStepBadgeById
+          stepId="analyze_materials"
+          className="text-sky-800 dark:text-sky-200"
+        />
         <h2 className="text-lg font-semibold leading-tight">
           Analiza la relación de materiales
         </h2>

@@ -11,6 +11,10 @@ import {
 
 import { ExportTrameadoPackageButton } from "@/components/trameado/export-trameado-package-button";
 import { Button } from "@/components/ui/button";
+import {
+  formatWorkflowStepHeading,
+  getWorkflowStepShortLabel,
+} from "@/lib/jobs/job-workflow-state";
 import { formatTrameadoPalilloTotalMm } from "@/lib/trameado/segment-helpers";
 import type { TrameadoSheetSuggestion } from "@/lib/trameado/suggestions";
 import type { TrameadoSheetValidationResult } from "@/lib/trameado/sheet-validation";
@@ -279,8 +283,11 @@ export function TrameadoGuidedWizard({
       data-workflow-complete={workflowComplete ? "true" : "false"}
     >
       <header className="space-y-2 border-b border-primary/10 pb-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-primary">
-          Empieza aquí
+        <p
+          className="text-xs font-medium uppercase tracking-wide text-primary"
+          data-testid="trameado-wizard-global-step"
+        >
+          {formatWorkflowStepHeading(7, getWorkflowStepShortLabel("trameado"))}
         </p>
         <h3
           className="text-lg font-semibold leading-tight"
@@ -288,9 +295,12 @@ export function TrameadoGuidedWizard({
         >
           Modo guiado de palilleo
         </h3>
-        <p className="text-sm text-muted-foreground">
-          Sigue estos pasos para completar la hoja, marcar el isométrico y
-          descargar el paquete.
+        <p
+          className="text-sm text-muted-foreground"
+          data-testid="trameado-wizard-global-description"
+        >
+          Aquí conviertes la palillería en una hoja revisable y marcas en el
+          plano dónde va cada tramo.
         </p>
         {canManage ? (
           <p className="text-xs text-muted-foreground">
@@ -562,9 +572,18 @@ export function TrameadoGuidedWizard({
 
                   {step.id === "download_package" && isCurrent ? (
                     <>
+                      <p
+                        className="text-xs font-medium uppercase tracking-wide text-primary"
+                        data-testid="trameado-wizard-export-global-step"
+                      >
+                        {formatWorkflowStepHeading(
+                          8,
+                          getWorkflowStepShortLabel("export_delivery"),
+                        )}
+                      </p>
                       <p className="text-muted-foreground">
-                        Incluye Excel, resumen de validación y PDF marcado si hay
-                        marcas.
+                        El paquete reúne la hoja Excel, el PDF marcado y el
+                        resumen de validación.
                       </p>
                       {selectedSheet && wizardState.canExportPackage ? (
                         <div data-testid="trameado-wizard-package-cta">

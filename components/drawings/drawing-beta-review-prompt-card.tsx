@@ -1,5 +1,6 @@
 "use client";
 
+import { WorkflowStepBadgeById } from "@/components/jobs/workflow-step-badge";
 import { Button } from "@/components/ui/button";
 import type { BetaProposalSummary } from "@/lib/drawings/experimental-auto-takeoff-ui";
 
@@ -26,7 +27,7 @@ export function DrawingBetaReviewPromptCard({
 
   const headline =
     readyCount > 0
-      ? `La app recomienda importar ${readyCount} línea${readyCount === 1 ? "" : "s"}.`
+      ? `La app recomienda importar ${readyCount} línea${readyCount === 1 ? "" : "s"}. Primero selecciónalas y luego confirma la importación para pasarlas a la palillería.`
       : `La app ha encontrado ${suggestedCount} sugerencia${suggestedCount === 1 ? "" : "s"}.`;
 
   let primaryLabel: string | null = null;
@@ -56,15 +57,16 @@ export function DrawingBetaReviewPromptCard({
       data-testid="beta-review-prompt-card"
     >
       <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-800 dark:text-emerald-200">
-          Paso actual del trabajo
-        </p>
+        <WorkflowStepBadgeById
+          stepId="review_beta_proposal"
+          className="text-emerald-800 dark:text-emerald-200"
+        />
         <h2 className="text-lg font-semibold leading-tight">
           Revisa la propuesta beta
         </h2>
         <p className="text-sm text-muted-foreground">
-          La app ha encontrado sugerencias de palillería a partir del PDF. Revisa
-          las líneas recomendadas y confirma cuáles quieres importar.
+          La app ha encontrado sugerencias de palillería a partir del PDF. Si
+          aceptas la propuesta, estas líneas pasarán a la palillería.
         </p>
         <p className="text-sm text-foreground">{headline}</p>
         {excludedCount > 0 ? (
@@ -74,7 +76,8 @@ export function DrawingBetaReviewPromptCard({
           </p>
         ) : null}
         <p className="text-xs text-muted-foreground">
-          Nada se importa hasta que confirmes la propuesta revisada.
+          Seleccionar recomendadas no importa todavía. «Importar propuesta
+          revisada» es lo que crea la palillería.
         </p>
       </header>
 
