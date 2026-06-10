@@ -273,7 +273,20 @@ Para **HL-1291-01** con la app actual:
 
 **No hace:** cierre automático, validación bloqueante, OCR ni APIs externas.
 
-## 18. Fase siguiente (backlog)
+## 18. Fase 18P-A — Cierre MVP y demo end-to-end
+
+**Implementado (jun 2026).** Validación documentada del flujo completo sin código nuevo.
+
+| Aspecto | Detalle |
+|---------|---------|
+| Caso | HL-1289-02 / HL-1289-A010AA-N-02 |
+| Evidencia | [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md) |
+| Flujo | Hoja → sugerencias → validación → marcas → XLSX/PDF → paquete ZIP |
+| Resultado | 10/10 pasos OK en caso principal |
+| Bugs bloqueantes | Ninguno |
+| Conclusión | Listo demo interna; siguiente 18P-B hardening QA |
+
+## 19. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -283,7 +296,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 19. Criterios MVP — estado tras 18O-F
+## 20. Criterios MVP — estado tras 18P-A
 
 | Criterio | Estado |
 |----------|--------|
@@ -291,9 +304,10 @@ Para **HL-1291-01** con la app actual:
 | Export columnas reconocibles | ✅ |
 | Viewer solo lectura | ✅ (E2E) |
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
-| Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
+| Demo interna end-to-end HL-1289-02 | ✅ 18P-A |
+| Cliente externo valida export | ⏳ Pendiente sesión formal |
 
-## 20. Referencias
+## 21. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -302,4 +316,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D; PDF marcado 18O-E; paquete ZIP 18O-F — jun 2026. Datos con `validate-trameado-functional.ts`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D; PDF marcado 18O-E; paquete ZIP 18O-F; cierre MVP 18P-A — jun 2026. Datos con `validate-trameado-functional.ts`.*

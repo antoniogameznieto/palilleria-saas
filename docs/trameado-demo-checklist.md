@@ -1,7 +1,7 @@
 # Demo interna: flujo de trameado asistido
 
 > **Fase 18N-A** — Guion y checklist para validar el estado actual del producto con PDFs reales.  
-> **Sin cambios de código.** Solo documentación operativa para demo interna o sesión con cliente.
+> **Cierre MVP 18P-A:** evidencia end-to-end del caso HL-1289-02 en [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md).
 
 ---
 

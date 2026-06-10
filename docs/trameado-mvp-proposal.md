@@ -326,6 +326,14 @@ Columnas:
 - Primer **entregable combinado** de trameado/palilleo para taller/cliente.
 - Sigue siendo **supervisado**: no sustituye revisión del ingeniero ni cierre automático.
 
+### 18P-A — Cierre MVP y demo end-to-end (completado)
+
+- Reporte: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md).
+- Caso validado: **HL-1289-02** / hoja **HL-1289-A010AA-N-02** (3 tramos golden, validación 2,5 %, paquete ZIP completo).
+- Flujo completo documentado: hoja → sugerencias → validación → marcas → exports → entregable.
+- Conclusión: **listo para demo interna y validación con usuario técnico**; no listo para automatización total.
+- Recomendación siguiente: **18P-B** hardening QA antes de push/release.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -346,7 +354,8 @@ Columnas:
 - [x] Export genera columnas ISO, Nº, Ø, SCH., PALILLO reconocibles por taller.
 - [x] Viewer solo lectura; engineer edita.
 - [x] Beta BOM sigue funcionando sin regresión (fuera alcance 18L).
-- [ ] Cliente valida export con un iso real del paquete `Ejemplos/Ejemplo 1`.
+- [x] Demo interna end-to-end con iso real HL-1289-02 — **18P-A** ([reporte](./trameado-mvp-demo-report.md)).
+- [ ] Cliente externo valida export en sesión formal (pendiente).
 
 ## 11. Referencias
 
@@ -357,6 +366,7 @@ Columnas:
 - Research vectorial (input real): [trameado-vector-research.md](./trameado-vector-research.md)
 - Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
+- Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
