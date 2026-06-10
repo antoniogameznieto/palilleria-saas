@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { DrawingOperationalStatusPanel } from "@/components/drawings/drawing-operational-status-panel";
+import { useBetaAssistantNotAnalyzed } from "@/components/drawings/use-beta-assistant-not-analyzed";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
@@ -41,6 +42,7 @@ type DrawingDetailWorkspaceProps = {
   takeoffLineCount: number;
   metadataConfirmation?: ReactNode;
   jobHasOtherMetadataPending?: boolean;
+  showMaterialsAnalysisPrompt?: boolean;
 };
 
 export function DrawingDetailWorkspace({
@@ -55,17 +57,24 @@ export function DrawingDetailWorkspace({
   takeoffLineCount,
   metadataConfirmation,
   jobHasOtherMetadataPending = false,
+  showMaterialsAnalysisPrompt = false,
 }: DrawingDetailWorkspaceProps) {
   const metadataAttention = needsMetadataAttention(progress);
+  const betaNotAnalyzed = useBetaAssistantNotAnalyzed();
   const defaultTab = useMemo(
     () => resolveDrawingWorkspaceDefaultTab(showBetaProposal, progress),
     [progress, showBetaProposal],
   );
   const [activeTab, setActiveTab] = useState<DrawingWorkspaceTab>(defaultTab);
+  const hideOperationalBannerForMaterialsFocus =
+    showMaterialsAnalysisPrompt &&
+    activeTab === "propuesta-beta" &&
+    betaNotAnalyzed;
   const previousProgressRef = useRef(progress);
 
   useEffect(() => {
     const previousProgress = previousProgressRef.current;
+    let nextTab: DrawingWorkspaceTab | null = null;
 
     if (
       needsMetadataAttention(previousProgress) &&
@@ -73,12 +82,18 @@ export function DrawingDetailWorkspace({
       progress === "takeoff_missing" &&
       showBetaProposal
     ) {
-      setActiveTab("propuesta-beta");
+      nextTab = "propuesta-beta";
     } else if (needsMetadataAttention(progress)) {
-      setActiveTab("metadatos");
+      nextTab = "metadatos";
     }
 
     previousProgressRef.current = progress;
+
+    if (nextTab) {
+      queueMicrotask(() => {
+        setActiveTab(nextTab);
+      });
+    }
   }, [progress, showBetaProposal]);
 
   const focusMetadataConfirmation = useCallback(() => {
@@ -125,7 +140,7 @@ export function DrawingDetailWorkspace({
     <div className="space-y-4">
       {metadataConfirmation}
 
-      {metadataConfirmation ? null : (
+      {metadataConfirmation || hideOperationalBannerForMaterialsFocus ? null : (
         <DrawingOperationalStatusPanel
           progress={progress}
           showBetaProposal={showBetaProposal}

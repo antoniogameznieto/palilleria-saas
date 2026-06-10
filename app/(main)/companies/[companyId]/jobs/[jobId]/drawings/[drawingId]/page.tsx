@@ -224,6 +224,7 @@ export default async function DrawingDetailPage({
 
       <DrawingDetailWorkspace
         jobHasOtherMetadataPending={jobHasOtherMetadataPending}
+        showMaterialsAnalysisPrompt={showMaterialsAnalysisPrompt}
         metadataConfirmation={
           showMetadataConfirmation ? (
             <DrawingMetadataConfirmationCard

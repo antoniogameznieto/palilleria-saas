@@ -57,19 +57,19 @@ test.describe("drawing metadata suggestions", () => {
       "true",
     );
     await expect(page.getByTestId("drawing-materials-analysis-prompt")).toBeVisible();
-    await expect(page.getByTestId("drawing-materials-step-note")).toBeVisible();
+    await expect(page.getByTestId("materials-analysis-primary-cta")).toBeVisible();
+    await expect(page.getByTestId("drawing-operational-status")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-operational-analyze-materials")).toHaveCount(0);
+    await expect(page.getByTestId("beta-assistant-secondary-section")).toBeVisible();
+    await expect(page.getByTestId("experimental-auto-takeoff-run")).toBeHidden();
     await expect(
-      page.getByTestId("drawing-materials-analysis-prompt-run"),
-    ).toBeVisible();
-    await expect(page.getByTestId("drawing-operational-analyze-materials")).toBeVisible();
+      page.getByRole("button", { name: "Analizar relación de materiales" }),
+    ).toHaveCount(1);
     await expect(page.getByRole("button", { name: "Detectar metadatos" })).toBeHidden();
     await page.getByRole("button", { name: "Metadatos", exact: true }).click();
     await expect(page.getByTestId("drawing-metadata-advanced-tools")).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Guardar ajuste manual" }),
     ).toBeHidden();
-    await expect(page.getByTestId("drawing-operational-status")).not.toContainText(
-      "Faltan metadatos",
-    );
   });
 });

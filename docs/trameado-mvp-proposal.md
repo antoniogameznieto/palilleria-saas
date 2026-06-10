@@ -383,6 +383,13 @@ Columnas:
 - **Multi-plano:** copy local si el trabajo aún tiene otros planos pendientes; guía global sigue en Confirmar metadatos hasta completar todos.
 - **Qué no cambia:** `confirmDrawingMetadataAction`, lógica de análisis BOM, permisos ni exports.
 
+### 18S-F — Foco único en análisis de materiales (completado)
+
+- **Feedback:** tras 18S-E el CTA «Analizar relación de materiales» aparecía en banner, tarjeta y asistente beta.
+- **Qué hace:** oculta banner operativo en Propuesta beta con prompt activo; tarjeta `materials-analysis-primary-cta` como único CTA; asistente beta plegado en `beta-assistant-secondary-section` hasta analizar.
+- **Tras analizar:** prompt desaparece; asistente beta vuelve al flujo revisar/importar.
+- **Qué no cambia:** lógica de análisis, propuesta beta, permisos ni exports.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.

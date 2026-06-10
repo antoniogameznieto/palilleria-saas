@@ -49,6 +49,15 @@ Tras pulsar **Confirmar metadatos**:
 - La guía del trabajo avanza cuando todos los planos tienen metadatos confirmados.
 - Si quedan otros planos pendientes en el trabajo, el plano confirmado puede analizar materiales localmente mientras el trabajo global sigue pidiendo confirmar metadatos.
 
+## Foco único en análisis de materiales (18S-F)
+
+Con metadatos confirmados y materiales sin analizar en Propuesta beta:
+
+- Solo la tarjeta **Analiza la relación de materiales** muestra el CTA principal.
+- El banner operativo superior se oculta para no repetir el mismo botón.
+- El asistente beta queda plegado en **Detalles del asistente beta** hasta completar el análisis.
+- Tras analizar, la tarjeta desaparece y el asistente beta recupera el flujo normal de revisión e importación.
+
 ---
 
 ## Flujo del trabajo (18S-A)

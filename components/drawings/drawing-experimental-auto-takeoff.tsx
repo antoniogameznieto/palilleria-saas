@@ -71,6 +71,7 @@ type DrawingExperimentalAutoTakeoffProps = {
   jobId: string;
   drawingId: string;
   existingTakeoffLineCount: number;
+  deferPrimaryAnalyzeCta?: boolean;
 };
 
 const initialAnalyzeState: ExperimentalAutoTakeoffActionState = {};
@@ -448,6 +449,7 @@ export function DrawingExperimentalAutoTakeoff({
   jobId,
   drawingId,
   existingTakeoffLineCount,
+  deferPrimaryAnalyzeCta = false,
 }: DrawingExperimentalAutoTakeoffProps) {
   const router = useRouter();
   const [analyzeState, analyzeAction, analyzePending] = useActionState(
@@ -593,6 +595,49 @@ export function DrawingExperimentalAutoTakeoff({
   }
 
   const hasImportableMissing = hasBetaImportableProposal(suggestedItems);
+
+  if (deferPrimaryAnalyzeCta && !hasResult) {
+    return (
+      <details
+        className="group rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
+        data-testid="beta-assistant-secondary-section"
+      >
+        <summary className="cursor-pointer list-none px-4 py-3 marker:content-none">
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold">Detalles del asistente beta</h3>
+            <p className="text-sm text-muted-foreground">
+              Después del análisis aparecerá aquí la propuesta beta para revisar e
+              importar.
+            </p>
+            <p className="text-sm font-medium text-primary group-open:hidden">
+              Mostrar detalles del asistente beta
+            </p>
+            <p className="hidden text-sm font-medium text-primary group-open:block">
+              Ocultar detalles del asistente beta
+            </p>
+          </div>
+        </summary>
+        <div className="border-t px-4 py-4">
+          <form action={analyzeAction} className="sr-only" aria-hidden="true">
+            <input type="hidden" name="companyId" value={companyId} />
+            <input type="hidden" name="jobId" value={jobId} />
+            <input type="hidden" name="drawingId" value={drawingId} />
+            <Button
+              type="submit"
+              disabled={analyzePending}
+              data-testid="experimental-auto-takeoff-run"
+              tabIndex={-1}
+            >
+              Analizar relación de materiales
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground">
+            El análisis se lanza desde la tarjeta principal de este paso.
+          </p>
+        </div>
+      </details>
+    );
+  }
 
   return (
     <div

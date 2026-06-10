@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useBetaAssistantNotAnalyzed } from "@/components/drawings/use-beta-assistant-not-analyzed";
 
 type DrawingMaterialsAnalysisPromptCardProps = {
   jobHasOtherMetadataPending?: boolean;
@@ -17,6 +18,12 @@ function runMaterialsAnalysis(): void {
 export function DrawingMaterialsAnalysisPromptCard({
   jobHasOtherMetadataPending = false,
 }: DrawingMaterialsAnalysisPromptCardProps) {
+  const notAnalyzed = useBetaAssistantNotAnalyzed();
+
+  if (!notAnalyzed) {
+    return null;
+  }
+
   return (
     <section
       className="rounded-xl border-2 border-sky-500/25 bg-sky-500/5 p-4 shadow-sm"
@@ -49,7 +56,7 @@ export function DrawingMaterialsAnalysisPromptCard({
         type="button"
         className="mt-4"
         onClick={runMaterialsAnalysis}
-        data-testid="drawing-materials-analysis-prompt-run"
+        data-testid="materials-analysis-primary-cta"
       >
         Analizar relación de materiales
       </Button>
