@@ -3,11 +3,15 @@ import { JobDetailKpis } from "@/components/jobs/job-detail-kpis";
 import { JobDrawingsSection } from "@/components/jobs/job-drawings-section";
 import { JobTakeoffConsolidatedSection } from "@/components/jobs/job-takeoff-consolidated-section";
 import { JobSettingsCollapsible } from "@/components/jobs/job-settings-collapsible";
+import { JobWorkflowGuide } from "@/components/jobs/job-workflow-guide";
 import { getDrawingProgress, buildJobDrawingProgressSummary } from "@/lib/drawings/drawing-progress";
 import { buildJobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summary";
+import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { buildJobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import { buildJobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
+import { getJobTrameadoWorkflowSummary } from "@/lib/jobs/get-job-trameado-summary";
+import { buildJobWorkflowState } from "@/lib/jobs/job-workflow-state";
 import { serializeJobSettings } from "@/lib/jobs/serialize-settings";
 import {
   canArchiveJob,
@@ -28,9 +32,10 @@ type JobDetailPageProps = {
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { companyId, jobId } = await params;
   const { membership, job } = await requireJobAccess(companyId, jobId);
-  const [drawings, jobTakeoffItems] = await Promise.all([
+  const [drawings, jobTakeoffItems, trameadoSummary] = await Promise.all([
     getJobDrawings(companyId, jobId),
     getJobTakeoffExportItems(companyId, jobId),
+    getJobTrameadoWorkflowSummary(companyId, jobId),
   ]);
 
   const canEdit = canEditJob(membership.role);
@@ -82,6 +87,24 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       }),
     ]),
   );
+  const workflowState = buildJobWorkflowState({
+    companyId,
+    jobId,
+    jobName: job.name,
+    drawings: drawings.map((drawing) => ({
+      id: drawing.id,
+      originalFileName: drawing.originalFileName,
+      status: drawing.status,
+      drawingNumber: drawing.drawingNumber,
+      lineNumber: drawing.lineNumber,
+      revision: drawing.revision,
+      takeoffLineCount: drawing._count.takeoffItems,
+      takeoffReviewedAt: drawing.takeoffReviewedAt,
+    })),
+    showBetaProposal: canAccessExperimentalAutoTakeoff(membership.role),
+    trameado: trameadoSummary,
+  });
+  const canAdvanceWorkflow = canEdit || canUpload;
 
   return (
     <div className="space-y-6">
@@ -106,6 +129,11 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         takeoffSummary={jobTakeoffSummary}
         takeoffReviewSummary={takeoffReviewSummary}
         drawingProgressSummary={drawingProgressSummary}
+      />
+
+      <JobWorkflowGuide
+        workflowState={workflowState}
+        canAdvance={canAdvanceWorkflow}
       />
 
       <JobTakeoffConsolidatedSection

@@ -15,6 +15,16 @@ Enseñar en 10–15 minutos cómo un ingeniero pasa de un isométrico vectorial 
 
 ---
 
+## Flujo del trabajo (18S-A)
+
+En el **detalle del trabajo**, la tarjeta **Flujo del trabajo** orienta el proceso completo: planos → metadatos → materiales → propuesta → palillería → Trameado → entrega.
+
+- **Diferencia con el modo guiado de palilleo (18R-B):** el flujo del trabajo es la brújula global del trabajo; el wizard de Trameado guía una hoja concreta dentro de un plano.
+- **No añade** automatización ni descarga global del trabajo; la entrega sigue descargándose plano a plano.
+- Úsalo al inicio de la demo para explicar el recorrido antes de entrar en HL-1289-02.
+
+---
+
 ## Modo guiado (18R-A / 18R-B)
 
 En la pestaña Trameado, la tarjeta **Modo guiado de palilleo** ordena el flujo en 6 pasos con checklist compacto. Úsala como hilo conductor de la demo; la UI avanzada sigue disponible debajo para ajustes manuales.

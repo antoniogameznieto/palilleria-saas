@@ -39,6 +39,31 @@ export async function resetE2eTrameadoData(client: PrismaClient = prisma) {
   });
 }
 
+export async function resetE2eJobWorkflowData(client: PrismaClient = prisma) {
+  await resetE2eTrameadoData(client);
+
+  await client.drawing.deleteMany({
+    where: {
+      jobId: E2E_IDS.job,
+      id: {
+        notIn: [E2E_IDS.drawingPending, E2E_IDS.drawingBom],
+      },
+    },
+  });
+
+  await client.drawing.updateMany({
+    where: {
+      id: {
+        in: [E2E_IDS.drawingPending, E2E_IDS.drawingBom],
+      },
+    },
+    data: {
+      takeoffReviewedAt: null,
+      takeoffReviewedById: null,
+    },
+  });
+}
+
 async function upsertUser(
   id: string,
   email: string,

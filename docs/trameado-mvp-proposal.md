@@ -355,6 +355,14 @@ Columnas:
 - **Qué no cambia:** lógica de tramos, validación, marcado, exports ni permisos; UI avanzada sigue visible.
 - **No añade** automatización nueva; guía con estado y CTAs reutilizando acciones existentes.
 
+### 18S-A — Flujo guiado del trabajo (completado)
+
+- **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.
+- **Qué es:** tarjeta «Flujo del trabajo» en el detalle del trabajo (`JobWorkflowGuide` + `lib/jobs/job-workflow-state.ts`).
+- **Pasos:** trabajo → planos → metadatos → materiales → propuesta → palillería → trameado → entrega.
+- **Diferencia con 18R:** flujo global del trabajo vs. modo guiado de palilleo dentro de Trameado.
+- **Qué no cambia:** permisos, lógica de negocio, tabs existentes, exports; sin descarga global del trabajo en esta fase.
+
 ### 18R-B — Pulido UX del wizard (completado)
 
 - **Objetivo:** wizard más protagonista y fácil de seguir sin quitar la UI avanzada.
@@ -396,6 +404,7 @@ Columnas:
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
 - Runbook demo 18P-C: [trameado-demo-runbook.md](./trameado-demo-runbook.md)
+- Flujo guiado del trabajo 18S-A: `components/jobs/job-workflow-guide.tsx`
 - Wizard guiado 18R-A / pulido UX 18R-B: `components/trameado/trameado-guided-wizard.tsx`
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
