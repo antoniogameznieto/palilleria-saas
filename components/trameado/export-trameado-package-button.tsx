@@ -10,12 +10,18 @@ type ExportTrameadoPackageButtonProps = {
   sheetId: string;
   segmentCount: number;
   markedCount: number;
+  exportTestId?: string;
+  hintTestId?: string;
+  disabledTestId?: string;
 };
 
 export function ExportTrameadoPackageButton({
   sheetId,
   segmentCount,
   markedCount,
+  exportTestId = "trameado-export-package",
+  hintTestId = "trameado-package-hint",
+  disabledTestId = "trameado-export-package-disabled",
 }: ExportTrameadoPackageButtonProps) {
   const canExport = canExportTrameadoPackage(segmentCount);
   const exportPath = buildTrameadoPackageExportPath(sheetId);
@@ -25,7 +31,7 @@ export function ExportTrameadoPackageButton({
       <span
         className="inline-flex"
         title="Añade al menos un tramo para descargar el paquete."
-        data-testid="trameado-export-package-disabled"
+        data-testid={disabledTestId}
       >
         <Button type="button" variant="outline" size="sm" disabled>
           Descargar paquete
@@ -39,13 +45,13 @@ export function ExportTrameadoPackageButton({
       {markedCount === 0 ? (
         <p
           className="text-xs text-muted-foreground"
-          data-testid="trameado-package-hint"
+          data-testid={hintTestId}
         >
           El paquete no incluirá PDF marcado hasta que marques tramos en el
           isométrico.
         </p>
       ) : null}
-      <Link href={exportPath} data-testid="trameado-export-package">
+      <Link href={exportPath} data-testid={exportTestId}>
         <Button type="button" variant="outline" size="sm">
           Descargar paquete
         </Button>

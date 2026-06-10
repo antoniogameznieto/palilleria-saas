@@ -15,6 +15,16 @@ Enseñar en 10–15 minutos cómo un ingeniero pasa de un isométrico vectorial 
 
 ---
 
+## Modo guiado (18R-A)
+
+En la pestaña Trameado, la tarjeta **Modo guiado** ordena el flujo en 6 pasos con checklist visible. Úsala como hilo conductor de la demo; la UI avanzada sigue disponible debajo.
+
+Mensaje para la audiencia:
+
+> Trameado semiautomático supervisado: la app propone, valida y empaqueta; el ingeniero revisa.
+
+---
+
 ## Antes de enseñar (checklist)
 
 - [ ] `npm run dev` en marcha (o entorno desplegado accesible).
@@ -67,9 +77,13 @@ En seed E2E la ruta es análoga a:
 
 ## Pasos de demo (orden)
 
+### 0. Modo guiado (opcional, 30 s)
+
+Señalar la tarjeta **Modo guiado** y el checklist Hoja → Sugerencias → Tramos → Marcas → Validación → Paquete.
+
 ### 1. Contexto (30 s)
 
-Mostrar layout: PDF + cotas a la izquierda; hoja + tramos a la derecha.
+Mostrar layout: PDF + cotas a la izquierda; wizard + hoja + tramos a la derecha.
 
 ### 2. Hoja de palilleo (1 min)
 

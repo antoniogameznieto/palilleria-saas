@@ -8,6 +8,7 @@ import {
   upsertTrameadoAnnotationAction,
 } from "@/lib/actions/trameado";
 
+import { TrameadoGuidedWizard } from "@/components/trameado/trameado-guided-wizard";
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
@@ -58,6 +59,7 @@ import {
   type TrameadoPdfAnnotation,
 } from "@/lib/trameado/pdf-annotations";
 import { validateTrameadoSheet } from "@/lib/trameado/sheet-validation";
+import { buildTrameadoWizardState } from "@/lib/trameado/wizard-state";
 import { cn } from "@/lib/utils";
 import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
@@ -483,6 +485,52 @@ export function TrameadoSection({
     ],
   );
 
+  const wizardState = useMemo(
+    () =>
+      buildTrameadoWizardState({
+        hasSheet: Boolean(selectedSheet),
+        segmentSuggestions: segmentSuggestionsResult,
+        confirmedSegmentsCount: selectedSheet?.segments.length ?? 0,
+        annotationSummary,
+        validation: sheetValidation,
+        segments: (selectedSheet?.segments ?? []).map((segment) => ({
+          id: segment.id,
+          segmentLabel: segment.segmentLabel ?? segment.segmentNumber,
+          segmentNumber: segment.segmentNumber,
+        })),
+      }),
+    [
+      annotationSummary,
+      segmentSuggestionsResult,
+      selectedSheet,
+      sheetValidation,
+    ],
+  );
+
+  const primarySheetSuggestion = useMemo(
+    () =>
+      sheetSuggestions.find((suggestion) => !suggestion.alreadyExists) ?? null,
+    [sheetSuggestions],
+  );
+
+  const handleWizardCreateSheet = () => {
+    setShowCreateSheet(true);
+    setShowAddSegment(false);
+    setEditingSegmentId(null);
+  };
+
+  const handleWizardFocusSuggestions = () => {
+    document
+      .getElementById("trameado-segment-suggestions-anchor")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleWizardAddSegment = () => {
+    setShowCreateSheet(false);
+    setShowAddSegment(true);
+    setEditingSegmentId(null);
+  };
+
   const handlePrepareSegmentFromCandidate = (value: string) => {
     if (!canManage || !selectedSheet) {
       return;
@@ -546,6 +594,18 @@ export function TrameadoSection({
       className="flex min-h-0 flex-col space-y-4"
       data-testid="trameado-sheet-panel"
     >
+      <TrameadoGuidedWizard
+        canManage={canManage}
+        wizardState={wizardState}
+        selectedSheet={selectedSheet}
+        primarySheetSuggestion={primarySheetSuggestion}
+        validation={sheetValidation}
+        onCreateSheet={handleWizardCreateSheet}
+        onFocusSuggestions={handleWizardFocusSuggestions}
+        onAddSegment={handleWizardAddSegment}
+        onMarkSegment={handleStartMarkingSegment}
+      />
+
       <div className="rounded-lg border bg-card p-4">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b pb-4">
           <div className="min-w-0 space-y-2">
@@ -651,15 +711,17 @@ export function TrameadoSection({
       </div>
 
       {canManage ? (
-        <TrameadoSegmentSuggestionsPanel
-          companyId={companyId}
-          jobId={jobId}
-          drawingId={drawingId}
-          sheetId={selectedSheet?.id ?? ""}
-          result={segmentSuggestionsResult}
-          canManage={canManage}
-          onPrepareSuggestion={handlePrepareSegmentFromSuggestion}
-        />
+        <div id="trameado-segment-suggestions-anchor">
+          <TrameadoSegmentSuggestionsPanel
+            companyId={companyId}
+            jobId={jobId}
+            drawingId={drawingId}
+            sheetId={selectedSheet?.id ?? ""}
+            result={segmentSuggestionsResult}
+            canManage={canManage}
+            onPrepareSuggestion={handlePrepareSegmentFromSuggestion}
+          />
+        </div>
       ) : null}
 
       {!hasSheet ? (

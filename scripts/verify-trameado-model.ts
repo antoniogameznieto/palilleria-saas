@@ -64,6 +64,7 @@ import {
   TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY,
   TRAMEADO_PACKAGE_XLSX_ENTRY,
 } from "../lib/trameado/export-package";
+import { buildTrameadoWizardState } from "../lib/trameado/wizard-state";
 import JSZip from "jszip";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
@@ -1211,6 +1212,113 @@ async function verifyXlsxExport(): Promise<void> {
   );
 }
 
+function verifyTrameadoWizardState(): void {
+  const noSheet = buildTrameadoWizardState({
+    hasSheet: false,
+    segmentSuggestions: {
+      suggestions: [],
+      mode: "no_sheet",
+      warnings: [],
+    },
+    confirmedSegmentsCount: 0,
+    annotationSummary: { markedCount: 0, totalCount: 0, items: [] },
+    validation: validateTrameadoSheet({ hasActiveSheet: false, segments: [] }),
+    segments: [],
+  });
+
+  assert(noSheet.currentStep === "prepare_sheet", "Wizard should start at prepare sheet");
+  assert(!noSheet.hasSheet, "Wizard should report no sheet");
+  assert(!noSheet.canExportPackage, "Wizard should not allow package without segments");
+
+  const withSegments = buildTrameadoWizardState({
+    hasSheet: true,
+    segmentSuggestions: {
+      suggestions: [
+        {
+          suggestionKey: "s1",
+          suggestedNumber: "2",
+          suggestedLabel: "<2>",
+          palilloLength: "100",
+          displayPalilloLength: "100",
+          confidence: "high",
+          score: 100,
+          sourceCandidateDimension: 100,
+          reason: "test",
+          notes: "",
+          diameter: '3/4"',
+          schedule: "80",
+          heatNumber: "",
+          alreadyOnSheet: true,
+        },
+      ],
+      mode: "short_iso",
+      warnings: [],
+    },
+    confirmedSegmentsCount: 3,
+    annotationSummary: {
+      markedCount: 2,
+      totalCount: 3,
+      items: [
+        {
+          segmentId: "s1",
+          segmentNumber: "2",
+          segmentLabel: "2",
+          palilloLength: "100",
+          marked: true,
+        },
+        {
+          segmentId: "s2",
+          segmentNumber: "4",
+          segmentLabel: "4",
+          palilloLength: "120",
+          marked: true,
+        },
+        {
+          segmentId: "s3",
+          segmentNumber: "6",
+          segmentLabel: "6",
+          palilloLength: "170",
+          marked: false,
+        },
+      ],
+    },
+    validation: validateTrameadoSheet({
+      hasActiveSheet: true,
+      segments: [
+        { segmentNumber: "2", palilloLength: "100" },
+        { segmentNumber: "4", palilloLength: "120" },
+        { segmentNumber: "6", palilloLength: "170" },
+      ],
+      takeoffItems: [
+        {
+          description: '1 3/4" TUBERIA A106 Gr.B SCH 80',
+          quantity: "0.4",
+          unit: "M",
+        },
+      ],
+    }),
+    segments: [
+      { id: "s1", segmentLabel: "<2>", segmentNumber: "2" },
+      { id: "s2", segmentLabel: "<4>", segmentNumber: "4" },
+      { id: "s3", segmentLabel: "<6>", segmentNumber: "6" },
+    ],
+  });
+
+  assert(withSegments.canExportPackage, "Wizard should allow package with segments");
+  assert(
+    withSegments.steps.mark_isometric === "in_progress",
+    "Wizard should be in progress on marks when 2/3",
+  );
+  assert(
+    withSegments.unmarkedSegments.length === 1,
+    "Wizard should list one unmarked segment",
+  );
+  assert(
+    withSegments.checklist.length === 6,
+    "Wizard checklist should have six items",
+  );
+}
+
 async function verifyTrameadoPackageExport(): Promise<void> {
   assert(!canExportTrameadoPackage(0), "Package export should require segments");
   assert(canExportTrameadoPackage(1), "Package export should be allowed with segments");
@@ -1336,6 +1444,7 @@ async function main(): Promise<void> {
   verifyTrameadoSheetValidation();
   verifyPdfAnnotations();
   verifyTrameadoAnnotationValidation();
+  verifyTrameadoWizardState();
   await verifyMarkedPdfExport();
   await verifyXlsxExport();
   await verifyTrameadoPackageExport();

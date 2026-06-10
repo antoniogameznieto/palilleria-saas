@@ -347,6 +347,14 @@ Columnas:
 - Smoke scripts + E2E específicos; migraciones verificadas.
 - Conclusión: **listo para demo interna seria** tras push y `migrate deploy` en destino.
 
+### 18R-A — Wizard guiado (completado)
+
+- Componente: `TrameadoGuidedWizard` + `lib/trameado/wizard-state.ts`.
+- **Por qué:** feedback demo — resultado y ZIP útiles, pero UI difícil sin explicación larga.
+- **Pasos:** hoja → sugerencias → tramos → marcas → validación → paquete.
+- **Qué no cambia:** lógica de tramos, validación, marcado, exports ni permisos; UI avanzada sigue visible.
+- **No añade** automatización nueva; guía con estado y CTAs reutilizando acciones existentes.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -382,6 +390,7 @@ Columnas:
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
 - Runbook demo 18P-C: [trameado-demo-runbook.md](./trameado-demo-runbook.md)
+- Wizard guiado 18R-A: `components/trameado/trameado-guided-wizard.tsx`
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
