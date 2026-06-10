@@ -369,6 +369,13 @@ Columnas:
 - **Foco UX:** un único camino claro — revisar y confirmar la propuesta superior.
 - **Qué no cambia:** lógica de `confirmDrawingMetadataAction`, sugerencias desde filename, permisos ni flujos de materiales/trameado.
 
+### 18S-D — Opciones avanzadas plegadas en metadatos pendientes (completado)
+
+- **Feedback:** tras 18S-C seguían visibles estado, ajuste manual y herramientas de diagnóstico; el usuario percibía demasiadas acciones.
+- **Qué hace:** en `pendingMetadataConfirmation`, la pestaña Metadatos muestra un acordeón **Opciones avanzadas** cerrado por defecto (`details/summary`); estado, ajuste manual y detección/diagnóstico quedan dentro.
+- **Foco UX:** «Revisa estos datos propuestos y pulsa Confirmar metadatos»; herramientas avanzadas bajo demanda.
+- **Qué no cambia:** permisos, lógica de confirmación, materiales, trameado ni exports.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.

@@ -32,6 +32,14 @@ Con metadatos pendientes y tarjeta de confirmación visible:
 - La pestaña Metadatos pasa a **Ajuste manual de metadatos** (secundaria); «Detectar metadatos» se oculta mientras hay propuesta automática.
 - Tras confirmar, desaparece la tarjeta y el flujo avanza a materiales.
 
+## Opciones avanzadas plegadas (18S-D)
+
+Con metadatos pendientes, la pestaña Metadatos muestra solo un bloque **Opciones avanzadas** cerrado por defecto.
+
+- El usuario ve la tarjeta de confirmación y pulsa **Confirmar metadatos**; no aparecen botones de estado, guardado manual ni diagnóstico hasta desplegar.
+- Al abrir **Mostrar opciones avanzadas** siguen disponibles estado, ajuste manual y herramientas de diagnóstico.
+- Con metadatos ya confirmados, la pestaña Metadatos vuelve al layout normal (sin plegado).
+
 ---
 
 ## Flujo del trabajo (18S-A)

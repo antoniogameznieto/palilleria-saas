@@ -25,7 +25,14 @@ type DrawingMetadataTabProps = {
   pendingMetadataConfirmation?: boolean;
 };
 
-export function DrawingMetadataTab({
+type DrawingMetadataTabContentProps = Omit<
+  DrawingMetadataTabProps,
+  "pendingMetadataConfirmation"
+> & {
+  pendingMetadataConfirmation: boolean;
+};
+
+function DrawingMetadataTabContent({
   companyId,
   jobId,
   drawingId,
@@ -42,8 +49,8 @@ export function DrawingMetadataTab({
   canConfirmDetected,
   showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
-  pendingMetadataConfirmation = false,
-}: DrawingMetadataTabProps) {
+  pendingMetadataConfirmation,
+}: DrawingMetadataTabContentProps) {
   const metadataProps = {
     companyId,
     jobId,
@@ -56,7 +63,7 @@ export function DrawingMetadataTab({
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <section className="space-y-2">
         <h3 className="text-base font-semibold">Estado del plano</h3>
         <DrawingStatusControl
@@ -118,6 +125,50 @@ export function DrawingMetadataTab({
           hideFilenameDetection={pendingMetadataConfirmation}
         />
       </section>
-    </div>
+    </>
   );
+}
+
+export function DrawingMetadataTab({
+  pendingMetadataConfirmation = false,
+  ...props
+}: DrawingMetadataTabProps) {
+  const content = (
+    <DrawingMetadataTabContent
+      {...props}
+      pendingMetadataConfirmation={pendingMetadataConfirmation}
+    />
+  );
+
+  if (pendingMetadataConfirmation) {
+    return (
+      <details
+        className="group rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
+        data-testid="drawing-metadata-advanced-options"
+      >
+        <summary className="cursor-pointer list-none px-4 py-3 marker:content-none">
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold">Opciones avanzadas</h3>
+            <p className="text-sm text-muted-foreground">
+              Normalmente no necesitas tocar esto. Úsalo solo si quieres corregir
+              datos manualmente, cambiar el estado del plano o revisar herramientas
+              de diagnóstico.
+            </p>
+            <p
+              className="text-sm font-medium text-primary group-open:hidden"
+              data-testid="drawing-metadata-advanced-toggle"
+            >
+              Mostrar opciones avanzadas
+            </p>
+            <p className="hidden text-sm font-medium text-primary group-open:block">
+              Ocultar opciones avanzadas
+            </p>
+          </div>
+        </summary>
+        <div className="space-y-6 border-t px-4 py-4">{content}</div>
+      </details>
+    );
+  }
+
+  return <div className="space-y-6">{content}</div>;
 }

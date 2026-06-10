@@ -36,10 +36,25 @@ test.describe("drawing metadata suggestions", () => {
     await expect(page.getByTestId("drawing-operational-analyze-materials")).toHaveCount(0);
     await expect(page.getByTestId("drawing-operational-confirm-metadata")).toHaveCount(0);
     await expect(page.getByTestId("drawing-operational-status")).toHaveCount(0);
-    await expect(page.getByTestId("drawing-detect-metadata-block")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-metadata-advanced-options")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Opciones avanzadas" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Guardar ajuste manual" }),
+    ).toBeHidden();
+    await expect(page.getByRole("button", { name: "Actualizar estado" })).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "Extraer texto del PDF" }),
+    ).toBeHidden();
+
+    await page.getByTestId("drawing-metadata-advanced-toggle").click();
     await expect(page.getByTestId("drawing-metadata-manual-section")).toContainText(
       "Ajuste manual de metadatos",
     );
+    await expect(page.getByRole("button", { name: "Guardar ajuste manual" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Actualizar estado" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Extraer texto del PDF" })).toBeVisible();
 
     await page.getByTestId("drawing-metadata-confirm-submit").click();
     await expect(page.getByTestId("drawing-metadata-confirmation-card")).toHaveCount(0, {
