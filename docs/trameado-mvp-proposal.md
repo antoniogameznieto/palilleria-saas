@@ -362,6 +362,13 @@ Columnas:
 - **Foco UX:** banner y flujo del trabajo priorizan metadatos; análisis de materiales oculto o con copy “disponible después”.
 - **Qué no cambia:** permisos, Prisma, lógica de palillería/trameado/exports; sin auto-guardado ni análisis automático de materiales nuevo.
 
+### 18S-C — Limpieza de duplicidades en metadatos pendientes (completado)
+
+- **Feedback:** la tarjeta de confirmación funcionaba, pero el banner «Faltan metadatos» y la pestaña Metadatos repetían CTAs (Confirmar, Guardar, Detectar).
+- **Qué hace:** oculta el banner operativo cuando hay tarjeta de confirmación; la pestaña inferior pasa a «Ajuste manual de metadatos» con Guardar secundario; oculta «Detectar metadatos» mientras hay propuesta automática.
+- **Foco UX:** un único camino claro — revisar y confirmar la propuesta superior.
+- **Qué no cambia:** lógica de `confirmDrawingMetadataAction`, sugerencias desde filename, permisos ni flujos de materiales/trameado.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.

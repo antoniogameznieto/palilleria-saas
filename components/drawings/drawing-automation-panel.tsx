@@ -21,6 +21,7 @@ type DrawingAutomationPanelProps = {
   canConfirmDetected: boolean;
   showExperimentalTitleBlockOcr: boolean;
   lastDetectionFeedback: DetectionFeedbackSummary | null;
+  hideFilenameDetection?: boolean;
 };
 
 function AutomationBlock({
@@ -60,6 +61,7 @@ export function DrawingAutomationPanel({
   canConfirmDetected,
   showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
+  hideFilenameDetection = false,
 }: DrawingAutomationPanelProps) {
   const isDetected = status === "detected";
   const hasAutomationAccess =
@@ -90,11 +92,12 @@ export function DrawingAutomationPanel({
         />
       ) : null}
 
-      {canStartDetection ? (
+      {canStartDetection && !hideFilenameDetection ? (
         <AutomationBlock
           title="Detectar metadatos"
           description="Busca número de plano, línea y revisión usando el nombre del archivo y el texto embebido del PDF."
           className={isDetected ? "border-t border-border/60 pt-6" : undefined}
+          data-testid="drawing-detect-metadata-block"
         >
           <DrawingDetectionControl
             companyId={companyId}

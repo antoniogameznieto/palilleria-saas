@@ -252,6 +252,7 @@ export default async function DrawingDetailPage({
             canConfirmDetected={canConfirmDetected}
             showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
             lastDetectionFeedback={lastDetectionFeedback}
+            pendingMetadataConfirmation={showMetadataConfirmation}
           />
         }
         actividad={

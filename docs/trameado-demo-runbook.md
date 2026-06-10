@@ -23,6 +23,15 @@ Tras subir planos, el detalle del plano muestra una tarjeta **Confirma los metad
 - **Analizar relación de materiales** queda despriorizado hasta confirmar metadatos.
 - El flujo del trabajo recomienda **Confirmar metadatos** antes de materiales o palillería.
 
+## Limpieza de duplicidades (18S-C)
+
+Con metadatos pendientes y tarjeta de confirmación visible:
+
+- No aparece el banner rosa «Faltan metadatos» ni un segundo CTA de confirmar.
+- La tarjeta superior es el único foco principal.
+- La pestaña Metadatos pasa a **Ajuste manual de metadatos** (secundaria); «Detectar metadatos» se oculta mientras hay propuesta automática.
+- Tras confirmar, desaparece la tarjeta y el flujo avanza a materiales.
+
 ---
 
 ## Flujo del trabajo (18S-A)

@@ -25,6 +25,7 @@ type DrawingMetadataFormProps = {
   revision: string | null;
   createdByLabel: string;
   plain?: boolean;
+  secondarySubmit?: boolean;
 };
 
 const initialState: AuthActionState = {};
@@ -39,6 +40,7 @@ export function DrawingMetadataForm({
   revision,
   createdByLabel,
   plain = false,
+  secondarySubmit = false,
 }: DrawingMetadataFormProps) {
   const [state, formAction, isPending] = useActionState(
     updateDrawingMetadataAction,
@@ -151,8 +153,19 @@ export function DrawingMetadataForm({
             </div>
           </div>
 
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Guardando..." : "Guardar"}
+          <Button
+            type="submit"
+            variant={secondarySubmit ? "outline" : "default"}
+            disabled={isPending}
+            data-testid={
+              secondarySubmit ? "drawing-metadata-manual-save" : undefined
+            }
+          >
+            {isPending
+              ? "Guardando..."
+              : secondarySubmit
+                ? "Guardar ajuste manual"
+                : "Guardar"}
           </Button>
         </form>
     </div>

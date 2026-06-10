@@ -22,6 +22,7 @@ type DrawingMetadataTabProps = {
   canConfirmDetected: boolean;
   showExperimentalTitleBlockOcr: boolean;
   lastDetectionFeedback: DetectionFeedbackSummary | null;
+  pendingMetadataConfirmation?: boolean;
 };
 
 export function DrawingMetadataTab({
@@ -41,6 +42,7 @@ export function DrawingMetadataTab({
   canConfirmDetected,
   showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
+  pendingMetadataConfirmation = false,
 }: DrawingMetadataTabProps) {
   const metadataProps = {
     companyId,
@@ -67,13 +69,31 @@ export function DrawingMetadataTab({
         />
       </section>
 
-      <section className="space-y-2">
-        <h3 className="text-base font-semibold">Metadatos</h3>
+      <section
+        className="space-y-2"
+        data-testid={
+          pendingMetadataConfirmation
+            ? "drawing-metadata-manual-section"
+            : undefined
+        }
+      >
+        <h3 className="text-base font-semibold">
+          {pendingMetadataConfirmation
+            ? "Ajuste manual de metadatos"
+            : "Metadatos"}
+        </h3>
+        {pendingMetadataConfirmation ? (
+          <p className="text-sm text-muted-foreground">
+            Usa esta zona solo si necesitas corregir los datos manualmente. Para
+            el flujo normal, confirma la propuesta superior.
+          </p>
+        ) : null}
         {canEditMetadata ? (
           <DrawingMetadataForm
             key={`${drawingId}:${drawingNumber ?? ""}:${lineNumber ?? ""}:${revision ?? ""}`}
             {...metadataProps}
             plain
+            secondarySubmit={pendingMetadataConfirmation}
           />
         ) : (
           <DrawingMetadataReadonly {...metadataProps} plain />
@@ -95,6 +115,7 @@ export function DrawingMetadataTab({
           canConfirmDetected={canConfirmDetected}
           showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
           lastDetectionFeedback={lastDetectionFeedback}
+          hideFilenameDetection={pendingMetadataConfirmation}
         />
       </section>
     </div>

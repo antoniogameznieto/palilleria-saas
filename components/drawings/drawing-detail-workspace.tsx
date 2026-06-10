@@ -98,14 +98,16 @@ export function DrawingDetailWorkspace({
     <div className="space-y-4">
       {metadataConfirmation}
 
-      <DrawingOperationalStatusPanel
-        progress={progress}
-        showBetaProposal={showBetaProposal}
-        takeoffLineCount={takeoffLineCount}
-        activeTab={activeTab}
-        onNavigateTab={setActiveTab}
-        onFocusMetadataConfirmation={focusMetadataConfirmation}
-      />
+      {metadataConfirmation ? null : (
+        <DrawingOperationalStatusPanel
+          progress={progress}
+          showBetaProposal={showBetaProposal}
+          takeoffLineCount={takeoffLineCount}
+          activeTab={activeTab}
+          onNavigateTab={setActiveTab}
+          onFocusMetadataConfirmation={focusMetadataConfirmation}
+        />
+      )}
 
       <Card
         className={cn(

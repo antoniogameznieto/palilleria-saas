@@ -32,9 +32,14 @@ test.describe("drawing metadata suggestions", () => {
       "HL-1289",
     );
     await expect(page.getByTestId("drawing-metadata-suggestion-revision")).toHaveValue("01");
-    await expect(page.getByTestId("drawing-metadata-confirm-submit")).toBeVisible();
+    await expect(page.getByTestId("drawing-metadata-confirm-submit")).toHaveCount(1);
     await expect(page.getByTestId("drawing-operational-analyze-materials")).toHaveCount(0);
-    await expect(page.getByTestId("drawing-operational-confirm-metadata")).toBeVisible();
+    await expect(page.getByTestId("drawing-operational-confirm-metadata")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-operational-status")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-detect-metadata-block")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-metadata-manual-section")).toContainText(
+      "Ajuste manual de metadatos",
+    );
 
     await page.getByTestId("drawing-metadata-confirm-submit").click();
     await expect(page.getByTestId("drawing-metadata-confirmation-card")).toHaveCount(0, {
