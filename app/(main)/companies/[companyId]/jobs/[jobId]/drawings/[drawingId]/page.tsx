@@ -156,6 +156,7 @@ export default async function DrawingDetailPage({
       sheets={trameadoSheets}
       sheetSuggestions={trameadoSheetSuggestions}
       candidateDimensions={candidateDimensions}
+      takeoffItems={takeoffItems}
       canManage={canEditTrameado}
       suggestedLineIdentifier={suggestedLineIdentifier}
       variant="workspace"

@@ -12,6 +12,7 @@ import {
   type TrameadoStickySegmentValues,
 } from "@/components/trameado/trameado-segment-form";
 import { TrameadoSegmentSuggestionsPanel } from "@/components/trameado/trameado-segment-suggestions-panel";
+import { TrameadoSheetValidationPanel } from "@/components/trameado/trameado-sheet-validation-panel";
 import { TrameadoSegmentsTable } from "@/components/trameado/trameado-segments-table";
 import { TrameadoSheetAssistant } from "@/components/trameado/trameado-sheet-assistant";
 import { TrameadoSheetForm } from "@/components/trameado/trameado-sheet-form";
@@ -27,6 +28,7 @@ import {
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
 import type { SerializedCandidateDimensionsResult } from "@/lib/trameado/candidate-dimensions";
 import {
+  pickBestPipeHintsFromTakeoffItems,
   shouldShowTrameadoSheetAssistant,
   type TrameadoSheetSuggestion,
 } from "@/lib/trameado/suggestions";
@@ -38,7 +40,9 @@ import {
   buildTrameadoSegmentSuggestions,
   type TrameadoSegmentSuggestion,
 } from "@/lib/trameado/segment-suggestions";
+import { validateTrameadoSheet } from "@/lib/trameado/sheet-validation";
 import { cn } from "@/lib/utils";
+import type { SerializedTakeoffItem } from "@/lib/drawings/takeoff";
 
 type TrameadoSectionProps = {
   companyId: string;
@@ -48,6 +52,7 @@ type TrameadoSectionProps = {
   sheets: SerializedTrameadoSheet[];
   sheetSuggestions: TrameadoSheetSuggestion[];
   candidateDimensions: SerializedCandidateDimensionsResult;
+  takeoffItems: SerializedTakeoffItem[];
   canManage: boolean;
   suggestedLineIdentifier: string | null;
   variant?: "page" | "workspace";
@@ -113,6 +118,7 @@ export function TrameadoSection({
   sheets,
   sheetSuggestions,
   candidateDimensions,
+  takeoffItems,
   canManage,
   suggestedLineIdentifier,
   variant = "workspace",
@@ -215,15 +221,43 @@ export function TrameadoSection({
       (suggestion) =>
         suggestion.lineIdentifier === selectedSheet.lineIdentifier,
     );
+    const pipeHints = pickBestPipeHintsFromTakeoffItems(
+      takeoffItems.map((item) => ({
+        description: item.description,
+        reference: item.reference,
+        unit: item.unit,
+      })),
+    );
 
     return {
       diameter:
-        stickyCreateValues?.diameter ?? matchedSuggestion?.diameter ?? "",
+        stickyCreateValues?.diameter ??
+        matchedSuggestion?.diameter ??
+        pipeHints?.diameter ??
+        "",
       schedule:
-        stickyCreateValues?.schedule ?? matchedSuggestion?.schedule ?? "",
+        stickyCreateValues?.schedule ??
+        matchedSuggestion?.schedule ??
+        pipeHints?.schedule ??
+        "",
       heatNumber: stickyCreateValues?.heatNumber ?? "",
     };
-  }, [selectedSheet, sheetSuggestions, stickyCreateValues]);
+  }, [selectedSheet, sheetSuggestions, stickyCreateValues, takeoffItems]);
+
+  const sheetValidation = useMemo(
+    () =>
+      validateTrameadoSheet({
+        hasActiveSheet: Boolean(selectedSheet),
+        segments: selectedSheet?.segments ?? [],
+        takeoffItems: takeoffItems.map((item) => ({
+          description: item.description,
+          reference: item.reference,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+      }),
+    [selectedSheet, takeoffItems],
+  );
 
   const segmentSuggestionsResult = useMemo(
     () =>
@@ -592,11 +626,15 @@ export function TrameadoSection({
                 reviewedAt={selectedSheet.reviewedAt}
                 reviewedByLabel={selectedSheet.reviewedByLabel}
                 canManage={canManage}
+                validationStatus={sheetValidation.status}
+                validationStatusLabel={sheetValidation.statusLabel}
               />
             </>
           ) : null}
         </div>
       )}
+
+      <TrameadoSheetValidationPanel validation={sheetValidation} />
     </div>
   );
 

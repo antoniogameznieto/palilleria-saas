@@ -276,7 +276,16 @@ Columnas:
 - UI: panel **Tramos sugeridos** (añadir / preparar-editar / descartar); sin persistencia en BD.
 - **No** guarda tramos hasta confirmación del ingeniero (acciones existentes).
 - **-02:** hasta 5 sugerencias desde cotas high/medium; **-01 largos:** modo `unreliable` (0 sugerencias).
-- Sin X/Y, sin iso trameado, sin Σ PALILLO vs BOM.
+- Sin X/Y, sin iso trameado, sin Σ PALILLO vs BOM estricta.
+
+### 18O-B — Validación orientativa de hoja (completado)
+
+- Helper: `lib/trameado/sheet-validation.ts` — `validateTrameadoSheet`.
+- UI: panel **Validación de hoja** junto a tabla/export/revisión.
+- Compara Σ PALILLO confirmado con referencia tubería BOM (metros) si existe.
+- **Informativa:** no bloquea export ni «Marcar revisada»; aviso suave si estado «Revisar».
+- Copy prudente: «Parece razonable», «Revisar diferencia», «Sin referencia suficiente».
+- **No** garantiza exactitud ni sustituye revisión del ingeniero.
 
 ### 18M-F — Export/plantilla cliente (backlog)
 
@@ -310,6 +319,7 @@ Columnas:
 - Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
+- Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 
 ---
 

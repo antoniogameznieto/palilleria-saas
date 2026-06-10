@@ -244,6 +244,21 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 - Submit del formulario asistido: **Confirmar tramo** (misma action create existente).
 - Aviso desaparece al guardar, cancelar o preparar otra cota.
 
+## Validación orientativa de hoja (18O-B)
+
+**Helper:** `validateTrameadoSheet` en `lib/trameado/sheet-validation.ts`.
+
+| Entrada | Uso |
+|---------|-----|
+| Segmentos confirmados de la hoja | Σ PALILLO, duplicados, PALILLO inválidos |
+| Takeoff/BOM del plano | Referencia tubería en metros (`TUBERIA` / `PIPE` / `TUBO` + unidad M) |
+
+**Estados:** `no_data`, `incomplete`, `no_comparable`, `review_data`, `review_delta`, `review_delta_high`, `reasonable`.
+
+**UI:** `TrameadoSheetValidationPanel` en `TrameadoSection`; aviso opcional en `TrameadoReviewButton` si hay revisión pendiente.
+
+**No bloquea** export CSV/XLSX ni marcar revisada.
+
 ## Archivos tocados en 18B
 
 - `prisma/schema.prisma`

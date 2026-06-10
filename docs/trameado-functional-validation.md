@@ -206,9 +206,26 @@ Para **HL-1291-01** con la app actual:
 
 **Reglas:** solo cotas high/medium con score ≥40; sin duplicar PALILLO ya en hoja; numeración con `getNextSegmentNumber`; acciones **Añadir a hoja** / **Preparar/editar** / **Descartar** (client-side).
 
-**No hace:** iso trameado, Σ vs BOM, X/Y, guardado automático.
+**No hace:** iso trameado, Σ vs BOM estricta, X/Y, guardado automático.
 
-## 13. Fase siguiente (backlog)
+## 13. Fase 18O-B — Validación orientativa de hoja
+
+**Implementado (jun 2026).** Helper `validateTrameadoSheet` en `lib/trameado/sheet-validation.ts`.
+
+| Plano (mock golden) | Referencia BOM | Total PALILLO mock | Estado típico |
+|---------------------|----------------|------------------|---------------|
+| HL-1289-02 | 0.4 m | 390 mm (170+100+120) | Parece razonable (~2.5 % Δ) |
+| HL-1291-02 | 0.4 m | 390 mm (sin 170 literal) | Parece razonable |
+
+**Métricas:** tramos confirmados, Σ PALILLO (mm/m), referencia tubería BOM (M), Δ %, duplicados Nº/PALILLO (informativo).
+
+**Estados:** `no_data` · `incomplete` · `no_comparable` · `review_data` · `review_delta` · `review_delta_high` · `reasonable`.
+
+**Reglas:** tolerancia ≤10 % → razonable; ≤25 % → revisar diferencia; >25 % → revisar diferencia (alta). PALILLO inválido o Nº duplicado → revisar datos.
+
+**No hace:** bloquear export/revisión; afirmar «correcto/incorrecto»; igualdad estricta BOM = Σ PALILLO.
+
+## 14. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -218,7 +235,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 14. Criterios MVP — estado tras 18O-A
+## 15. Criterios MVP — estado tras 18O-B
 
 | Criterio | Estado |
 |----------|--------|
@@ -228,7 +245,7 @@ Para **HL-1291-01** con la app actual:
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
 | Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
 
-## 15. Referencias
+## 16. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -237,4 +254,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A — jun 2026. Datos con `validate-trameado-functional.ts`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B — jun 2026. Datos con `validate-trameado-functional.ts`.*

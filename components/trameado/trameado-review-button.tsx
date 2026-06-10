@@ -7,6 +7,7 @@ import type { AuthActionState } from "@/lib/actions/auth";
 import { markTrameadoSheetReviewedAction } from "@/lib/actions/trameado";
 import { formatTakeoffReviewedAt } from "@/lib/drawings/takeoff-review";
 import { Button } from "@/components/ui/button";
+import type { TrameadoSheetValidationStatus } from "@/lib/trameado/sheet-validation";
 
 type TrameadoReviewButtonProps = {
   companyId: string;
@@ -17,6 +18,8 @@ type TrameadoReviewButtonProps = {
   reviewedAt: string | null;
   reviewedByLabel: string | null;
   canManage: boolean;
+  validationStatus?: TrameadoSheetValidationStatus;
+  validationStatusLabel?: string;
 };
 
 const initialState: AuthActionState = {};
@@ -30,7 +33,13 @@ export function TrameadoReviewButton({
   reviewedAt,
   reviewedByLabel,
   canManage,
+  validationStatus,
+  validationStatusLabel,
 }: TrameadoReviewButtonProps) {
+  const showValidationHint =
+    validationStatus === "review_data" ||
+    validationStatus === "review_delta" ||
+    validationStatus === "review_delta_high";
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(
     markTrameadoSheetReviewedAction,
@@ -66,10 +75,21 @@ export function TrameadoReviewButton({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/15 px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Cuando los tramos estén correctos, marca la hoja como revisada antes de
-        exportar.
-      </p>
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">
+          Cuando los tramos estén correctos, marca la hoja como revisada antes de
+          exportar.
+        </p>
+        {showValidationHint ? (
+          <p
+            className="text-xs text-amber-800 dark:text-amber-200"
+            data-testid="trameado-review-validation-hint"
+          >
+            La validación orientativa indica «{validationStatusLabel}». Puedes
+            marcar revisada, pero conviene comprobar la hoja.
+          </p>
+        ) : null}
+      </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">
         {state.error ? (

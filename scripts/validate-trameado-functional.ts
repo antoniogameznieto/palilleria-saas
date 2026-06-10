@@ -12,6 +12,7 @@ import {
   buildTrameadoSegmentSuggestions,
   type TrameadoSegmentSuggestion,
 } from "../lib/trameado/segment-suggestions";
+import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 
 type CaseSpec = {
   label: string;
@@ -172,6 +173,40 @@ async function main() {
         `segment suggestion warnings: ${segmentSuggestions.warnings.join(" | ")}`,
       );
     }
+
+    const suggestedTotalPalilloMm = segmentSuggestions.suggestions.reduce(
+      (total, suggestion) => total + Number(suggestion.palilloLength),
+      0,
+    );
+    const mockConfirmedSegments = spec.goldenPalilloMm.map((value, index) => ({
+      segmentNumber: String(index + 1),
+      palilloLength: String(value),
+    }));
+    const confirmedTotalPalilloMm = mockConfirmedSegments.reduce(
+      (total, segment) => total + Number(segment.palilloLength),
+      0,
+    );
+    const sheetValidation = validateTrameadoSheet({
+      hasActiveSheet: true,
+      segments: mockConfirmedSegments,
+      takeoffItems: [
+        {
+          description: spec.takeoffPipeDescription,
+          quantity: spec.takeoffPipeQty,
+          unit: "M",
+        },
+      ],
+    });
+
+    console.log(
+      `segment suggestion total PALILLO: ${suggestedTotalPalilloMm} mm (${segmentSuggestions.suggestions.length} sugeridos)`,
+    );
+    console.log(
+      `mock confirmed total PALILLO: ${confirmedTotalPalilloMm} mm (${mockConfirmedSegments.length} tramos golden)`,
+    );
+    console.log(
+      `sheet validation: ${sheetValidation.statusLabel} (ref ${sheetValidation.referencePipeLengthM ?? "n/a"} m, delta ${sheetValidation.deltaPct != null ? `${sheetValidation.deltaPct.toFixed(1)}%` : "n/a"})`,
+    );
   }
 }
 

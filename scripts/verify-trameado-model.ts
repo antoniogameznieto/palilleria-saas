@@ -33,6 +33,7 @@ import {
   type CandidateDimensionsExtractionResult,
 } from "../lib/trameado/candidate-dimensions";
 import { buildTrameadoSegmentSuggestions } from "../lib/trameado/segment-suggestions";
+import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
   calculateTrameadoTotals,
   formatTrameadoSegmentDisplayLabel,
@@ -769,6 +770,135 @@ function verifySegmentSuggestions(): void {
   );
 }
 
+function verifyTrameadoSheetValidation(): void {
+  const noSheet = validateTrameadoSheet({
+    hasActiveSheet: false,
+    segments: [],
+  });
+
+  assert(noSheet.status === "no_data", "Without sheet should be no_data");
+
+  const incomplete = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(incomplete.status === "incomplete", "Empty sheet should be incomplete");
+
+  const noReference = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [{ segmentNumber: "1", palilloLength: "100" }],
+    takeoffItems: [
+      {
+        description: "BRIDA 150# RF",
+        quantity: "2",
+        unit: "UD",
+      },
+    ],
+  });
+
+  assert(
+    noReference.status === "no_comparable",
+    "Segments without pipe BOM reference should be no_comparable",
+  );
+
+  const invalidPalillo = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [
+      { segmentNumber: "1", palilloLength: "abc" },
+      { segmentNumber: "2", palilloLength: "100" },
+    ],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(
+    invalidPalillo.status === "review_data",
+    "Invalid PALILLO should trigger review_data",
+  );
+
+  const duplicateNumbers = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [
+      { segmentNumber: "1", palilloLength: "100" },
+      { segmentNumber: "<1>", palilloLength: "120" },
+    ],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(
+    duplicateNumbers.status === "review_data",
+    "Duplicate segment numbers should trigger review_data",
+  );
+
+  const reasonable = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [{ segmentNumber: "1", palilloLength: "1000" }],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(reasonable.status === "reasonable", "1000 mm vs 1.0 m should be reasonable");
+  assert(reasonable.deltaPct === 0, "Exact match should have 0% delta");
+
+  const reviewDelta = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [{ segmentNumber: "1", palilloLength: "850" }],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(
+    reviewDelta.status === "review_delta",
+    "850 mm vs 1.0 m should be review_delta",
+  );
+
+  const reviewHigh = validateTrameadoSheet({
+    hasActiveSheet: true,
+    segments: [{ segmentNumber: "1", palilloLength: "100" }],
+    takeoffItems: [
+      {
+        description: '1 4" TUBERIA A106 Gr.B SCH 40',
+        quantity: "1.0",
+        unit: "M",
+      },
+    ],
+  });
+
+  assert(
+    reviewHigh.status === "review_delta_high",
+    "100 mm vs 1.0 m should be review_delta_high",
+  );
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -860,6 +990,7 @@ async function main(): Promise<void> {
   verifySheetSuggestions();
   verifyCandidateDimensions();
   verifySegmentSuggestions();
+  verifyTrameadoSheetValidation();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

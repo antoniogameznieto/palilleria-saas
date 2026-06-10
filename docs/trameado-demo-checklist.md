@@ -174,6 +174,18 @@ npm run validate:trameado-functional
 
 ---
 
+### Paso 5b — Validación de hoja (18O-B)
+
+1. Panel **Validación de hoja** bajo la tabla de tramos.
+2. Comprobar **Tramos confirmados**, **Total PALILLO** y, si hay tubería en BOM con unidad M, **Referencia BOM** y **Diferencia %**.
+3. Estados posibles: *Sin tramos*, *Sin referencia suficiente*, *Parece razonable*, *Revisar diferencia*, *Revisar datos*.
+
+**Qué decir:** «Es una comprobación orientativa. La suma PALILLO no tiene por qué coincidir exactamente con los metros de tubería del BOM; ayuda a detectar desvíos grandes antes de cerrar la hoja.»
+
+**Qué mirar:** que no bloquee export ni marcar revisada.
+
+---
+
 ### Paso 6 — Exportar
 
 1. Con al menos un tramo: **Exportar CSV** y **Exportar Excel**.
