@@ -13,6 +13,7 @@ type ExportTrameadoPackageButtonProps = {
   exportTestId?: string;
   hintTestId?: string;
   disabledTestId?: string;
+  emphasized?: boolean;
 };
 
 export function ExportTrameadoPackageButton({
@@ -22,6 +23,7 @@ export function ExportTrameadoPackageButton({
   exportTestId = "trameado-export-package",
   hintTestId = "trameado-package-hint",
   disabledTestId = "trameado-export-package-disabled",
+  emphasized = false,
 }: ExportTrameadoPackageButtonProps) {
   const canExport = canExportTrameadoPackage(segmentCount);
   const exportPath = buildTrameadoPackageExportPath(sheetId);
@@ -33,7 +35,12 @@ export function ExportTrameadoPackageButton({
         title="Añade al menos un tramo para descargar el paquete."
         data-testid={disabledTestId}
       >
-        <Button type="button" variant="outline" size="sm" disabled>
+        <Button
+          type="button"
+          variant={emphasized ? "default" : "outline"}
+          size={emphasized ? "default" : "sm"}
+          disabled
+        >
           Descargar paquete
         </Button>
       </span>
@@ -52,7 +59,11 @@ export function ExportTrameadoPackageButton({
         </p>
       ) : null}
       <Link href={exportPath} data-testid={exportTestId}>
-        <Button type="button" variant="outline" size="sm">
+        <Button
+          type="button"
+          variant={emphasized ? "default" : "outline"}
+          size={emphasized ? "default" : "sm"}
+        >
           Descargar paquete
         </Button>
       </Link>

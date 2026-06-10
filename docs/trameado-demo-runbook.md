@@ -15,9 +15,11 @@ Enseñar en 10–15 minutos cómo un ingeniero pasa de un isométrico vectorial 
 
 ---
 
-## Modo guiado (18R-A)
+## Modo guiado (18R-A / 18R-B)
 
-En la pestaña Trameado, la tarjeta **Modo guiado** ordena el flujo en 6 pasos con checklist visible. Úsala como hilo conductor de la demo; la UI avanzada sigue disponible debajo.
+En la pestaña Trameado, la tarjeta **Modo guiado de palilleo** ordena el flujo en 6 pasos con checklist compacto. Úsala como hilo conductor de la demo; la UI avanzada sigue disponible debajo para ajustes manuales.
+
+**18R-B — pulido UX:** pasos completados se muestran en una línea (título + resumen); el paso activo tiene más contraste y un CTA principal único; al terminar aparece el banner «Hoja lista para revisar o entregar» con descarga destacada. No cambia lógica de tramos, validación ni permisos.
 
 Mensaje para la audiencia:
 

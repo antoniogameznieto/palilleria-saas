@@ -1,22 +1,29 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Circle, CircleDashed } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Circle,
+  CircleDashed,
+  Minus,
+} from "lucide-react";
 
 import { ExportTrameadoPackageButton } from "@/components/trameado/export-trameado-package-button";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  TRAMEADO_PACKAGE_MARKED_PDF_ENTRY,
-  TRAMEADO_PACKAGE_SUMMARY_JSON_ENTRY,
-  TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY,
-  TRAMEADO_PACKAGE_XLSX_ENTRY,
-} from "@/lib/trameado/export-package";
 import { formatTrameadoPalilloTotalMm } from "@/lib/trameado/segment-helpers";
 import type { TrameadoSheetSuggestion } from "@/lib/trameado/suggestions";
 import type { TrameadoSheetValidationResult } from "@/lib/trameado/sheet-validation";
 import type {
+  TrameadoWizardPrimaryActionKey,
   TrameadoWizardState,
+  TrameadoWizardStepId,
   TrameadoWizardStepStatus,
+} from "@/lib/trameado/wizard-state";
+import {
+  buildTrameadoWizardStepSummaries,
+  isTrameadoWizardWorkflowComplete,
+  resolveTrameadoWizardPrimaryAction,
 } from "@/lib/trameado/wizard-state";
 import type { SerializedTrameadoSheet } from "@/lib/trameado/db";
 import { cn } from "@/lib/utils";
@@ -33,32 +40,69 @@ type TrameadoGuidedWizardProps = {
   onMarkSegment: (segmentId: string) => void;
 };
 
-function checklistBadgeVariant(
-  displayStatus: TrameadoWizardState["checklist"][number]["displayStatus"],
-): "default" | "secondary" | "outline" | "destructive" {
+const STEP_META: Array<{
+  id: TrameadoWizardStepId;
+  number: number;
+  title: string;
+  summaryTestId?: string;
+}> = [
+  {
+    id: "prepare_sheet",
+    number: 1,
+    title: "Prepara la hoja de palilleo",
+    summaryTestId: "trameado-wizard-active-sheet",
+  },
+  { id: "review_suggestions", number: 2, title: "Revisa las sugerencias" },
+  {
+    id: "confirm_segments",
+    number: 3,
+    title: "Confirma los tramos",
+    summaryTestId: "trameado-wizard-segments-count",
+  },
+  { id: "mark_isometric", number: 4, title: "Marca el isométrico" },
+  { id: "validate_sheet", number: 5, title: "Valida la hoja" },
+  { id: "download_package", number: 6, title: "Descarga el paquete" },
+];
+
+function primaryActionTestId(
+  key: TrameadoWizardPrimaryActionKey,
+): string | undefined {
+  switch (key) {
+    case "create_sheet":
+      return "trameado-wizard-create-sheet";
+    case "add_segment":
+      return "trameado-wizard-add-segment";
+    case "mark_segments":
+      return "trameado-wizard-mark-segment";
+    default:
+      return undefined;
+  }
+}
+
+function checklistIcon(displayStatus: string) {
   switch (displayStatus) {
     case "Completo":
-      return "default";
+      return <Check className="size-3.5 shrink-0" aria-hidden />;
     case "Revisar":
-      return "secondary";
+      return <AlertCircle className="size-3.5 shrink-0 text-amber-600" aria-hidden />;
     case "En curso":
-      return "secondary";
+      return <CircleDashed className="size-3.5 shrink-0" aria-hidden />;
     default:
-      return "outline";
+      return <Minus className="size-3.5 shrink-0 opacity-50" aria-hidden />;
   }
 }
 
 function stepStatusIcon(status: TrameadoWizardStepStatus) {
   switch (status) {
     case "complete":
-      return <CheckCircle2 className="size-4 text-primary" aria-hidden />;
+      return <CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden />;
     case "review":
-      return <AlertCircle className="size-4 text-amber-600" aria-hidden />;
+      return <AlertCircle className="size-4 shrink-0 text-amber-600" aria-hidden />;
     case "in_progress":
     case "pending":
-      return <CircleDashed className="size-4 text-muted-foreground" aria-hidden />;
+      return <CircleDashed className="size-4 shrink-0 text-primary" aria-hidden />;
     default:
-      return <Circle className="size-4 text-muted-foreground/50" aria-hidden />;
+      return <Circle className="size-4 shrink-0 text-muted-foreground/40" aria-hidden />;
   }
 }
 
@@ -76,34 +120,67 @@ function formatPercent(value: number): string {
   }).format(value);
 }
 
-function WizardStep({
+function WizardStepShell({
   stepNumber,
   title,
   status,
   isCurrent,
+  isCompact,
+  summary,
+  summaryTestId,
+  trailing,
   children,
 }: {
   stepNumber: number;
   title: string;
   status: TrameadoWizardStepStatus;
   isCurrent: boolean;
-  children: React.ReactNode;
+  isCompact: boolean;
+  summary: string;
+  summaryTestId?: string;
+  trailing?: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   return (
     <section
       className={cn(
-        "rounded-lg border p-4",
-        isCurrent ? "border-primary/40 bg-primary/5" : "bg-card",
+        "rounded-lg border transition-colors",
+        isCurrent
+          ? "border-primary bg-primary/5 p-4 shadow-sm"
+          : isCompact
+            ? "border-transparent bg-muted/30 px-3 py-2"
+            : status === "blocked"
+              ? "border-transparent bg-transparent px-3 py-1.5 opacity-60"
+              : "border-border/60 bg-card/50 px-3 py-2",
       )}
       data-testid={`trameado-wizard-step-${stepNumber}`}
       data-step-status={status}
+      data-step-expanded={isCurrent ? "true" : "false"}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         {stepStatusIcon(status)}
-        <div className="min-w-0 flex-1 space-y-2">
-          <h4 className="text-sm font-semibold">
-            {stepNumber}. {title}
-          </h4>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <h4
+                className={cn(
+                  "font-semibold",
+                  isCurrent ? "text-sm" : "text-xs text-muted-foreground",
+                )}
+              >
+                {stepNumber}. {title}
+              </h4>
+              {isCompact || !isCurrent ? (
+                <span
+                  className="text-xs text-muted-foreground"
+                  data-testid={summaryTestId}
+                >
+                  {summary}
+                </span>
+              ) : null}
+            </div>
+            {trailing}
+          </div>
           {children}
         </div>
       </div>
@@ -123,324 +200,408 @@ export function TrameadoGuidedWizard({
   onMarkSegment,
 }: TrameadoGuidedWizardProps) {
   const { checklist, currentStep, suggestionSummary } = wizardState;
+  const summaries = buildTrameadoWizardStepSummaries({
+    state: wizardState,
+    sheetLineIdentifier: selectedSheet?.lineIdentifier,
+  });
+  const workflowComplete = isTrameadoWizardWorkflowComplete(wizardState);
+  const primaryAction = resolveTrameadoWizardPrimaryAction(wizardState, canManage);
+  const showLaterSteps = wizardState.hasSheet;
+
+  const handlePrimaryAction = (key: TrameadoWizardPrimaryActionKey) => {
+    switch (key) {
+      case "create_sheet":
+        onCreateSheet();
+        break;
+      case "review_suggestions":
+        onFocusSuggestions();
+        break;
+      case "add_segment":
+        onAddSegment();
+        break;
+      case "mark_segments": {
+        const firstUnmarked = wizardState.unmarkedSegments[0];
+        if (firstUnmarked) {
+          onMarkSegment(firstUnmarked.id);
+        }
+        break;
+      }
+      case "download_package":
+        break;
+    }
+  };
+
+  const renderPrimaryCtaButton = (emphasized: boolean) => {
+    if (!primaryAction) {
+      return null;
+    }
+
+    if (primaryAction.key === "download_package") {
+      if (!selectedSheet) {
+        return null;
+      }
+
+      return (
+        <ExportTrameadoPackageButton
+          sheetId={selectedSheet.id}
+          segmentCount={wizardState.confirmedSegmentsCount}
+          markedCount={wizardState.markedSegmentsCount}
+          exportTestId="trameado-wizard-export-package"
+          hintTestId="trameado-wizard-package-hint"
+          disabledTestId="trameado-wizard-export-package-disabled"
+          emphasized={emphasized}
+        />
+      );
+    }
+
+    if (!canManage) {
+      return null;
+    }
+
+    return (
+      <Button
+        type="button"
+        variant={emphasized ? "default" : "outline"}
+        size={emphasized ? "default" : "sm"}
+        data-testid={primaryActionTestId(primaryAction.key)}
+        onClick={() => handlePrimaryAction(primaryAction.key)}
+      >
+        {primaryAction.label}
+      </Button>
+    );
+  };
 
   return (
     <div
-      className="space-y-4 rounded-lg border-2 border-primary/15 bg-card p-4"
+      className="space-y-4 rounded-xl border-2 border-primary/25 bg-gradient-to-b from-primary/5 to-card p-4 shadow-sm"
       data-testid="trameado-guided-wizard"
       data-current-step={currentStep}
+      data-workflow-complete={workflowComplete ? "true" : "false"}
     >
-      <div className="space-y-1">
-        <h3 className="text-base font-semibold">Modo guiado</h3>
-        <p className="text-sm text-muted-foreground">
-          Sigue estos pasos para completar la hoja de palilleo y descargar el
-          paquete de entrega.
+      <header className="space-y-2 border-b border-primary/10 pb-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-primary">
+          Empieza aquí
         </p>
-        {!canManage ? (
+        <h3
+          className="text-lg font-semibold leading-tight"
+          data-testid="trameado-wizard-title"
+        >
+          Modo guiado de palilleo
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Sigue estos pasos para completar la hoja, marcar el isométrico y
+          descargar el paquete.
+        </p>
+        {canManage ? (
+          <p className="text-xs text-muted-foreground">
+            Empieza aquí si es la primera vez que haces este flujo. Puedes usar
+            el modo guiado para avanzar paso a paso; la zona inferior sigue
+            disponible para ajustes manuales.
+          </p>
+        ) : (
           <p
             className="text-xs text-muted-foreground"
             data-testid="trameado-wizard-viewer-note"
           >
-            Tu rol permite revisar y descargar, pero no editar.
+            Estás en modo revisión: puedes consultar el estado y descargar el
+            paquete, pero no modificar la hoja.
           </p>
-        ) : null}
-      </div>
+        )}
+      </header>
 
       <ol
-        className="flex flex-wrap gap-2"
+        className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-6"
         aria-label="Progreso del wizard"
         data-testid="trameado-wizard-checklist"
       >
         {checklist.map((item) => (
           <li key={item.id}>
-            <Badge
-              variant={checklistBadgeVariant(item.displayStatus)}
-              className="gap-1"
+            <div
+              className={cn(
+                "flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs",
+                item.displayStatus === "En curso"
+                  ? "border-primary/40 bg-primary/10 font-medium"
+                  : item.displayStatus === "Completo"
+                    ? "border-border bg-muted/40"
+                    : item.displayStatus === "Revisar"
+                      ? "border-amber-500/30 bg-amber-500/5"
+                      : "border-transparent bg-muted/20 text-muted-foreground",
+              )}
               data-testid={`trameado-wizard-check-${item.id}`}
               data-status={item.displayStatus}
             >
-              {item.label}: {item.displayStatus}
-            </Badge>
+              {checklistIcon(item.displayStatus)}
+              <span className="truncate">
+                <span className="font-medium">{item.label}</span>
+                <span className="hidden sm:inline"> · </span>
+                <span className="block sm:inline">{item.displayStatus}</span>
+              </span>
+            </div>
           </li>
         ))}
       </ol>
 
-      <div className="space-y-3">
-        <WizardStep
-          stepNumber={1}
-          title="Prepara la hoja de palilleo"
-          status={wizardState.steps.prepare_sheet}
-          isCurrent={currentStep === "prepare_sheet"}
+      {workflowComplete ? (
+        <div
+          className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-4"
+          data-testid="trameado-wizard-complete-banner"
         >
-          <p className="text-sm text-muted-foreground">
-            Primero necesitamos una hoja donde guardar los tramos de esta línea.
+          <p className="text-sm font-semibold">
+            Hoja lista para revisar o entregar
           </p>
-          {wizardState.hasSheet && selectedSheet ? (
-            <p
-              className="text-sm font-medium"
-              data-testid="trameado-wizard-active-sheet"
-            >
-              Hoja activa: {selectedSheet.lineIdentifier}
-              {selectedSheet.lineClass ? (
-                <span className="font-normal text-muted-foreground">
-                  {" "}
-                  · CLASE {selectedSheet.lineClass}
-                </span>
-              ) : null}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {primarySheetSuggestion && !primarySheetSuggestion.alreadyExists ? (
-                <p className="text-xs text-muted-foreground">
-                  Sugerencia desde el plano:{" "}
-                  <span className="font-medium text-foreground">
-                    {primarySheetSuggestion.lineIdentifier}
-                  </span>
-                  {primarySheetSuggestion.diameter ? (
-                    <span>
-                      {" "}
-                      · {primarySheetSuggestion.diameter} · SCH{" "}
-                      {primarySheetSuggestion.schedule}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-              {canManage ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  data-testid="trameado-wizard-create-sheet"
-                  onClick={onCreateSheet}
-                >
-                  Crear hoja de palilleo
-                </Button>
-              ) : null}
-            </div>
-          )}
-        </WizardStep>
-
-        <WizardStep
-          stepNumber={2}
-          title="Revisa las sugerencias"
-          status={wizardState.steps.review_suggestions}
-          isCurrent={currentStep === "review_suggestions"}
-        >
-          <p className="text-sm text-muted-foreground">
-            La app detecta posibles palillos a partir de cotas del plano. Revisa
-            cada sugerencia antes de añadirla.
-          </p>
-          {wizardState.steps.review_suggestions === "blocked" ? (
-            <p className="text-xs text-muted-foreground">
-              Crea una hoja para ver sugerencias.
-            </p>
-          ) : (
-            <div className="space-y-2 text-sm">
-              <p data-testid="trameado-wizard-suggestions-summary">
-                Alta confianza: {suggestionSummary.highConfidenceCount} · Revisar:{" "}
-                {suggestionSummary.reviewCount}
-                {suggestionSummary.onSheetCount > 0
-                  ? ` · En hoja: ${suggestionSummary.onSheetCount}`
-                  : ""}
-              </p>
-              {suggestionSummary.mode === "unreliable" ? (
-                <p className="text-xs text-amber-800 dark:text-amber-200">
-                  En este plano las sugerencias automáticas no son fiables. Añade
-                  tramos manualmente desde las cotas.
-                </p>
-              ) : null}
-              {canManage && suggestionSummary.hasActionableSuggestions ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  data-testid="trameado-wizard-focus-suggestions"
-                  onClick={onFocusSuggestions}
-                >
-                  Ver sugerencias en el panel
-                </Button>
-              ) : null}
-            </div>
-          )}
-        </WizardStep>
-
-        <WizardStep
-          stepNumber={3}
-          title="Confirma los tramos"
-          status={wizardState.steps.confirm_segments}
-          isCurrent={currentStep === "confirm_segments"}
-        >
-          <p className="text-sm text-muted-foreground">
-            Cada tramo confirmado aparecerá en la hoja de palilleo y en los
-            exports.
-          </p>
-          <p
-            className="text-sm font-medium tabular-nums"
-            data-testid="trameado-wizard-segments-count"
-          >
-            {wizardState.confirmedSegmentsCount} tramo
-            {wizardState.confirmedSegmentsCount === 1 ? "" : "s"} confirmado
-            {wizardState.confirmedSegmentsCount === 1 ? "" : "s"}
-          </p>
-          {selectedSheet && selectedSheet.segments.length > 0 ? (
-            <div className="overflow-x-auto rounded-md border text-xs">
-              <table className="w-full min-w-[280px]">
-                <thead className="bg-muted/50 text-left">
-                  <tr>
-                    <th className="px-2 py-1.5 font-medium">Nº</th>
-                    <th className="px-2 py-1.5 font-medium">Ø</th>
-                    <th className="px-2 py-1.5 font-medium">SCH</th>
-                    <th className="px-2 py-1.5 font-medium">PALILLO</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedSheet.segments.map((segment) => (
-                    <tr key={segment.id} className="border-t">
-                      <td className="px-2 py-1.5">{segment.segmentLabel}</td>
-                      <td className="px-2 py-1.5">{segment.diameter}</td>
-                      <td className="px-2 py-1.5">{segment.schedule}</td>
-                      <td className="px-2 py-1.5 tabular-nums">
-                        {segment.palilloLength} mm
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-          {canManage && wizardState.confirmedSegmentsCount === 0 ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              data-testid="trameado-wizard-add-segment"
-              onClick={onAddSegment}
-            >
-              Añadir tramo
-            </Button>
-          ) : null}
-        </WizardStep>
-
-        <WizardStep
-          stepNumber={4}
-          title="Marca el isométrico"
-          status={wizardState.steps.mark_isometric}
-          isCurrent={currentStep === "mark_isometric"}
-        >
-          <p className="text-sm text-muted-foreground">
-            Marca en el plano dónde corresponde cada tramo. Esto se usará para
-            generar el PDF marcado. Selecciona un tramo y haz clic o arrastra
-            sobre el plano.
-          </p>
-          <p
-            className="text-sm font-medium tabular-nums"
-            data-testid="trameado-wizard-marks-count"
-          >
-            Marcados {wizardState.markedSegmentsCount}/
-            {wizardState.totalSegmentsCount}
-          </p>
-          {wizardState.unmarkedSegments.length > 0 ? (
-            <ul className="space-y-1 text-xs text-muted-foreground">
-              {wizardState.unmarkedSegments.map((segment) => (
-                <li key={segment.id} className="flex flex-wrap items-center gap-2">
-                  <span>Pendiente: Nº {segment.label}</span>
-                  {canManage ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2"
-                      data-testid="trameado-wizard-mark-segment"
-                      onClick={() => onMarkSegment(segment.id)}
-                    >
-                      Marcar
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : wizardState.totalSegmentsCount > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Todos los tramos están marcados.
-            </p>
-          ) : null}
-        </WizardStep>
-
-        <WizardStep
-          stepNumber={5}
-          title="Valida la hoja"
-          status={wizardState.steps.validate_sheet}
-          isCurrent={currentStep === "validate_sheet"}
-        >
-          <p className="text-sm text-muted-foreground">
-            La validación compara el total de palillos con la referencia
-            disponible. Es una ayuda, no sustituye la revisión del ingeniero.
-          </p>
-          {wizardState.confirmedSegmentsCount > 0 ? (
-            <div className="space-y-1 text-sm">
-              <p data-testid="trameado-wizard-validation-status">
-                Estado:{" "}
-                <span className="font-medium">{validation.statusLabel}</span>
-              </p>
-              <p className="tabular-nums">
-                Total PALILLO: {formatTrameadoPalilloTotalMm(validation.totalPalilloMm)}{" "}
-                mm / {formatMeters(validation.totalPalilloM)} m
-              </p>
-              {validation.hasReferenceLength &&
-              validation.referencePipeLengthM != null ? (
-                <p className="tabular-nums">
-                  Referencia BOM: {formatMeters(validation.referencePipeLengthM)} m
-                  {validation.deltaPct != null
-                    ? ` · Diferencia: ${formatPercent(validation.deltaPct)} %`
-                    : ""}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Sin referencia BOM: revisar manualmente.
-                </p>
-              )}
-            </div>
-          ) : null}
-        </WizardStep>
-
-        <WizardStep
-          stepNumber={6}
-          title="Descarga el paquete"
-          status={wizardState.steps.download_package}
-          isCurrent={currentStep === "download_package"}
-        >
-          <p className="text-sm text-muted-foreground">
-            El paquete contiene la hoja Excel, el PDF marcado si hay marcas, y el
-            resumen de validación.
-          </p>
-          <ul className="list-inside list-disc text-xs text-muted-foreground">
-            <li>{TRAMEADO_PACKAGE_XLSX_ENTRY}</li>
-            {wizardState.includesMarkedPdfInPackage ? (
-              <li>{TRAMEADO_PACKAGE_MARKED_PDF_ENTRY}</li>
-            ) : (
-              <li className="text-amber-800 dark:text-amber-200">
-                {TRAMEADO_PACKAGE_MARKED_PDF_ENTRY} (solo si hay marcas)
-              </li>
-            )}
-            <li>{TRAMEADO_PACKAGE_SUMMARY_TXT_ENTRY}</li>
-            <li>{TRAMEADO_PACKAGE_SUMMARY_JSON_ENTRY}</li>
+          <ul className="space-y-0.5 text-sm text-muted-foreground">
+            <li>{summaries.confirm_segments}</li>
+            <li>{summaries.mark_isometric}</li>
+            <li>Validación: {summaries.validate_sheet}</li>
+            <li>{summaries.download_package}</li>
           </ul>
-          {selectedSheet && wizardState.canExportPackage ? (
+          {selectedSheet ? (
             <div data-testid="trameado-wizard-package-cta">
-              <ExportTrameadoPackageButton
-                sheetId={selectedSheet.id}
-                segmentCount={wizardState.confirmedSegmentsCount}
-                markedCount={wizardState.markedSegmentsCount}
-                exportTestId="trameado-wizard-export-package"
-                hintTestId="trameado-wizard-package-hint"
-                disabledTestId="trameado-wizard-export-package-disabled"
-              />
+              {renderPrimaryCtaButton(true)}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Añade al menos un tramo para descargar el paquete.
-            </p>
-          )}
-        </WizardStep>
+          ) : null}
+        </div>
+      ) : primaryAction ? (
+        <div className="rounded-lg border border-dashed border-primary/30 bg-background/80 p-3">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            Siguiente paso recomendado
+          </p>
+          {renderPrimaryCtaButton(true)}
+        </div>
+      ) : null}
+
+      <div className="space-y-2">
+        {STEP_META.map((step) => {
+          if (!showLaterSteps && step.id !== "prepare_sheet") {
+            return null;
+          }
+
+          const status = wizardState.steps[step.id];
+          const isCurrent = currentStep === step.id;
+          const isCompact = status === "complete" && !isCurrent;
+
+          const packageTrailing =
+            step.id === "download_package" &&
+            wizardState.canExportPackage &&
+            selectedSheet &&
+            !isCurrent ? (
+              <div data-testid="trameado-wizard-package-cta">
+                <ExportTrameadoPackageButton
+                  sheetId={selectedSheet.id}
+                  segmentCount={wizardState.confirmedSegmentsCount}
+                  markedCount={wizardState.markedSegmentsCount}
+                  exportTestId="trameado-wizard-export-package"
+                  hintTestId="trameado-wizard-package-hint"
+                  disabledTestId="trameado-wizard-export-package-disabled"
+                  emphasized={workflowComplete}
+                />
+              </div>
+            ) : null;
+
+          return (
+            <WizardStepShell
+              key={step.id}
+              stepNumber={step.number}
+              title={step.title}
+              status={status}
+              isCurrent={isCurrent}
+              isCompact={isCompact}
+              summary={summaries[step.id]}
+              summaryTestId={
+                isCompact || !isCurrent ? step.summaryTestId : undefined
+              }
+              trailing={packageTrailing}
+            >
+              {isCompact ? null : (
+                <div
+                  className={cn(
+                    "space-y-2",
+                    isCurrent ? "mt-2" : "mt-1",
+                    !isCurrent && status === "blocked" ? "text-xs" : "text-sm",
+                  )}
+                >
+                  {step.id === "prepare_sheet" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        Primero necesitamos una hoja donde guardar los tramos
+                        de esta línea.
+                      </p>
+                      {primarySheetSuggestion &&
+                      !primarySheetSuggestion.alreadyExists ? (
+                        <p className="text-xs text-muted-foreground">
+                          Sugerencia desde el plano:{" "}
+                          <span className="font-medium text-foreground">
+                            {primarySheetSuggestion.lineIdentifier}
+                          </span>
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
+
+                  {step.id === "prepare_sheet" &&
+                  wizardState.hasSheet &&
+                  selectedSheet ? (
+                    <p
+                      className="font-medium"
+                      data-testid="trameado-wizard-active-sheet"
+                    >
+                      {summaries.prepare_sheet}
+                    </p>
+                  ) : null}
+
+                  {step.id === "review_suggestions" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        La app detecta posibles palillos a partir de cotas del
+                        plano. Revisa cada sugerencia antes de añadirla.
+                      </p>
+                      <p data-testid="trameado-wizard-suggestions-summary">
+                        Alta confianza: {suggestionSummary.highConfidenceCount}{" "}
+                        · Revisar: {suggestionSummary.reviewCount}
+                      </p>
+                      {suggestionSummary.mode === "unreliable" ? (
+                        <p className="text-xs text-amber-800 dark:text-amber-200">
+                          En este plano las sugerencias automáticas no son
+                          fiables. Añade tramos manualmente desde las cotas.
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
+
+                  {step.id === "confirm_segments" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        Cada tramo confirmado aparecerá en la hoja y en los
+                        exports.
+                      </p>
+                      <p
+                        className="font-medium tabular-nums"
+                        data-testid="trameado-wizard-segments-count"
+                      >
+                        {summaries.confirm_segments}
+                      </p>
+                      {selectedSheet && selectedSheet.segments.length > 0 ? (
+                        <div className="overflow-x-auto rounded-md border text-xs">
+                          <table className="w-full min-w-[240px]">
+                            <thead className="bg-muted/50 text-left">
+                              <tr>
+                                <th className="px-2 py-1 font-medium">Nº</th>
+                                <th className="px-2 py-1 font-medium">PALILLO</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedSheet.segments.map((segment) => (
+                                <tr key={segment.id} className="border-t">
+                                  <td className="px-2 py-1">
+                                    {segment.segmentLabel}
+                                  </td>
+                                  <td className="px-2 py-1 tabular-nums">
+                                    {segment.palilloLength} mm
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : null}
+
+                  {step.id === "mark_isometric" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        Marca en el plano dónde corresponde cada tramo.
+                        Selecciona un tramo y haz clic o arrastra sobre el
+                        plano.
+                      </p>
+                      <p
+                        className="font-medium tabular-nums"
+                        data-testid="trameado-wizard-marks-count"
+                      >
+                        Marcados {wizardState.markedSegmentsCount}/
+                        {wizardState.totalSegmentsCount}
+                      </p>
+                      {wizardState.unmarkedSegments.length > 0 ? (
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          {wizardState.unmarkedSegments.map((segment) => (
+                            <li key={segment.id}>
+                              Pendiente: Nº {segment.label}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </>
+                  ) : null}
+
+                  {step.id === "validate_sheet" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        Comparación orientativa con la referencia disponible. No
+                        sustituye la revisión del ingeniero.
+                      </p>
+                      <p data-testid="trameado-wizard-validation-status">
+                        Estado:{" "}
+                        <span className="font-medium">
+                          {validation.statusLabel}
+                        </span>
+                      </p>
+                      <p className="tabular-nums text-xs">
+                        Total PALILLO:{" "}
+                        {formatTrameadoPalilloTotalMm(validation.totalPalilloMm)}{" "}
+                        mm
+                        {validation.hasReferenceLength &&
+                        validation.referencePipeLengthM != null
+                          ? ` · BOM ${formatMeters(validation.referencePipeLengthM)} m`
+                          : ""}
+                        {validation.deltaPct != null
+                          ? ` · ${formatPercent(validation.deltaPct)} %`
+                          : ""}
+                      </p>
+                    </>
+                  ) : null}
+
+                  {step.id === "download_package" && isCurrent ? (
+                    <>
+                      <p className="text-muted-foreground">
+                        Incluye Excel, resumen de validación y PDF marcado si hay
+                        marcas.
+                      </p>
+                      {selectedSheet && wizardState.canExportPackage ? (
+                        <div data-testid="trameado-wizard-package-cta">
+                          <ExportTrameadoPackageButton
+                            sheetId={selectedSheet.id}
+                            segmentCount={wizardState.confirmedSegmentsCount}
+                            markedCount={wizardState.markedSegmentsCount}
+                            exportTestId="trameado-wizard-export-package"
+                            hintTestId="trameado-wizard-package-hint"
+                            disabledTestId="trameado-wizard-export-package-disabled"
+                            emphasized
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Añade al menos un tramo para descargar el paquete.
+                        </p>
+                      )}
+                    </>
+                  ) : null}
+
+                  {!isCurrent && status !== "blocked" && !isCompact ? (
+                    <p className="text-xs text-muted-foreground">
+                      {summaries[step.id]}
+                    </p>
+                  ) : null}
+
+                  {!isCurrent && status === "blocked" ? (
+                    <p className="text-xs text-muted-foreground/70">
+                      Completa el paso anterior primero.
+                    </p>
+                  ) : null}
+                </div>
+              )}
+            </WizardStepShell>
+          );
+        })}
       </div>
     </div>
   );

@@ -260,6 +260,110 @@ function buildUnmarkedSegments(
     }));
 }
 
+export type TrameadoWizardPrimaryActionKey =
+  | "create_sheet"
+  | "review_suggestions"
+  | "add_segment"
+  | "mark_segments"
+  | "download_package";
+
+export type TrameadoWizardPrimaryAction = {
+  key: TrameadoWizardPrimaryActionKey;
+  label: string;
+};
+
+export type TrameadoWizardStepSummaries = Record<
+  TrameadoWizardStepId,
+  string
+>;
+
+export function isTrameadoWizardWorkflowComplete(
+  state: TrameadoWizardState,
+): boolean {
+  return (
+    state.hasSheet &&
+    state.confirmedSegmentsCount > 0 &&
+    state.markedSegmentsCount >= state.totalSegmentsCount &&
+    state.canExportPackage
+  );
+}
+
+export function buildTrameadoWizardStepSummaries(input: {
+  state: TrameadoWizardState;
+  sheetLineIdentifier?: string | null;
+}): TrameadoWizardStepSummaries {
+  const { state, sheetLineIdentifier } = input;
+
+  const suggestionsSummary =
+    state.suggestionSummary.onSheetCount > 0
+      ? "Sugerencias revisadas"
+      : state.suggestionSummary.hasActionableSuggestions
+        ? "Sugerencias pendientes de revisar"
+        : "Sin sugerencias pendientes";
+
+  const packageSummary = state.canExportPackage
+    ? state.includesMarkedPdfInPackage
+      ? "Paquete listo para descargar"
+      : "Paquete disponible (sin PDF marcado)"
+    : "Pendiente de tramos";
+
+  return {
+    prepare_sheet: state.hasSheet
+      ? `Hoja preparada · ${sheetLineIdentifier ?? "—"}`
+      : "Crea una hoja para empezar",
+    review_suggestions: suggestionsSummary,
+    confirm_segments:
+      state.confirmedSegmentsCount > 0
+        ? `${state.confirmedSegmentsCount} tramo${state.confirmedSegmentsCount === 1 ? "" : "s"} confirmado${state.confirmedSegmentsCount === 1 ? "" : "s"}`
+        : "Añade al menos un tramo",
+    mark_isometric:
+      state.totalSegmentsCount > 0
+        ? `${state.markedSegmentsCount}/${state.totalSegmentsCount} marcas`
+        : "Marca cada tramo en el plano",
+    validate_sheet:
+      state.confirmedSegmentsCount > 0
+        ? state.validationStatusLabel
+        : "Validación pendiente",
+    download_package: packageSummary,
+  };
+}
+
+export function resolveTrameadoWizardPrimaryAction(
+  state: TrameadoWizardState,
+  canManage: boolean,
+): TrameadoWizardPrimaryAction | null {
+  if (isTrameadoWizardWorkflowComplete(state)) {
+    return { key: "download_package", label: "Descargar paquete" };
+  }
+
+  if (!canManage) {
+    if (state.canExportPackage) {
+      return { key: "download_package", label: "Descargar paquete" };
+    }
+
+    return null;
+  }
+
+  switch (state.currentStep) {
+    case "prepare_sheet":
+      return { key: "create_sheet", label: "Crear hoja de palilleo" };
+    case "review_suggestions":
+      return { key: "review_suggestions", label: "Revisar sugerencias" };
+    case "confirm_segments":
+      return { key: "add_segment", label: "Añadir tramo" };
+    case "mark_isometric":
+      return { key: "mark_segments", label: "Marcar tramos pendientes" };
+    case "validate_sheet":
+    case "download_package":
+      if (state.canExportPackage) {
+        return { key: "download_package", label: "Descargar paquete" };
+      }
+      return { key: "add_segment", label: "Añadir tramo" };
+    default:
+      return null;
+  }
+}
+
 export function buildTrameadoWizardState(
   input: BuildTrameadoWizardStateInput,
 ): TrameadoWizardState {

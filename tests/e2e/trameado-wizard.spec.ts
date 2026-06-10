@@ -40,6 +40,9 @@ test.describe("trameado guided wizard", () => {
 
     const wizard = page.getByTestId("trameado-guided-wizard");
     await expect(wizard).toBeVisible();
+    await expect(page.getByTestId("trameado-wizard-title")).toHaveText(
+      "Modo guiado de palilleo",
+    );
     await expect(wizard).toHaveAttribute("data-current-step", "prepare_sheet");
     await expect(page.getByTestId("trameado-wizard-create-sheet")).toBeVisible();
     await expect(page.getByTestId("trameado-wizard-check-prepare_sheet")).toContainText(
@@ -59,7 +62,7 @@ test.describe("trameado guided wizard", () => {
       "HL-E2E-WIZ-01",
     );
 
-    await page.getByTestId("trameado-wizard-add-segment").click();
+    await page.getByTestId("trameado-add-segment").click();
     await fillSegmentForm(page, {
       segmentNumber: "<1>",
       diameter: '4"',
@@ -88,7 +91,7 @@ test.describe("trameado guided wizard", () => {
     await engineerPage.getByTestId("trameado-wizard-create-sheet").click();
     await engineerPage.locator("#trameado-line-identifier").fill("HL-E2E-WIZ-VIEW");
     await engineerPage.getByTestId("trameado-create-sheet-submit").click();
-    await engineerPage.getByTestId("trameado-wizard-add-segment").click();
+    await engineerPage.getByTestId("trameado-add-segment").click();
     await fillSegmentForm(engineerPage, {
       segmentNumber: "<1>",
       diameter: '4"',
@@ -109,7 +112,7 @@ test.describe("trameado guided wizard", () => {
     await expect(page.getByTestId("trameado-guided-wizard")).toBeVisible();
     await expect(page.getByTestId("trameado-wizard-viewer-note")).toBeVisible();
     await expect(page.getByTestId("trameado-wizard-create-sheet")).toHaveCount(0);
-    await expect(page.getByTestId("trameado-wizard-add-segment")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-wizard-primary-cta")).toHaveCount(0);
     await expect(page.getByTestId("trameado-wizard-mark-segment")).toHaveCount(0);
     await expect(page.getByTestId("trameado-wizard-active-sheet")).toContainText(
       "HL-E2E-WIZ-VIEW",

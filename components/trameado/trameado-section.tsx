@@ -685,7 +685,11 @@ export function TrameadoSection({
 
         {selectedSheet ? (
           <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-wrap items-start gap-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Exportes individuales (opcional)
+              </p>
+              <div className="flex flex-wrap items-start gap-3">
               <ExportTrameadoCsvButton
                 sheetId={selectedSheet.id}
                 segmentCount={selectedSheet.segments.length}
@@ -700,6 +704,7 @@ export function TrameadoSection({
                 segmentCount={selectedSheet.segments.length}
                 markedCount={annotationSummary.markedCount}
               />
+              </div>
             </div>
             {selectedSheet.notes ? (
               <p className="max-w-prose text-xs text-muted-foreground">

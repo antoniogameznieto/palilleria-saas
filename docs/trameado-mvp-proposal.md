@@ -355,6 +355,12 @@ Columnas:
 - **Qué no cambia:** lógica de tramos, validación, marcado, exports ni permisos; UI avanzada sigue visible.
 - **No añade** automatización nueva; guía con estado y CTAs reutilizando acciones existentes.
 
+### 18R-B — Pulido UX del wizard (completado)
+
+- **Objetivo:** wizard más protagonista y fácil de seguir sin quitar la UI avanzada.
+- **Cambios visuales:** cabecera «Modo guiado de palilleo»; checklist compacto con icono y estado; paso activo con mayor contraste; pasos completos en una línea (título + resumen); CTA principal único por estado; banner final «Hoja lista para revisar o entregar»; microcopy de tranquilidad (modo guiado + zona inferior manual); viewer con copy de solo lectura.
+- **Qué no cambia:** Prisma, permisos, validación, marcado, exports, endpoints ni automatización nueva.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -390,7 +396,7 @@ Columnas:
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
 - Runbook demo 18P-C: [trameado-demo-runbook.md](./trameado-demo-runbook.md)
-- Wizard guiado 18R-A: `components/trameado/trameado-guided-wizard.tsx`
+- Wizard guiado 18R-A / pulido UX 18R-B: `components/trameado/trameado-guided-wizard.tsx`
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
