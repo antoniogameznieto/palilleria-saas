@@ -1,6 +1,7 @@
 /**
- * Limpia hojas y tramos de trameado del plano E2E principal.
- * Usado entre tests de trameado-manual.spec.ts para aislar escenarios.
+ * Limpia hojas de trameado del plano E2E principal (drawingPending).
+ * Cascada Prisma elimina segmentos y anotaciones asociados.
+ * Usado entre tests de trameado-*.spec.ts para aislar escenarios.
  */
 import { PrismaClient } from "@prisma/client";
 

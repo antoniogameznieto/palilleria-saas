@@ -286,7 +286,19 @@ Para **HL-1291-01** con la app actual:
 | Bugs bloqueantes | Ninguno |
 | Conclusión | Listo demo interna; siguiente 18P-B hardening QA |
 
-## 19. Fase siguiente (backlog)
+## 19. Fase 18P-B — Hardening QA y permisos
+
+**Implementado (jun 2026).** Revisión pre-push sin funcionalidad nueva.
+
+| Aspecto | Detalle |
+|---------|---------|
+| Permisos | Engineer+ muta; viewer lee y exporta; cross-tenant 403 en APIs |
+| Endpoints | Auth + membership + scope en CSV/XLSX/PDF/ZIP |
+| E2E nuevo | `trameado-permissions.spec.ts` |
+| Bugs bloqueantes | Ninguno |
+| Evidencia | [trameado-hardening-report.md](./trameado-hardening-report.md) |
+
+## 20. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -296,7 +308,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 20. Criterios MVP — estado tras 18P-A
+## 21. Criterios MVP — estado tras 18P-B
 
 | Criterio | Estado |
 |----------|--------|
@@ -307,7 +319,7 @@ Para **HL-1291-01** con la app actual:
 | Demo interna end-to-end HL-1289-02 | ✅ 18P-A |
 | Cliente externo valida export | ⏳ Pendiente sesión formal |
 
-## 21. Referencias
+## 22. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)

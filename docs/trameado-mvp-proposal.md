@@ -334,6 +334,13 @@ Columnas:
 - Conclusión: **listo para demo interna y validación con usuario técnico**; no listo para automatización total.
 - Recomendación siguiente: **18P-B** hardening QA antes de push/release.
 
+### 18P-B — Hardening QA y permisos (completado)
+
+- Reporte: [trameado-hardening-report.md](./trameado-hardening-report.md).
+- Permisos server + UI revisados; sin bugs bloqueantes.
+- E2E: `trameado-permissions.spec.ts` (401/403 APIs, viewer/engineer UI).
+- Conclusión: **listo para push** con smoke documentado; sin cambios de producto.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -367,6 +374,7 @@ Columnas:
 - Validación funcional 18L: [trameado-functional-validation.md](./trameado-functional-validation.md)
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
+- Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`

@@ -30,6 +30,7 @@ PDF original
 - [trameado-demo-checklist.md](./trameado-demo-checklist.md) — guion operativo para repetir la demo
 - [trameado-functional-validation.md](./trameado-functional-validation.md) — evidencia funcional por fase
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md) — roadmap y criterios MVP
+- [trameado-hardening-report.md](./trameado-hardening-report.md) — hardening QA 18P-B
 
 ---
 

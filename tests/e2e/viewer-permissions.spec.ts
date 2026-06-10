@@ -31,5 +31,9 @@ test.describe("permisos viewer", () => {
     await expect(page.getByTestId("takeoff-import-csv")).toHaveCount(0);
     await expect(page.getByTestId("confirm-takeoff-review")).toHaveCount(0);
     await expect(page.locator("header").getByTestId("export-drawing-csv")).toBeEnabled();
+
+    await page.getByRole("button", { name: "Trameado", exact: true }).click();
+    await expect(page.getByTestId("trameado-create-sheet")).toHaveCount(0);
+    await expect(page.getByTestId("trameado-add-segment")).toHaveCount(0);
   });
 });
