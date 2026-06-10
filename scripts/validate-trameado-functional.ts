@@ -12,6 +12,7 @@ import {
   buildTrameadoSegmentSuggestions,
   type TrameadoSegmentSuggestion,
 } from "../lib/trameado/segment-suggestions";
+import { canExportMarkedTrameadoPdf } from "../lib/trameado/export-marked-pdf";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 
 type CaseSpec = {
@@ -206,6 +207,12 @@ async function main() {
     );
     console.log(
       `sheet validation: ${sheetValidation.statusLabel} (ref ${sheetValidation.referencePipeLengthM ?? "n/a"} m, delta ${sheetValidation.deltaPct != null ? `${sheetValidation.deltaPct.toFixed(1)}%` : "n/a"})`,
+    );
+    console.log(
+      `marked PDF exportable: ${canExportMarkedTrameadoPdf(0) ? "sí" : "no"} (este script no carga marcas persistidas; con ≥1 marca en hoja: exportar PDF marcado)`,
+    );
+    console.log(
+      `annotation hint: ${mockConfirmedSegments.length} tramos golden de referencia; marcar en UI para PDF marcado`,
     );
   }
 }

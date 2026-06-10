@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "@prisma/client",
     "prisma",
     "pdf-parse",
+    "pdf-lib",
     "pdfjs-dist",
     "exceljs",
     "@napi-rs/canvas",

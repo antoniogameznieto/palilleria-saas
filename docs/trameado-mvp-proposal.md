@@ -301,6 +301,19 @@ Columnas:
 - **No** trameado automático, **no** coordenadas PDF reales, **no** geometría vectorial.
 - Base para exportar/generar iso trameado en fases posteriores.
 
+### 18O-E — Exportar PDF marcado (completado)
+
+- Helper: `lib/trameado/export-marked-pdf.ts` (`pdf-lib`).
+- API: `GET /api/files/trameado/[sheetId]/marked-pdf`.
+- UI: botón **Exportar PDF marcado** (requiere ≥1 marca).
+- Mapea coords relativas del visor a la página PDF; primer entregable visual prudente.
+- **No** sustituye revisión del ingeniero ni precisión CAD.
+
+### 18O-E2 — Legibilidad del PDF marcado (completado)
+
+- Estilos escalados con mínimos (`resolveMarkedPdfRenderStyle`, `MARKED_PDF_MIN_SIZES`).
+- Marcas más grandes, mayor contraste, etiquetas bold, halo blanco y leader line.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -335,6 +348,7 @@ Columnas:
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
 - Marcado isométrico 18O-C/D: `lib/trameado/pdf-annotations.ts`, `DrawingTrameadoAnnotation`
+- PDF marcado 18O-E: `lib/trameado/export-marked-pdf.ts`
 
 ---
 

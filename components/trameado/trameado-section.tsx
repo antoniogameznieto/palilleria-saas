@@ -11,6 +11,7 @@ import {
 import { TrameadoCandidateDimensionsPanel } from "@/components/trameado/trameado-candidate-dimensions-panel";
 import { TrameadoReviewButton } from "@/components/trameado/trameado-review-button";
 import { ExportTrameadoCsvButton } from "@/components/trameado/export-trameado-csv-button";
+import { ExportTrameadoMarkedPdfButton } from "@/components/trameado/export-trameado-marked-pdf-button";
 import { TrameadoIsoMarkingPanel } from "@/components/trameado/trameado-iso-marking-panel";
 import { TrameadoPdfPanel } from "@/components/trameado/trameado-pdf-panel";
 import {
@@ -623,11 +624,17 @@ export function TrameadoSection({
 
         {selectedSheet ? (
           <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-            <ExportTrameadoCsvButton
-              sheetId={selectedSheet.id}
-              segmentCount={selectedSheet.segments.length}
-              reviewedAt={selectedSheet.reviewedAt}
-            />
+            <div className="flex flex-wrap items-start gap-3">
+              <ExportTrameadoCsvButton
+                sheetId={selectedSheet.id}
+                segmentCount={selectedSheet.segments.length}
+                reviewedAt={selectedSheet.reviewedAt}
+              />
+              <ExportTrameadoMarkedPdfButton
+                sheetId={selectedSheet.id}
+                markedCount={annotationSummary.markedCount}
+              />
+            </div>
             {selectedSheet.notes ? (
               <p className="max-w-prose text-xs text-muted-foreground">
                 {selectedSheet.notes}

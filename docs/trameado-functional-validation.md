@@ -244,7 +244,21 @@ Para **HL-1291-01** con la app actual:
 
 **No hace:** trameado automático, geometría vectorial, OCR, coordenadas PDF reales.
 
-## 16. Fase siguiente (backlog)
+## 16. Fase 18O-E — Exportar PDF marcado
+
+**Implementado (jun 2026).** `pdf-lib` superpone marcas persistidas sobre el PDF original.
+
+| Capacidad | Detalle |
+|-----------|---------|
+| Export | `GET /api/files/trameado/[sheetId]/marked-pdf` |
+| UI | **Exportar PDF marcado** junto a CSV/Excel |
+| Requisito | ≥1 marca persistida en la hoja |
+| Viewer | Puede descargar si hay marcas; no edita |
+| Coordenadas | Relativas del visor → página PDF (no CAD real) |
+
+**No hace:** iso trameado perfecto de taller, coordenadas PDF reales, geometría automática.
+
+## 17. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -254,7 +268,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 17. Criterios MVP — estado tras 18O-D
+## 18. Criterios MVP — estado tras 18O-E
 
 | Criterio | Estado |
 |----------|--------|
@@ -264,7 +278,7 @@ Para **HL-1291-01** con la app actual:
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
 | Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
 
-## 18. Referencias
+## 19. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -273,4 +287,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D — jun 2026. Datos con `validate-trameado-functional.ts`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C; persistencia marcas 18O-D; PDF marcado 18O-E — jun 2026. Datos con `validate-trameado-functional.ts`.*

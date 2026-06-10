@@ -281,6 +281,18 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 
 **Coordenadas:** relativas al contenedor del visor (0–1), no espacio PDF.
 
+## Exportar PDF marcado (18O-E)
+
+**Helper:** `lib/trameado/export-marked-pdf.ts` — `buildMarkedTrameadoPdf`, mapeo visor → página PDF (`pdf-lib`).
+
+**API:** `GET /api/files/trameado/[sheetId]/marked-pdf` — requiere ≥1 `DrawingTrameadoAnnotation`.
+
+**UI:** `ExportTrameadoMarkedPdfButton` — **Exportar PDF marcado**; viewer puede descargar.
+
+**Limitación:** colocación aproximada; no coordenadas PDF/CAD reales.
+
+**18O-E2:** `MARKED_PDF_MIN_SIZES` + `resolveMarkedPdfRenderStyle` — marcas/etiquetas más legibles, leader line, halo.
+
 ## Archivos tocados en 18B
 
 - `prisma/schema.prisma`

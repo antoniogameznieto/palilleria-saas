@@ -198,6 +198,16 @@ npm run validate:trameado-functional
 
 ---
 
+### Paso 5d — Exportar PDF marcado (18O-E)
+
+1. Con al menos una marca, pulsa **Exportar PDF marcado**.
+2. Abre el PDF descargado: deben verse etiquetas **Nº X** sobre el isométrico.
+3. Sin marcas, el botón está deshabilitado.
+
+**Qué decir:** «Es un primer PDF marcado prudente. La colocación depende del visor, no de coordenadas CAD. El ingeniero debe revisarlo.»
+
+---
+
 ### Paso 6 — Exportar
 
 1. Con al menos un tramo: **Exportar CSV** y **Exportar Excel**.

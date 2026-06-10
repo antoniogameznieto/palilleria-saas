@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { PDFDocument } from "pdf-lib";
 
 import {
   buildTrameadoCsv,
@@ -41,6 +42,17 @@ import {
   removeAnnotationForSegment,
   upsertAnnotationForSegment,
 } from "../lib/trameado/pdf-annotations";
+import {
+  buildMarkedTrameadoPdf,
+  buildTrameadoMarkedPdfExportPath,
+  buildTrameadoMarkedPdfFileName,
+  canExportMarkedTrameadoPdf,
+  isAnnotationOnValidPage,
+  mapRelativeViewerRectToPdf,
+  mapRelativeViewerYToPdfY,
+  MARKED_PDF_MIN_SIZES,
+  resolveMarkedPdfRenderStyle,
+} from "../lib/trameado/export-marked-pdf";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
   parseTrameadoAnnotationFormData,
@@ -1004,6 +1016,108 @@ function verifyPdfAnnotations(): void {
   assert(emptySummary.markedCount === 0, "Removing annotation should clear marked count");
 }
 
+async function verifyMarkedPdfExport(): Promise<void> {
+  const blankDoc = await PDFDocument.create();
+  blankDoc.addPage([600, 400]);
+  const blankBuffer = Buffer.from(await blankDoc.save());
+
+  assert(!canExportMarkedTrameadoPdf(0), "Marked PDF export should require annotations");
+  assert(canExportMarkedTrameadoPdf(1), "Marked PDF export should be allowed with marks");
+
+  const pageHeight = 400;
+  assert(
+    Math.abs(mapRelativeViewerYToPdfY(0, pageHeight) - pageHeight) < 0.001,
+    "Top relative Y should map to PDF top",
+  );
+  assert(
+    Math.abs(mapRelativeViewerYToPdfY(1, pageHeight)) < 0.001,
+    "Bottom relative Y should map to PDF bottom",
+  );
+
+  const rect = mapRelativeViewerRectToPdf(0.1, 0.2, 0.3, 0.15, 600, 400);
+  assert(rect.width === 180, "Rect width should scale with page width");
+  assert(rect.height === 60, "Rect height should scale with page height");
+
+  assert(!isAnnotationOnValidPage(0, 1), "Page 0 should be invalid");
+  assert(!isAnnotationOnValidPage(2, 1), "Page 2 should be invalid on single-page PDF");
+  assert(isAnnotationOnValidPage(1, 1), "Page 1 should be valid");
+
+  const smallPageStyle = resolveMarkedPdfRenderStyle(200, 150);
+  assert(
+    smallPageStyle.pointRadius >= MARKED_PDF_MIN_SIZES.pointRadius,
+    "Point radius should respect readability minimum",
+  );
+  assert(
+    smallPageStyle.labelFontSize >= MARKED_PDF_MIN_SIZES.labelFontSize,
+    "Label font size should respect readability minimum",
+  );
+
+  const largePageStyle = resolveMarkedPdfRenderStyle(2400, 1700);
+  assert(
+    largePageStyle.labelFontSize > MARKED_PDF_MIN_SIZES.labelFontSize,
+    "Large pages should scale label size up",
+  );
+
+  const pointPdf = await buildMarkedTrameadoPdf({
+    pdfBuffer: blankBuffer,
+    sheetLabel: "HL-TEST",
+    annotations: [
+      {
+        segmentLabel: "1",
+        pageNumber: 1,
+        type: "point",
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+  assert(pointPdf.length > blankBuffer.length, "Point mark should produce non-empty PDF");
+
+  const rectPdf = await buildMarkedTrameadoPdf({
+    pdfBuffer: blankBuffer,
+    annotations: [
+      {
+        segmentLabel: "2",
+        pageNumber: 1,
+        type: "rect",
+        x: 0.1,
+        y: 0.1,
+        width: 0.2,
+        height: 0.15,
+      },
+    ],
+  });
+  assert(rectPdf.length > blankBuffer.length, "Rect mark should produce non-empty PDF");
+
+  const skippedInvalidPage = await buildMarkedTrameadoPdf({
+    pdfBuffer: blankBuffer,
+    annotations: [
+      {
+        segmentLabel: "9",
+        pageNumber: 99,
+        type: "point",
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+  assert(
+    skippedInvalidPage.length > 0,
+    "Out-of-page annotations should be ignored without failing export",
+  );
+
+  assert(
+    buildTrameadoMarkedPdfExportPath("sheet-1") ===
+      "/api/files/trameado/sheet-1/marked-pdf",
+    "Marked PDF export path should match API route",
+  );
+  assert(
+    buildTrameadoMarkedPdfFileName("HL-1289-02", "DWG-001") ===
+      "trameado-DWG-001-HL-1289-02.pdf",
+    "Marked PDF file name should include drawing and line identifiers",
+  );
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -1098,6 +1212,7 @@ async function main(): Promise<void> {
   verifyTrameadoSheetValidation();
   verifyPdfAnnotations();
   verifyTrameadoAnnotationValidation();
+  await verifyMarkedPdfExport();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

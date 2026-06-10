@@ -74,6 +74,14 @@ export function TrameadoIsoMarkingPanel({
           <p className="text-xs text-muted-foreground">
             Las marcas se guardan con la hoja. Coordenadas relativas al visor.
           </p>
+          {summary.markedCount === 0 ? (
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="trameado-marked-pdf-hint"
+            >
+              Marca al menos un tramo para exportar el PDF marcado.
+            </p>
+          ) : null}
         </div>
         {markingSegmentLabel ? (
           <Badge variant="secondary" data-testid="trameado-iso-marking-active">
