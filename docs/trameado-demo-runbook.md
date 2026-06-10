@@ -40,6 +40,15 @@ Con metadatos pendientes, la pestaña Metadatos muestra solo un bloque **Opcione
 - Al abrir **Mostrar opciones avanzadas** siguen disponibles estado, ajuste manual y herramientas de diagnóstico.
 - Con metadatos ya confirmados, la pestaña Metadatos vuelve al layout normal (sin plegado).
 
+## Transición tras confirmar metadatos (18S-E)
+
+Tras pulsar **Confirmar metadatos**:
+
+- La pantalla abre **Propuesta beta** y muestra la tarjeta **Analiza la relación de materiales** con CTA principal.
+- El banner operativo indica el siguiente paso; la pestaña Metadatos pasa a **Herramientas avanzadas** plegadas (sin «Detectar metadatos» como acción principal).
+- La guía del trabajo avanza cuando todos los planos tienen metadatos confirmados.
+- Si quedan otros planos pendientes en el trabajo, el plano confirmado puede analizar materiales localmente mientras el trabajo global sigue pidiendo confirmar metadatos.
+
 ---
 
 ## Flujo del trabajo (18S-A)

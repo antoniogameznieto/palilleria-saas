@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { DrawingOperationalStatusPanel } from "@/components/drawings/drawing-operational-status-panel";
 import { Button } from "@/components/ui/button";
@@ -33,6 +40,7 @@ type DrawingDetailWorkspaceProps = {
   showBetaProposal: boolean;
   takeoffLineCount: number;
   metadataConfirmation?: ReactNode;
+  jobHasOtherMetadataPending?: boolean;
 };
 
 export function DrawingDetailWorkspace({
@@ -46,6 +54,7 @@ export function DrawingDetailWorkspace({
   showBetaProposal,
   takeoffLineCount,
   metadataConfirmation,
+  jobHasOtherMetadataPending = false,
 }: DrawingDetailWorkspaceProps) {
   const metadataAttention = needsMetadataAttention(progress);
   const defaultTab = useMemo(
@@ -53,6 +62,24 @@ export function DrawingDetailWorkspace({
     [progress, showBetaProposal],
   );
   const [activeTab, setActiveTab] = useState<DrawingWorkspaceTab>(defaultTab);
+  const previousProgressRef = useRef(progress);
+
+  useEffect(() => {
+    const previousProgress = previousProgressRef.current;
+
+    if (
+      needsMetadataAttention(previousProgress) &&
+      !needsMetadataAttention(progress) &&
+      progress === "takeoff_missing" &&
+      showBetaProposal
+    ) {
+      setActiveTab("propuesta-beta");
+    } else if (needsMetadataAttention(progress)) {
+      setActiveTab("metadatos");
+    }
+
+    previousProgressRef.current = progress;
+  }, [progress, showBetaProposal]);
 
   const focusMetadataConfirmation = useCallback(() => {
     document
@@ -106,6 +133,7 @@ export function DrawingDetailWorkspace({
           activeTab={activeTab}
           onNavigateTab={setActiveTab}
           onFocusMetadataConfirmation={focusMetadataConfirmation}
+          jobHasOtherMetadataPending={jobHasOtherMetadataPending}
         />
       )}
 
@@ -137,6 +165,7 @@ export function DrawingDetailWorkspace({
                     "border-sky-500/50 text-sky-900 dark:text-sky-100",
                 )}
                 aria-pressed={activeTab === tab.id}
+                data-testid={`drawing-workspace-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}

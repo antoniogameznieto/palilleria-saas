@@ -5,6 +5,11 @@ import { DrawingStatusControl } from "@/components/drawings/drawing-status-contr
 import type { DetectionFeedbackSummary } from "@/lib/drawings/detection-merge";
 import type { DrawingStatus } from "@prisma/client";
 
+export type DrawingMetadataTabCollapseMode =
+  | "pending_confirmation"
+  | "materials_step"
+  | null;
+
 type DrawingMetadataTabProps = {
   companyId: string;
   jobId: string;
@@ -22,14 +27,14 @@ type DrawingMetadataTabProps = {
   canConfirmDetected: boolean;
   showExperimentalTitleBlockOcr: boolean;
   lastDetectionFeedback: DetectionFeedbackSummary | null;
-  pendingMetadataConfirmation?: boolean;
+  collapseMode?: DrawingMetadataTabCollapseMode;
 };
 
 type DrawingMetadataTabContentProps = Omit<
   DrawingMetadataTabProps,
-  "pendingMetadataConfirmation"
+  "collapseMode"
 > & {
-  pendingMetadataConfirmation: boolean;
+  collapseMode: DrawingMetadataTabCollapseMode;
 };
 
 function DrawingMetadataTabContent({
@@ -49,8 +54,13 @@ function DrawingMetadataTabContent({
   canConfirmDetected,
   showExperimentalTitleBlockOcr,
   lastDetectionFeedback,
-  pendingMetadataConfirmation,
+  collapseMode,
 }: DrawingMetadataTabContentProps) {
+  const pendingMetadataConfirmation = collapseMode === "pending_confirmation";
+  const deferToMaterialsStep = collapseMode === "materials_step";
+  const hideFilenameDetection =
+    pendingMetadataConfirmation || deferToMaterialsStep;
+
   const metadataProps = {
     companyId,
     jobId,
@@ -81,7 +91,9 @@ function DrawingMetadataTabContent({
         data-testid={
           pendingMetadataConfirmation
             ? "drawing-metadata-manual-section"
-            : undefined
+            : deferToMaterialsStep
+              ? "drawing-metadata-complete-section"
+              : undefined
         }
       >
         <h3 className="text-base font-semibold">
@@ -94,13 +106,18 @@ function DrawingMetadataTabContent({
             Usa esta zona solo si necesitas corregir los datos manualmente. Para
             el flujo normal, confirma la propuesta superior.
           </p>
+        ) : deferToMaterialsStep ? (
+          <p className="text-sm text-muted-foreground">
+            Los metadatos de este plano ya están completos. Si necesitas
+            corregirlos, puedes editar los campos manualmente.
+          </p>
         ) : null}
         {canEditMetadata ? (
           <DrawingMetadataForm
             key={`${drawingId}:${drawingNumber ?? ""}:${lineNumber ?? ""}:${revision ?? ""}`}
             {...metadataProps}
             plain
-            secondarySubmit={pendingMetadataConfirmation}
+            secondarySubmit={pendingMetadataConfirmation || deferToMaterialsStep}
           />
         ) : (
           <DrawingMetadataReadonly {...metadataProps} plain />
@@ -122,46 +139,70 @@ function DrawingMetadataTabContent({
           canConfirmDetected={canConfirmDetected}
           showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
           lastDetectionFeedback={lastDetectionFeedback}
-          hideFilenameDetection={pendingMetadataConfirmation}
+          hideFilenameDetection={hideFilenameDetection}
         />
       </section>
     </>
   );
 }
 
+type AdvancedCollapseConfig = {
+  testId: string;
+  title: string;
+  description: string;
+  toggleTestId: string;
+};
+
+function getAdvancedCollapseConfig(
+  collapseMode: DrawingMetadataTabCollapseMode,
+): AdvancedCollapseConfig {
+  if (collapseMode === "materials_step") {
+    return {
+      testId: "drawing-metadata-advanced-tools",
+      title: "Herramientas avanzadas",
+      description:
+        "Los metadatos de este plano ya están completos. Si necesitas corregirlos, cambiar el estado o usar diagnóstico, ábrelo aquí.",
+      toggleTestId: "drawing-metadata-advanced-tools-toggle",
+    };
+  }
+
+  return {
+    testId: "drawing-metadata-advanced-options",
+    title: "Opciones avanzadas",
+    description:
+      "Normalmente no necesitas tocar esto. Úsalo solo si quieres corregir datos manualmente, cambiar el estado del plano o revisar herramientas de diagnóstico.",
+    toggleTestId: "drawing-metadata-advanced-toggle",
+  };
+}
+
 export function DrawingMetadataTab({
-  pendingMetadataConfirmation = false,
+  collapseMode = null,
   ...props
 }: DrawingMetadataTabProps) {
   const content = (
-    <DrawingMetadataTabContent
-      {...props}
-      pendingMetadataConfirmation={pendingMetadataConfirmation}
-    />
+    <DrawingMetadataTabContent {...props} collapseMode={collapseMode} />
   );
 
-  if (pendingMetadataConfirmation) {
+  if (collapseMode) {
+    const collapse = getAdvancedCollapseConfig(collapseMode);
+
     return (
       <details
         className="group rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
-        data-testid="drawing-metadata-advanced-options"
+        data-testid={collapse.testId}
       >
         <summary className="cursor-pointer list-none px-4 py-3 marker:content-none">
           <div className="space-y-1">
-            <h3 className="text-base font-semibold">Opciones avanzadas</h3>
-            <p className="text-sm text-muted-foreground">
-              Normalmente no necesitas tocar esto. Úsalo solo si quieres corregir
-              datos manualmente, cambiar el estado del plano o revisar herramientas
-              de diagnóstico.
-            </p>
+            <h3 className="text-base font-semibold">{collapse.title}</h3>
+            <p className="text-sm text-muted-foreground">{collapse.description}</p>
             <p
               className="text-sm font-medium text-primary group-open:hidden"
-              data-testid="drawing-metadata-advanced-toggle"
+              data-testid={collapse.toggleTestId}
             >
-              Mostrar opciones avanzadas
+              Mostrar {collapse.title.toLowerCase()}
             </p>
             <p className="hidden text-sm font-medium text-primary group-open:block">
-              Ocultar opciones avanzadas
+              Ocultar {collapse.title.toLowerCase()}
             </p>
           </div>
         </summary>

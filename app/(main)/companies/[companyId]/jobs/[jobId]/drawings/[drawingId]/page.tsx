@@ -9,7 +9,11 @@ import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
 import { buildDrawingMetadataSuggestion } from "@/lib/drawings/metadata-suggestions";
-import { needsMetadataAttention } from "@/lib/drawings/drawing-workspace-default-tab";
+import {
+  needsMetadataAttention,
+  shouldDeferMetadataTab,
+} from "@/lib/drawings/drawing-workspace-default-tab";
+import type { DrawingMetadataTabCollapseMode } from "@/components/drawings/drawing-metadata-tab";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
@@ -142,6 +146,28 @@ export default async function DrawingDetailPage({
   });
   const showMetadataConfirmation =
     needsMetadataAttention(drawingProgress) && canEditMetadata;
+  const showMaterialsAnalysisPrompt =
+    showExperimentalAutoTakeoff &&
+    !needsMetadataAttention(drawingProgress) &&
+    drawingProgress === "takeoff_missing" &&
+    takeoffItems.length === 0;
+  const metadataTabCollapseMode: DrawingMetadataTabCollapseMode =
+    showMetadataConfirmation
+      ? "pending_confirmation"
+      : shouldDeferMetadataTab(
+            drawingProgress,
+            takeoffItems.length,
+            showExperimentalAutoTakeoff,
+          )
+        ? "materials_step"
+        : null;
+  const jobHasOtherMetadataPending = jobDrawings.some(
+    (jobDrawing) =>
+      jobDrawing.id !== drawing.id &&
+      (!jobDrawing.drawingNumber?.trim() ||
+        !jobDrawing.lineNumber?.trim() ||
+        !jobDrawing.revision?.trim()),
+  );
 
   const takeoffSection = (
     <DrawingTakeoffSection
@@ -197,6 +223,7 @@ export default async function DrawingDetailPage({
       />
 
       <DrawingDetailWorkspace
+        jobHasOtherMetadataPending={jobHasOtherMetadataPending}
         metadataConfirmation={
           showMetadataConfirmation ? (
             <DrawingMetadataConfirmationCard
@@ -231,6 +258,8 @@ export default async function DrawingDetailPage({
               jobId={jobId}
               drawingId={drawing.id}
               existingTakeoffLineCount={takeoffItems.length}
+              showMaterialsAnalysisPrompt={showMaterialsAnalysisPrompt}
+              jobHasOtherMetadataPending={jobHasOtherMetadataPending}
             />
           ) : null
         }
@@ -252,7 +281,7 @@ export default async function DrawingDetailPage({
             canConfirmDetected={canConfirmDetected}
             showExperimentalTitleBlockOcr={showExperimentalTitleBlockOcr}
             lastDetectionFeedback={lastDetectionFeedback}
-            pendingMetadataConfirmation={showMetadataConfirmation}
+            collapseMode={metadataTabCollapseMode}
           />
         }
         actividad={

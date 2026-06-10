@@ -28,3 +28,15 @@ export function needsMetadataAttention(progress: DrawingProgressState): boolean 
     progress === "missing_metadata" || progress === "metadata_pending_review"
   );
 }
+
+export function shouldDeferMetadataTab(
+  progress: DrawingProgressState,
+  takeoffLineCount: number,
+  showBetaProposal: boolean,
+): boolean {
+  return (
+    showBetaProposal &&
+    progress === "takeoff_missing" &&
+    takeoffLineCount === 0
+  );
+}

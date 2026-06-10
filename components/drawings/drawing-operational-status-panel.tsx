@@ -18,6 +18,7 @@ type DrawingOperationalStatusPanelProps = {
   activeTab: DrawingWorkspaceTab;
   onNavigateTab: (tab: DrawingWorkspaceTab) => void;
   onFocusMetadataConfirmation?: () => void;
+  jobHasOtherMetadataPending?: boolean;
   className?: string;
 };
 
@@ -26,7 +27,7 @@ type OperationalGuidance = {
   description: string;
   primaryLabel: string;
   primaryTarget?: DrawingWorkspaceTab;
-  primaryAction?: "focus-metadata-confirmation";
+  primaryAction?: "focus-metadata-confirmation" | "analyze-beta";
   secondaryLabel?: string;
   secondaryTarget?: DrawingWorkspaceTab;
 };
@@ -39,7 +40,8 @@ type TabBannerAction = {
 
 type PrimaryBannerAction =
   | TabBannerAction
-  | { type: "focus-metadata-confirmation"; label: string };
+  | { type: "focus-metadata-confirmation"; label: string }
+  | { type: "analyze-beta"; label: string };
 
 type SecondaryBannerAction =
   | TabBannerAction
@@ -76,17 +78,24 @@ function getOperationalGuidance(
         primaryAction: "focus-metadata-confirmation",
       };
     case "takeoff_missing":
+      if (showBetaProposal) {
+        return {
+          title: "Analizar relación de materiales",
+          description:
+            "Los metadatos del plano ya están confirmados. Revisa los materiales detectados en el PDF para preparar la propuesta de palillería.",
+          primaryLabel: "Analizar relación de materiales",
+          primaryTarget: "propuesta-beta",
+          primaryAction: "analyze-beta",
+          secondaryLabel: "Ir a palillería",
+          secondaryTarget: "palilleria",
+        };
+      }
+
       return {
         title: "Sin palillería",
-        description: showBetaProposal
-          ? "Empieza con la propuesta beta supervisada o añade líneas manualmente."
-          : "Añade líneas de palillería para este plano.",
-        primaryLabel: showBetaProposal
-          ? "Revisar propuesta beta"
-          : "Revisar palillería",
-        primaryTarget: showBetaProposal ? "propuesta-beta" : "palilleria",
-        secondaryLabel: showBetaProposal ? "Ir a palillería" : undefined,
-        secondaryTarget: showBetaProposal ? "palilleria" : undefined,
+        description: "Añade líneas de palillería para este plano.",
+        primaryLabel: "Revisar palillería",
+        primaryTarget: "palilleria",
       };
     case "takeoff_pending_review":
       return {
@@ -126,6 +135,8 @@ function resolveBannerActions(
   activeTab: DrawingWorkspaceTab,
   showAnalyzeBeta: boolean,
   metadataAttention: boolean,
+  progress: DrawingProgressState,
+  showBetaProposal: boolean,
 ): { primary: PrimaryBannerAction | null; secondary: SecondaryBannerAction | null } {
   let primaryLabel = guidance.primaryLabel;
   let primaryTarget = guidance.primaryTarget;
@@ -134,6 +145,30 @@ function resolveBannerActions(
   let secondaryTarget = guidance.secondaryTarget;
 
   const onBetaTab = activeTab === "propuesta-beta";
+  const materialsStep =
+    progress === "takeoff_missing" && showBetaProposal && !metadataAttention;
+
+  if (
+    materialsStep &&
+    onBetaTab &&
+    showAnalyzeBeta &&
+    guidance.primaryAction === "analyze-beta"
+  ) {
+    return {
+      primary: {
+        type: "analyze-beta",
+        label: guidance.primaryLabel,
+      },
+      secondary:
+        guidance.secondaryLabel && guidance.secondaryTarget
+          ? {
+              type: "tab",
+              label: guidance.secondaryLabel,
+              target: guidance.secondaryTarget,
+            }
+          : null,
+    };
+  }
 
   if (
     onBetaTab &&
@@ -165,7 +200,13 @@ function resolveBannerActions(
     secondaryTarget = undefined;
   }
 
-  const primary: PrimaryBannerAction | null = primaryAction
+  const primary: PrimaryBannerAction | null =
+    primaryAction === "analyze-beta" && onBetaTab && showAnalyzeBeta
+      ? {
+          type: "analyze-beta",
+          label: primaryLabel,
+        }
+      : primaryAction === "focus-metadata-confirmation"
     ? {
         type: "focus-metadata-confirmation",
         label: primaryLabel,
@@ -187,7 +228,13 @@ function resolveBannerActions(
         }
       : null;
 
-  if (!metadataAttention && onBetaTab && showAnalyzeBeta) {
+  if (
+    !metadataAttention &&
+    onBetaTab &&
+    showAnalyzeBeta &&
+    !materialsStep &&
+    guidance.primaryAction !== "analyze-beta"
+  ) {
     secondary = {
       type: "analyze-beta",
       label: "Analizar relación de materiales",
@@ -261,6 +308,7 @@ export function DrawingOperationalStatusPanel({
   activeTab,
   onNavigateTab,
   onFocusMetadataConfirmation,
+  jobHasOtherMetadataPending = false,
   className,
 }: DrawingOperationalStatusPanelProps) {
   const metadataAttention = needsMetadataAttention(progress);
@@ -280,7 +328,11 @@ export function DrawingOperationalStatusPanel({
     activeTab,
     showAnalyzeBeta,
     metadataAttention,
+    progress,
+    showBetaProposal,
   );
+  const showMaterialsStepNote =
+    progress === "takeoff_missing" && showBetaProposal && !metadataAttention;
 
   return (
     <section
@@ -290,6 +342,7 @@ export function DrawingOperationalStatusPanel({
           "border-amber-500/40 bg-amber-500/5",
         progress === "ready" && "border-emerald-500/30 bg-emerald-500/5",
         metadataAttention && "border-violet-500/30 bg-violet-500/5",
+        showMaterialsStepNote && "border-sky-500/30 bg-sky-500/5",
         className,
       )}
       data-testid="drawing-operational-status"
@@ -310,6 +363,23 @@ export function DrawingOperationalStatusPanel({
               Paso actual del trabajo: confirmar metadatos.
             </p>
           ) : null}
+          {showMaterialsStepNote ? (
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="drawing-materials-step-note"
+            >
+              Paso actual del trabajo: analizar relación de materiales.
+            </p>
+          ) : null}
+          {showMaterialsStepNote && jobHasOtherMetadataPending ? (
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="drawing-job-other-metadata-banner-note"
+            >
+              Este plano ya tiene metadatos completos. Puedes analizar sus
+              materiales. El trabajo todavía puede tener otros planos pendientes.
+            </p>
+          ) : null}
         </div>
 
         {primary || secondary ? (
@@ -321,11 +391,18 @@ export function DrawingOperationalStatusPanel({
                 data-testid={
                   primary.type === "focus-metadata-confirmation"
                     ? "drawing-operational-confirm-metadata"
-                    : undefined
+                    : primary.type === "analyze-beta"
+                      ? "drawing-operational-analyze-materials"
+                      : undefined
                 }
                 onClick={() => {
                   if (primary.type === "focus-metadata-confirmation") {
                     onFocusMetadataConfirmation?.();
+                    return;
+                  }
+
+                  if (primary.type === "analyze-beta") {
+                    runBetaAnalyzeAction();
                     return;
                   }
 

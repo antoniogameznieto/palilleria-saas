@@ -48,18 +48,26 @@ test.describe("drawing metadata suggestions", () => {
       page.getByRole("button", { name: "Extraer texto del PDF" }),
     ).toBeHidden();
 
-    await page.getByTestId("drawing-metadata-advanced-toggle").click();
-    await expect(page.getByTestId("drawing-metadata-manual-section")).toContainText(
-      "Ajuste manual de metadatos",
-    );
-    await expect(page.getByRole("button", { name: "Guardar ajuste manual" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Actualizar estado" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Extraer texto del PDF" })).toBeVisible();
-
     await page.getByTestId("drawing-metadata-confirm-submit").click();
     await expect(page.getByTestId("drawing-metadata-confirmation-card")).toHaveCount(0, {
       timeout: 15_000,
     });
+    await expect(page.getByTestId("drawing-workspace-tab-propuesta-beta")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(page.getByTestId("drawing-materials-analysis-prompt")).toBeVisible();
+    await expect(page.getByTestId("drawing-materials-step-note")).toBeVisible();
+    await expect(
+      page.getByTestId("drawing-materials-analysis-prompt-run"),
+    ).toBeVisible();
+    await expect(page.getByTestId("drawing-operational-analyze-materials")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Detectar metadatos" })).toBeHidden();
+    await page.getByRole("button", { name: "Metadatos", exact: true }).click();
+    await expect(page.getByTestId("drawing-metadata-advanced-tools")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Guardar ajuste manual" }),
+    ).toBeHidden();
     await expect(page.getByTestId("drawing-operational-status")).not.toContainText(
       "Faltan metadatos",
     );

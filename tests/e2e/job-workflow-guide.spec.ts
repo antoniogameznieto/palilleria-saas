@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test";
 
 import {
   drawingBomPath,
+  drawingMetadataPendingPath,
   drawingPath,
   E2E_USERS,
   jobPath,
@@ -131,6 +132,23 @@ test.describe("job workflow guide", () => {
     );
     await expect(guide).toContainText(
       "Confirma la propuesta de metadatos detectada en cada plano",
+    );
+  });
+
+  test("tras confirmar el último plano pendiente marca metadatos como completos", async ({
+    page,
+  }) => {
+    resetMetadataSuggestionDrawing();
+    await login(page, E2E_USERS.engineer);
+    await page.goto(drawingMetadataPendingPath());
+    await page.getByTestId("drawing-metadata-confirm-submit").click();
+    await expect(page.getByTestId("drawing-metadata-confirmation-card")).toHaveCount(0, {
+      timeout: 15_000,
+    });
+
+    await page.goto(jobPath());
+    await expect(page.getByTestId("job-workflow-check-complete_metadata")).toContainText(
+      "Completo",
     );
   });
 

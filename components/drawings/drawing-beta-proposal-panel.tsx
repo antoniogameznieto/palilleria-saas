@@ -1,10 +1,13 @@
 import { DrawingExperimentalAutoTakeoff } from "@/components/drawings/drawing-experimental-auto-takeoff";
+import { DrawingMaterialsAnalysisPromptCard } from "@/components/drawings/drawing-materials-analysis-prompt-card";
 
 type DrawingBetaProposalPanelProps = {
   companyId: string;
   jobId: string;
   drawingId: string;
   existingTakeoffLineCount: number;
+  showMaterialsAnalysisPrompt?: boolean;
+  jobHasOtherMetadataPending?: boolean;
 };
 
 export function DrawingBetaProposalPanel({
@@ -12,9 +15,17 @@ export function DrawingBetaProposalPanel({
   jobId,
   drawingId,
   existingTakeoffLineCount,
+  showMaterialsAnalysisPrompt = false,
+  jobHasOtherMetadataPending = false,
 }: DrawingBetaProposalPanelProps) {
   return (
     <div className="space-y-4" id="propuesta-beta">
+      {showMaterialsAnalysisPrompt ? (
+        <DrawingMaterialsAnalysisPromptCard
+          jobHasOtherMetadataPending={jobHasOtherMetadataPending}
+        />
+      ) : null}
+
       <div className="space-y-1">
         <h3 className="text-base font-semibold">Propuesta beta supervisada</h3>
         <p className="text-sm text-muted-foreground">

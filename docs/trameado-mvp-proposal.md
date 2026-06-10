@@ -376,6 +376,13 @@ Columnas:
 - **Foco UX:** «Revisa estos datos propuestos y pulsa Confirmar metadatos»; herramientas avanzadas bajo demanda.
 - **Qué no cambia:** permisos, lógica de confirmación, materiales, trameado ni exports.
 
+### 18S-E — Transición guiada tras confirmar metadatos (completado)
+
+- **Feedback:** tras confirmar, el usuario quedaba en Metadatos sin saber el siguiente paso.
+- **Qué hace:** remount del workspace → pestaña Propuesta beta; tarjeta `DrawingMaterialsAnalysisPromptCard`; banner con CTA **Analizar relación de materiales**; Metadatos en acordeón **Herramientas avanzadas** sin detectar como protagonista.
+- **Multi-plano:** copy local si el trabajo aún tiene otros planos pendientes; guía global sigue en Confirmar metadatos hasta completar todos.
+- **Qué no cambia:** `confirmDrawingMetadataAction`, lógica de análisis BOM, permisos ni exports.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.
