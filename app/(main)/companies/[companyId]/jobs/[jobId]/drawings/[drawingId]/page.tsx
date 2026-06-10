@@ -3,10 +3,13 @@ import { DrawingActivityCard } from "@/components/drawings/drawing-activity-card
 import { DrawingBetaProposalPanel } from "@/components/drawings/drawing-beta-proposal-panel";
 import { DrawingDetailCompactHeader } from "@/components/drawings/drawing-detail-compact-header";
 import { DrawingDetailWorkspace } from "@/components/drawings/drawing-detail-workspace";
+import { DrawingMetadataConfirmationCard } from "@/components/drawings/drawing-metadata-confirmation-card";
 import { DrawingMetadataTab } from "@/components/drawings/drawing-metadata-tab";
 import { PdfViewer } from "@/components/drawings/pdf-viewer";
 import { getDrawingRecentActivity, getLatestDetectionFeedbackFromActivities } from "@/lib/drawings/activity";
 import { getDrawingProgress } from "@/lib/drawings/drawing-progress";
+import { buildDrawingMetadataSuggestion } from "@/lib/drawings/metadata-suggestions";
+import { needsMetadataAttention } from "@/lib/drawings/drawing-workspace-default-tab";
 import { getDrawingTakeoffItems } from "@/lib/drawings/takeoff";
 import { getJobTakeoffExportItems } from "@/lib/drawings/job-takeoff-export";
 import { toTakeoffSuggestionSourceItems } from "@/lib/drawings/takeoff-suggestions";
@@ -131,6 +134,14 @@ export default async function DrawingDetailPage({
     takeoffLineCount: takeoffItems.length,
     takeoffReviewedAt: drawing.takeoffReviewedAt,
   });
+  const metadataSuggestion = buildDrawingMetadataSuggestion({
+    originalFileName: drawing.originalFileName,
+    drawingNumber: drawing.drawingNumber,
+    lineNumber: drawing.lineNumber,
+    revision: drawing.revision,
+  });
+  const showMetadataConfirmation =
+    needsMetadataAttention(drawingProgress) && canEditMetadata;
 
   const takeoffSection = (
     <DrawingTakeoffSection
@@ -186,6 +197,21 @@ export default async function DrawingDetailPage({
       />
 
       <DrawingDetailWorkspace
+        metadataConfirmation={
+          showMetadataConfirmation ? (
+            <DrawingMetadataConfirmationCard
+              companyId={companyId}
+              jobId={jobId}
+              drawingId={drawing.id}
+              originalFileName={drawing.originalFileName}
+              drawingNumber={drawing.drawingNumber}
+              lineNumber={drawing.lineNumber}
+              revision={drawing.revision}
+              suggestion={metadataSuggestion}
+              canConfirm={canEditMetadata}
+            />
+          ) : null
+        }
         pdf={
           <PdfViewer
             drawingId={drawing.id}

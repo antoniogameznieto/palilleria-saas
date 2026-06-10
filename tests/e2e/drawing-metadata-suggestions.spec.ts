@@ -1,0 +1,47 @@
+import { execSync } from "node:child_process";
+
+import { expect, test } from "@playwright/test";
+
+import { drawingMetadataPendingPath, E2E_USERS, login } from "./fixtures";
+
+function resetMetadataSuggestionDrawing() {
+  execSync("npx tsx scripts/reset-e2e-metadata-suggestions.ts", {
+    cwd: process.cwd(),
+    stdio: "pipe",
+    env: process.env,
+  });
+}
+
+test.describe("drawing metadata suggestions", () => {
+  test.beforeEach(() => {
+    resetMetadataSuggestionDrawing();
+  });
+
+  test("propone metadatos desde el nombre del archivo y permite confirmar", async ({
+    page,
+  }) => {
+    await login(page, E2E_USERS.engineer);
+    await page.goto(drawingMetadataPendingPath());
+
+    await expect(page.getByTestId("drawing-metadata-confirmation-card")).toBeVisible();
+    await expect(page.getByText("Confirma los metadatos del plano")).toBeVisible();
+    await expect(
+      page.getByTestId("drawing-metadata-suggestion-drawing-number"),
+    ).toHaveValue("2301GB47G-C1-L-HL-1289-01");
+    await expect(page.getByTestId("drawing-metadata-suggestion-line-number")).toHaveValue(
+      "HL-1289",
+    );
+    await expect(page.getByTestId("drawing-metadata-suggestion-revision")).toHaveValue("01");
+    await expect(page.getByTestId("drawing-metadata-confirm-submit")).toBeVisible();
+    await expect(page.getByTestId("drawing-operational-analyze-materials")).toHaveCount(0);
+    await expect(page.getByTestId("drawing-operational-confirm-metadata")).toBeVisible();
+
+    await page.getByTestId("drawing-metadata-confirm-submit").click();
+    await expect(page.getByTestId("drawing-metadata-confirmation-card")).toHaveCount(0, {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("drawing-operational-status")).not.toContainText(
+      "Faltan metadatos",
+    );
+  });
+});

@@ -9,6 +9,7 @@ import {
   type DrawingProgressState,
 } from "@/lib/drawings/drawing-progress";
 import type { DrawingWorkspaceTab } from "@/lib/drawings/drawing-workspace-default-tab";
+import { needsMetadataAttention } from "@/lib/drawings/drawing-workspace-default-tab";
 
 type DrawingOperationalStatusPanelProps = {
   progress: DrawingProgressState;
@@ -16,6 +17,7 @@ type DrawingOperationalStatusPanelProps = {
   takeoffLineCount: number;
   activeTab: DrawingWorkspaceTab;
   onNavigateTab: (tab: DrawingWorkspaceTab) => void;
+  onFocusMetadataConfirmation?: () => void;
   className?: string;
 };
 
@@ -23,7 +25,8 @@ type OperationalGuidance = {
   title: string;
   description: string;
   primaryLabel: string;
-  primaryTarget: DrawingWorkspaceTab;
+  primaryTarget?: DrawingWorkspaceTab;
+  primaryAction?: "focus-metadata-confirmation";
   secondaryLabel?: string;
   secondaryTarget?: DrawingWorkspaceTab;
 };
@@ -34,12 +37,13 @@ type TabBannerAction = {
   target: DrawingWorkspaceTab;
 };
 
+type PrimaryBannerAction =
+  | TabBannerAction
+  | { type: "focus-metadata-confirmation"; label: string };
+
 type SecondaryBannerAction =
   | TabBannerAction
   | { type: "analyze-beta"; label: string };
-
-const METADATA_WORKSPACE_HINT =
-  "Puedes seguir revisando la propuesta beta y la palillería, pero completa los metadatos antes de cerrar el plano.";
 
 function getOperationalGuidance(
   progress: DrawingProgressState,
@@ -58,24 +62,18 @@ function getOperationalGuidance(
     case "missing_metadata":
       return {
         title: "Faltan metadatos",
-        description: showBetaProposal
-          ? METADATA_WORKSPACE_HINT
-          : "Completa número de plano, línea y revisión para poder cerrar el plano.",
-        primaryLabel: "Completar metadatos",
-        primaryTarget: "metadatos",
-        secondaryLabel: "Ir a palillería",
-        secondaryTarget: "palilleria",
+        description:
+          "Confirma la propuesta de metadatos del plano antes de analizar materiales o palillería.",
+        primaryLabel: "Confirmar metadatos",
+        primaryAction: "focus-metadata-confirmation",
       };
     case "metadata_pending_review":
       return {
         title: "Metadatos pendientes de revisión",
-        description: showBetaProposal
-          ? METADATA_WORKSPACE_HINT
-          : "Confirma o corrige los metadatos detectados.",
-        primaryLabel: "Revisar metadatos",
-        primaryTarget: "metadatos",
-        secondaryLabel: showBetaProposal ? "Ir a palillería" : undefined,
-        secondaryTarget: showBetaProposal ? "palilleria" : undefined,
+        description:
+          "Confirma o corrige la propuesta antes de avanzar con materiales y palillería.",
+        primaryLabel: "Confirmar metadatos",
+        primaryAction: "focus-metadata-confirmation",
       };
     case "takeoff_missing":
       return {
@@ -127,9 +125,11 @@ function resolveBannerActions(
   guidance: OperationalGuidance,
   activeTab: DrawingWorkspaceTab,
   showAnalyzeBeta: boolean,
-): { primary: TabBannerAction | null; secondary: SecondaryBannerAction | null } {
+  metadataAttention: boolean,
+): { primary: PrimaryBannerAction | null; secondary: SecondaryBannerAction | null } {
   let primaryLabel = guidance.primaryLabel;
   let primaryTarget = guidance.primaryTarget;
+  let primaryAction = guidance.primaryAction;
   let secondaryLabel = guidance.secondaryLabel;
   let secondaryTarget = guidance.secondaryTarget;
 
@@ -147,6 +147,7 @@ function resolveBannerActions(
     ) {
       primaryLabel = secondaryLabel;
       primaryTarget = secondaryTarget;
+      primaryAction = undefined;
       secondaryLabel = undefined;
       secondaryTarget = undefined;
     } else {
@@ -164,10 +165,14 @@ function resolveBannerActions(
     secondaryTarget = undefined;
   }
 
-  const primary =
-    primaryLabel && primaryTarget
+  const primary: PrimaryBannerAction | null = primaryAction
+    ? {
+        type: "focus-metadata-confirmation",
+        label: primaryLabel,
+      }
+    : primaryLabel && primaryTarget
       ? {
-          type: "tab" as const,
+          type: "tab",
           label: primaryLabel,
           target: primaryTarget,
         }
@@ -182,7 +187,7 @@ function resolveBannerActions(
         }
       : null;
 
-  if (onBetaTab && showAnalyzeBeta) {
+  if (!metadataAttention && onBetaTab && showAnalyzeBeta) {
     secondary = {
       type: "analyze-beta",
       label: "Analizar relación de materiales",
@@ -228,10 +233,12 @@ function subscribeBetaAssistantStatus(onStoreChange: () => void): () => void {
 function useBetaNotAnalyzed(
   activeTab: DrawingWorkspaceTab,
   showBetaProposal: boolean,
+  metadataAttention: boolean,
 ): boolean {
   return useSyncExternalStore(
     subscribeBetaAssistantStatus,
     () =>
+      !metadataAttention &&
       showBetaProposal &&
       activeTab === "propuesta-beta" &&
       readBetaNotAnalyzed(),
@@ -253,19 +260,26 @@ export function DrawingOperationalStatusPanel({
   takeoffLineCount,
   activeTab,
   onNavigateTab,
+  onFocusMetadataConfirmation,
   className,
 }: DrawingOperationalStatusPanelProps) {
+  const metadataAttention = needsMetadataAttention(progress);
   const guidance = getOperationalGuidance(
     progress,
     showBetaProposal,
     takeoffLineCount,
   );
-  const betaNotAnalyzed = useBetaNotAnalyzed(activeTab, showBetaProposal);
+  const betaNotAnalyzed = useBetaNotAnalyzed(
+    activeTab,
+    showBetaProposal,
+    metadataAttention,
+  );
   const showAnalyzeBeta = betaNotAnalyzed;
   const { primary, secondary } = resolveBannerActions(
     guidance,
     activeTab,
     showAnalyzeBeta,
+    metadataAttention,
   );
 
   return (
@@ -275,11 +289,11 @@ export function DrawingOperationalStatusPanel({
         progress === "takeoff_pending_review" &&
           "border-amber-500/40 bg-amber-500/5",
         progress === "ready" && "border-emerald-500/30 bg-emerald-500/5",
-        needsMetadataBanner(progress) &&
-          "border-violet-500/30 bg-violet-500/5",
+        metadataAttention && "border-violet-500/30 bg-violet-500/5",
         className,
       )}
       data-testid="drawing-operational-status"
+      data-progress={progress}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
@@ -288,6 +302,14 @@ export function DrawingOperationalStatusPanel({
           <p className="text-xs text-muted-foreground">
             Estado: {DRAWING_PROGRESS_LABELS[progress]}
           </p>
+          {metadataAttention ? (
+            <p
+              className="text-xs text-muted-foreground"
+              data-testid="drawing-metadata-step-note"
+            >
+              Paso actual del trabajo: confirmar metadatos.
+            </p>
+          ) : null}
         </div>
 
         {primary || secondary ? (
@@ -296,7 +318,19 @@ export function DrawingOperationalStatusPanel({
               <Button
                 type="button"
                 size="sm"
-                onClick={() => onNavigateTab(primary.target)}
+                data-testid={
+                  primary.type === "focus-metadata-confirmation"
+                    ? "drawing-operational-confirm-metadata"
+                    : undefined
+                }
+                onClick={() => {
+                  if (primary.type === "focus-metadata-confirmation") {
+                    onFocusMetadataConfirmation?.();
+                    return;
+                  }
+
+                  onNavigateTab(primary.target);
+                }}
               >
                 {primary.label}
               </Button>
@@ -306,6 +340,11 @@ export function DrawingOperationalStatusPanel({
                 type="button"
                 size="sm"
                 variant="outline"
+                data-testid={
+                  secondary.type === "analyze-beta"
+                    ? "drawing-operational-analyze-materials"
+                    : undefined
+                }
                 onClick={() => {
                   if (secondary.type === "analyze-beta") {
                     runBetaAnalyzeAction();
@@ -322,6 +361,16 @@ export function DrawingOperationalStatusPanel({
         ) : null}
       </div>
 
+      {metadataAttention && showBetaProposal ? (
+        <p
+          className="mt-2 text-xs text-muted-foreground"
+          data-testid="drawing-materials-after-metadata-note"
+        >
+          Analizar relación de materiales estará disponible después de confirmar
+          metadatos.
+        </p>
+      ) : null}
+
       {progress === "takeoff_pending_review" ? (
         <p className="mt-2 text-xs text-amber-900 dark:text-amber-200">
           Marca la palillería como revisada solo después de comprobar las líneas
@@ -329,11 +378,5 @@ export function DrawingOperationalStatusPanel({
         </p>
       ) : null}
     </section>
-  );
-}
-
-function needsMetadataBanner(progress: DrawingProgressState): boolean {
-  return (
-    progress === "missing_metadata" || progress === "metadata_pending_review"
   );
 }

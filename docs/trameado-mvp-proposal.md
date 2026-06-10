@@ -355,6 +355,13 @@ Columnas:
 - **Qué no cambia:** lógica de tramos, validación, marcado, exports ni permisos; UI avanzada sigue visible.
 - **No añade** automatización nueva; guía con estado y CTAs reutilizando acciones existentes.
 
+### 18S-B — Metadatos sugeridos y foco del paso actual (completado)
+
+- **Feedback:** tras subir planos, “Completar metadatos” era confuso y competía con “Analizar relación de materiales”.
+- **Qué hace:** `buildDrawingMetadataSuggestion` propone Nº plano, línea y revisión desde el nombre del archivo; tarjeta `DrawingMetadataConfirmationCard` con CTA **Confirmar metadatos**.
+- **Foco UX:** banner y flujo del trabajo priorizan metadatos; análisis de materiales oculto o con copy “disponible después”.
+- **Qué no cambia:** permisos, Prisma, lógica de palillería/trameado/exports; sin auto-guardado ni análisis automático de materiales nuevo.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.
@@ -404,6 +411,7 @@ Columnas:
 - Cierre MVP 18P-A: [trameado-mvp-demo-report.md](./trameado-mvp-demo-report.md)
 - Hardening QA 18P-B: [trameado-hardening-report.md](./trameado-hardening-report.md)
 - Runbook demo 18P-C: [trameado-demo-runbook.md](./trameado-demo-runbook.md)
+- Metadatos sugeridos 18S-B: `lib/drawings/metadata-suggestions.ts`, `components/drawings/drawing-metadata-confirmation-card.tsx`
 - Flujo guiado del trabajo 18S-A: `components/jobs/job-workflow-guide.tsx`
 - Wizard guiado 18R-A / pulido UX 18R-B: `components/trameado/trameado-guided-wizard.tsx`
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`

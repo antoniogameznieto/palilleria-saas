@@ -43,6 +43,7 @@ import {
   requireJobAccess,
 } from "@/lib/permissions";
 import {
+  confirmDrawingMetadataSchema,
   updateDrawingMetadataSchema,
   updateDrawingStatusSchema,
   validatePdfFiles,
@@ -326,6 +327,112 @@ export async function updateDrawingMetadataAction(
   revalidateDrawingPages(companyId, jobId, drawingId);
 
   return { success: "Metadatos guardados correctamente." };
+}
+
+const METADATA_CONFIRM_STATUSES = new Set([
+  "uploaded",
+  "detected",
+  "processing",
+]);
+
+export async function confirmDrawingMetadataAction(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const companyId = formData.get("companyId");
+  const jobId = formData.get("jobId");
+  const drawingId = formData.get("drawingId");
+
+  if (typeof companyId !== "string" || companyId.length === 0) {
+    return { error: "Empresa no válida." };
+  }
+
+  if (typeof jobId !== "string" || jobId.length === 0) {
+    return { error: "Trabajo no válido." };
+  }
+
+  if (typeof drawingId !== "string" || drawingId.length === 0) {
+    return { error: "Plano no válido." };
+  }
+
+  const { user, membership, drawing } = await requireDrawingAccess(
+    companyId,
+    jobId,
+    drawingId,
+  );
+
+  if (!canEditDrawingMetadata(membership.role)) {
+    redirect(
+      `/companies/${companyId}/jobs/${jobId}/drawings/${drawingId}`,
+    );
+  }
+
+  const parsed = confirmDrawingMetadataSchema.safeParse({
+    drawingNumber: formData.get("drawingNumber") ?? undefined,
+    lineNumber: formData.get("lineNumber") ?? undefined,
+    revision: formData.get("revision") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "Revisa los campos del formulario.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const shouldMarkReviewed = METADATA_CONFIRM_STATUSES.has(drawing.status);
+
+  const updated = await prisma.drawing.updateMany({
+    where: {
+      id: drawingId,
+      companyId,
+      jobId,
+    },
+    data: {
+      drawingNumber: parsed.data.drawingNumber,
+      lineNumber: parsed.data.lineNumber,
+      revision: parsed.data.revision,
+      ...(shouldMarkReviewed ? { status: "reviewed" } : {}),
+    },
+  });
+
+  if (updated.count === 0) {
+    return { error: "No se pudo confirmar los metadatos del plano." };
+  }
+
+  await recordDrawingActivity({
+    drawingId,
+    companyId,
+    jobId,
+    actorUserId: user.id,
+    type: shouldMarkReviewed ? "metadata_confirmed" : "metadata_updated",
+    message: shouldMarkReviewed
+      ? buildMetadataConfirmedActivityMessage()
+      : buildMetadataUpdatedActivityMessage(),
+    metadata: {
+      previous: {
+        drawingNumber: drawing.drawingNumber,
+        lineNumber: drawing.lineNumber,
+        revision: drawing.revision,
+        status: drawing.status,
+      },
+      next: {
+        drawingNumber: parsed.data.drawingNumber,
+        lineNumber: parsed.data.lineNumber,
+        revision: parsed.data.revision,
+        status: shouldMarkReviewed ? "reviewed" : drawing.status,
+      },
+      source: "filename_suggestion",
+    },
+  });
+
+  revalidateDrawingPages(companyId, jobId, drawingId);
+
+  return {
+    success: shouldMarkReviewed
+      ? "Metadatos confirmados. Ya puedes continuar con materiales y palillería."
+      : "Metadatos confirmados correctamente.",
+  };
 }
 
 export async function updateDrawingStatusAction(

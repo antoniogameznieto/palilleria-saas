@@ -23,6 +23,22 @@ export type UpdateDrawingMetadataInput = z.infer<
   typeof updateDrawingMetadataSchema
 >;
 
+const requiredMetadataField = z
+  .string()
+  .trim()
+  .min(1, "Este campo es obligatorio.")
+  .max(200, "Máximo 200 caracteres");
+
+export const confirmDrawingMetadataSchema = z.object({
+  drawingNumber: requiredMetadataField,
+  lineNumber: requiredMetadataField,
+  revision: requiredMetadataField,
+});
+
+export type ConfirmDrawingMetadataInput = z.infer<
+  typeof confirmDrawingMetadataSchema
+>;
+
 export const updateDrawingStatusSchema = z.object({
   status: z.enum(MANUAL_DRAWING_STATUS_VALUES, {
     message: "Estado no válido.",

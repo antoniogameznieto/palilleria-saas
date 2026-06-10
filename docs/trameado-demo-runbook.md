@@ -15,6 +15,16 @@ Enseñar en 10–15 minutos cómo un ingeniero pasa de un isométrico vectorial 
 
 ---
 
+## Metadatos sugeridos (18S-B)
+
+Tras subir planos, el detalle del plano muestra una tarjeta **Confirma los metadatos del plano** con propuesta desde el nombre del archivo (ej. `2301GB47G-C1-L-HL-1289-01.pdf` → línea `HL-1289`, revisión `01`).
+
+- El usuario revisa y pulsa **Confirmar metadatos**; no hay auto-guardado silencioso.
+- **Analizar relación de materiales** queda despriorizado hasta confirmar metadatos.
+- El flujo del trabajo recomienda **Confirmar metadatos** antes de materiales o palillería.
+
+---
+
 ## Flujo del trabajo (18S-A)
 
 En el **detalle del trabajo**, la tarjeta **Flujo del trabajo** orienta el proceso completo: planos → metadatos → materiales → propuesta → palillería → Trameado → entrega.

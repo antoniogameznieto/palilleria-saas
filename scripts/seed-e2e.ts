@@ -19,6 +19,7 @@ export const E2E_IDS = {
   job: "seed-job-e2e",
   drawingPending: "seed-drawing-e2e-pending",
   drawingBom: "seed-drawing-e2e-bom",
+  drawingMetadataPending: "seed-drawing-e2e-metadata-pending",
   ownerUser: "seed-user-e2e-owner",
   engineerUser: "seed-user-e2e-engineer",
   viewerUser: "seed-user-e2e-viewer",
@@ -35,7 +36,85 @@ export const E2E_USERS = {
 
 export async function resetE2eTrameadoData(client: PrismaClient = prisma) {
   await client.drawingTrameadoSheet.deleteMany({
-    where: { drawingId: E2E_IDS.drawingPending },
+    where: {
+      drawingId: {
+        in: [E2E_IDS.drawingPending, E2E_IDS.drawingBom],
+      },
+    },
+  });
+}
+
+export async function resetE2eMetadataSuggestionDrawing(
+  client: PrismaClient = prisma,
+) {
+  const company = await client.company.findUnique({
+    where: { id: E2E_IDS.company },
+    select: { id: true },
+  });
+  const job = await client.job.findUnique({
+    where: { id: E2E_IDS.job },
+    select: { id: true, createdById: true },
+  });
+  const engineer = await client.user.findUnique({
+    where: { email: E2E_USERS.engineer },
+    select: { id: true },
+  });
+
+  if (!company || !job || !engineer) {
+    throw new Error("Seed E2E incompleto para metadatos sugeridos.");
+  }
+
+  const storageRoot =
+    process.env.LOCAL_STORAGE_PATH?.trim() || path.join(process.cwd(), "storage");
+  const originalFileName = "2301GB47G-C1-L-HL-1289-01.pdf";
+  const fixturePath = path.join(
+    process.cwd(),
+    "tests/fixtures/e2e-trameado-candidates.pdf",
+  );
+  const drawingPdf = await readFile(fixturePath);
+  const storagePath = buildDrawingStoragePath(
+    company.id,
+    job.id,
+    E2E_IDS.drawingMetadataPending,
+    originalFileName,
+  );
+  const absolutePath = path.join(storageRoot, storagePath);
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, drawingPdf);
+
+  await client.drawing.upsert({
+    where: { id: E2E_IDS.drawingMetadataPending },
+    update: {
+      companyId: company.id,
+      jobId: job.id,
+      fileName: originalFileName,
+      originalFileName,
+      storagePath,
+      fileSize: BigInt(drawingPdf.length),
+      mimeType: "application/pdf",
+      status: "uploaded",
+      drawingNumber: null,
+      lineNumber: null,
+      revision: null,
+      takeoffReviewedAt: null,
+      takeoffReviewedById: null,
+    },
+    create: {
+      id: E2E_IDS.drawingMetadataPending,
+      companyId: company.id,
+      jobId: job.id,
+      fileName: originalFileName,
+      originalFileName,
+      storagePath,
+      fileSize: BigInt(drawingPdf.length),
+      mimeType: "application/pdf",
+      status: "uploaded",
+      createdById: engineer.id,
+    },
+  });
+
+  await client.drawingTakeoffItem.deleteMany({
+    where: { drawingId: E2E_IDS.drawingMetadataPending },
   });
 }
 

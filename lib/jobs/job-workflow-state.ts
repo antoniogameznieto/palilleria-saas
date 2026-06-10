@@ -309,9 +309,9 @@ function buildStepSummary(
         return "Sube planos primero";
       }
       if (metrics.metadataIssueCount === 0) {
-        return "Metadatos completos";
+        return "Metadatos confirmados";
       }
-      return `${metrics.metadataIssueCount} plano${metrics.metadataIssueCount === 1 ? "" : "s"} pendiente${metrics.metadataIssueCount === 1 ? "" : "s"}`;
+      return `${metrics.metadataIssueCount} plano${metrics.metadataIssueCount === 1 ? "" : "s"} por confirmar`;
     case "analyze_materials":
       if (!metrics.hasMetadataCompleteDrawing) {
         return "Completa metadatos antes";
@@ -369,7 +369,7 @@ function buildWorkflowSummary(
   }
 
   if (metrics.metadataIssueCount > 0) {
-    return "Completa metadatos en los planos antes de avanzar con materiales y palillería.";
+    return "Confirma la propuesta de metadatos detectada en cada plano antes de avanzar con materiales y palillería.";
   }
 
   if (metrics.totalTakeoffLines === 0) {
@@ -421,10 +421,10 @@ function resolveRecommendedAction(
       return drawing
         ? {
             stepId: currentStep,
-            label: "Completar metadatos",
+            label: "Confirmar metadatos",
             href: drawingDetailHref(companyId, jobId, drawing.id),
             requiresEditPermission: true,
-            testId: "job-workflow-complete-metadata",
+            testId: "job-workflow-confirm-metadata",
           }
         : null;
     }

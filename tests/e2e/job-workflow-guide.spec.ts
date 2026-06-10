@@ -18,6 +18,14 @@ function resetJobWorkflowE2EData() {
   });
 }
 
+function resetMetadataSuggestionDrawing() {
+  execSync("npx tsx scripts/reset-e2e-metadata-suggestions.ts", {
+    cwd: process.cwd(),
+    stdio: "pipe",
+    env: process.env,
+  });
+}
+
 async function markPalilleriaReviewedOnDrawing(
   page: import("@playwright/test").Page,
   path: string,
@@ -98,9 +106,31 @@ test.describe("job workflow guide", () => {
     await page.getByTestId("trameado-add-segment-submit").click();
 
     await page.goto(jobPath());
-    await expect(page.getByTestId("job-workflow-open-trameado")).toBeVisible();
     await expect(page.getByTestId("job-workflow-check-trameado")).toContainText(
-      /Completo|En curso|Revisar/,
+      /Completo|En curso|Revisar|tramo/,
+    );
+    await expect(
+      page
+        .getByTestId("job-workflow-open-trameado")
+        .or(page.getByTestId("job-workflow-open-export")),
+    ).toBeVisible();
+  });
+
+  test("con plano sin metadatos recomienda confirmar antes de materiales", async ({
+    page,
+  }) => {
+    resetMetadataSuggestionDrawing();
+    await login(page, E2E_USERS.engineer);
+    await page.goto(jobPath());
+
+    const guide = page.getByTestId("job-workflow-guide");
+    await expect(guide).toHaveAttribute("data-current-step", "complete_metadata");
+    await expect(page.getByTestId("job-workflow-confirm-metadata")).toBeVisible();
+    await expect(page.getByTestId("job-workflow-check-analyze_materials")).toContainText(
+      "Bloqueado",
+    );
+    await expect(guide).toContainText(
+      "Confirma la propuesta de metadatos detectada en cada plano",
     );
   });
 
@@ -113,6 +143,6 @@ test.describe("job workflow guide", () => {
     await expect(page.getByTestId("job-workflow-guide")).toBeVisible();
     await expect(page.getByTestId("job-workflow-viewer-note")).toBeVisible();
     await expect(page.getByTestId("job-workflow-upload-drawing")).toHaveCount(0);
-    await expect(page.getByTestId("job-workflow-complete-metadata")).toHaveCount(0);
+    await expect(page.getByTestId("job-workflow-confirm-metadata")).toHaveCount(0);
   });
 });

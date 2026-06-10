@@ -25,6 +25,13 @@ export function drawingBomPath(
   return drawingPath(E2E_IDS.drawingBom, companyId, jobId);
 }
 
+export function drawingMetadataPendingPath(
+  companyId = E2E_IDS.company,
+  jobId = E2E_IDS.job,
+) {
+  return drawingPath(E2E_IDS.drawingMetadataPending, companyId, jobId);
+}
+
 export async function login(
   page: import("@playwright/test").Page,
   email: string,

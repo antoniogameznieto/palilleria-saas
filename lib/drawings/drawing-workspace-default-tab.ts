@@ -10,7 +10,12 @@ export type DrawingWorkspaceTab =
 
 export function resolveDrawingWorkspaceDefaultTab(
   showBetaProposal: boolean,
+  progress?: DrawingProgressState,
 ): DrawingWorkspaceTab {
+  if (progress && needsMetadataAttention(progress)) {
+    return "metadatos";
+  }
+
   if (showBetaProposal) {
     return "propuesta-beta";
   }
