@@ -57,7 +57,13 @@ test.describe("job workflow guide", () => {
       "Flujo del trabajo",
     );
     await expect(guide).toHaveAttribute("data-current-step", "upload_drawings");
+    await expect(page.getByTestId("job-workflow-current-step-heading")).toContainText(
+      "Paso 2 de 8",
+    );
     await expect(page.getByTestId("job-workflow-upload-drawing")).toBeVisible();
+    await expect(
+      page.getByTestId("job-takeoff-consolidated-section-wrapper"),
+    ).not.toHaveAttribute("open");
     await expect(page.getByTestId("job-workflow-check-upload_drawings")).toContainText(
       "En curso",
     );
@@ -83,6 +89,7 @@ test.describe("job workflow guide", () => {
     await expect(page.getByTestId("job-workflow-check-upload_drawings")).toContainText(
       "Completo",
     );
+    await page.getByTestId("job-workflow-step-details").locator("summary").click();
     await expect(page.getByTestId("job-workflow-step-1")).toBeVisible();
     await expect(page.getByTestId("job-workflow-check-export_delivery")).toBeVisible();
   });
@@ -133,7 +140,10 @@ test.describe("job workflow guide", () => {
 
     const guide = page.getByTestId("job-workflow-guide");
     await expect(guide).toHaveAttribute("data-current-step", "complete_metadata");
-    await expect(page.getByTestId("job-workflow-confirm-metadata")).toBeVisible();
+    await expect(page.getByTestId("job-workflow-review-metadata")).toBeVisible();
+    await expect(
+      page.getByTestId("job-takeoff-consolidated-section-wrapper"),
+    ).not.toHaveAttribute("open");
     await expect(page.getByTestId("job-workflow-check-analyze_materials")).toContainText(
       "Bloqueado",
     );
@@ -171,6 +181,6 @@ test.describe("job workflow guide", () => {
     await expect(page.getByTestId("job-workflow-guide")).toBeVisible();
     await expect(page.getByTestId("job-workflow-viewer-note")).toBeVisible();
     await expect(page.getByTestId("job-workflow-upload-drawing")).toHaveCount(0);
-    await expect(page.getByTestId("job-workflow-confirm-metadata")).toHaveCount(0);
+    await expect(page.getByTestId("job-workflow-review-metadata")).toHaveCount(0);
   });
 });

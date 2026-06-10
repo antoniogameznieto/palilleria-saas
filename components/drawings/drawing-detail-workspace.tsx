@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  cloneElement,
+  isValidElement,
   useCallback,
   useEffect,
   useMemo,
@@ -26,6 +28,18 @@ import {
 import { cn } from "@/lib/utils";
 
 export type { DrawingWorkspaceTab as DrawingDetailTab };
+
+function withStableKey(node: ReactNode, key: string): ReactNode {
+  if (node == null) {
+    return null;
+  }
+
+  if (isValidElement(node)) {
+    return cloneElement(node, { key });
+  }
+
+  return node;
+}
 
 type TabOption = {
   id: DrawingWorkspaceTab;
@@ -170,7 +184,7 @@ export function DrawingDetailWorkspace({
         hasExportablePackage={hasExportablePackage}
       />
 
-      {metadataConfirmation}
+      {withStableKey(metadataConfirmation, "metadata-confirmation")}
 
       {metadataConfirmation || hideOperationalBannerForBetaFocus ? null : (
         <DrawingOperationalStatusPanel
@@ -239,7 +253,7 @@ export function DrawingDetailWorkspace({
                   {tab.subtitle}
                 </p>
               ) : null}
-              {tabPanels[tab.id]}
+              {withStableKey(tabPanels[tab.id], tab.id)}
             </div>
           ))}
         </CardContent>

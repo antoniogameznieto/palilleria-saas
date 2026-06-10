@@ -390,6 +390,12 @@ Columnas:
 - **Tras analizar:** prompt desaparece; asistente beta vuelve al flujo revisar/importar.
 - **Qué no cambia:** lógica de análisis, propuesta beta, permisos ni exports.
 
+### 18T-A — Unificación del wizard completo y borrado por owner (completado)
+
+- **UX:** `WorkflowGuideShell` + trail compartido; página de trabajo reordenada; secciones técnicas plegadas en pasos 1–5; CTAs globales vs locales diferenciados.
+- **Borrado:** `deleteJobAction` solo owner; elimina job en cascada y archivos PDF de planos.
+- **Qué no cambia:** lógica de análisis, propuesta, trameado ni exports.
+
 ### 18S-I — Mini guía de flujo dentro del plano (completado)
 
 - **Feedback:** en el detalle del plano se pierde el mapa global y el acceso a conceptos.

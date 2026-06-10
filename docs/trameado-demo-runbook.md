@@ -58,6 +58,13 @@ Con metadatos confirmados y materiales sin analizar en Propuesta beta:
 - El asistente beta queda plegado en **Detalles del asistente beta** hasta completar el análisis.
 - Tras analizar, la tarjeta desaparece y el asistente beta recupera el flujo normal de revisión e importación.
 
+## Unificación del wizard y borrado por owner (18T-A)
+
+- La página del trabajo prioriza el **Flujo del trabajo**; resumen técnico, consolidado y settings quedan plegados en fases iniciales.
+- CTAs globales orientan («Revisar metadatos pendientes», «Ir a revisar propuesta»); la acción concreta sigue en cada plano.
+- Misma brújula visual en trabajo, plano y Trameado (trail de 8 pasos).
+- El **owner** puede **Eliminar trabajo** con confirmación; borra BD y PDFs asociados.
+
 ## Mini guía de flujo dentro del plano (18S-I)
 
 En el detalle de cada plano, encima de las pestañas del workspace:

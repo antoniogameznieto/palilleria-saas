@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { ExportTrameadoPackageButton } from "@/components/trameado/export-trameado-package-button";
+import { WorkflowStepTrail } from "@/components/workflow/workflow-guide";
 import { Button } from "@/components/ui/button";
 import {
   formatWorkflowStepHeading,
@@ -277,18 +278,23 @@ export function TrameadoGuidedWizard({
 
   return (
     <div
-      className="space-y-4 rounded-xl border-2 border-primary/25 bg-gradient-to-b from-primary/5 to-card p-4 shadow-sm"
+      className="space-y-4 rounded-xl border border-border/60 bg-card p-4 shadow-sm"
       data-testid="trameado-guided-wizard"
       data-current-step={currentStep}
       data-workflow-complete={workflowComplete ? "true" : "false"}
     >
-      <header className="space-y-2 border-b border-primary/10 pb-3">
+      <header className="space-y-2 border-b border-border/60 pb-3">
         <p
-          className="text-xs font-medium uppercase tracking-wide text-primary"
+          className="text-sm font-medium"
           data-testid="trameado-wizard-global-step"
         >
           {formatWorkflowStepHeading(7, getWorkflowStepShortLabel("trameado"))}
         </p>
+        <WorkflowStepTrail
+          currentStepId="trameado"
+          testId="trameado-wizard-step-trail"
+          stepTestIdPrefix="trameado-wizard"
+        />
         <h3
           className="text-lg font-semibold leading-tight"
           data-testid="trameado-wizard-title"

@@ -12,6 +12,7 @@ export {
 
 export {
   canArchiveJob,
+  canDeleteJob,
   canEditJob,
   canManageJobs,
   getCompanyJobStats,

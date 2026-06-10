@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 
 import { WorkflowConceptsHelp } from "@/components/jobs/workflow-concepts-help";
+import {
+  WorkflowGuideShell,
+  WorkflowStepTrail,
+  workflowRecommendedPanelClass,
+} from "@/components/workflow/workflow-guide";
 import { Button } from "@/components/ui/button";
 import {
   formatWorkflowStepHeading,
@@ -64,12 +69,12 @@ export function JobWorkflowGuide({
     (canAdvance || !recommendedAction.requiresEditPermission);
 
   return (
-    <section
-      className="space-y-4 rounded-xl border bg-card p-4 shadow-sm"
-      data-testid="job-workflow-guide"
-      data-current-step={currentStep}
+    <WorkflowGuideShell
+      variant="full"
+      currentStepId={currentStep}
+      testId="job-workflow-guide"
     >
-      <header className="space-y-2 border-b pb-3">
+      <header className="space-y-2 border-b border-border/60 pb-3">
         <h2
           className="text-lg font-semibold leading-tight"
           data-testid="job-workflow-title"
@@ -78,10 +83,6 @@ export function JobWorkflowGuide({
         </h2>
         <p className="text-sm text-muted-foreground">
           Sigue estos pasos para pasar de los planos a una entrega revisable.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Esta guía no bloquea el trabajo: solo te indica qué falta y cuál es el
-          siguiente paso recomendado.
         </p>
         {!canAdvance ? (
           <p
@@ -94,6 +95,25 @@ export function JobWorkflowGuide({
         ) : null}
         <WorkflowConceptsHelp />
       </header>
+
+      {currentStepMeta ? (
+        <div className="space-y-2">
+          <p
+            className="text-sm font-medium"
+            data-testid="job-workflow-current-step-heading"
+          >
+            {formatWorkflowStepHeading(
+              currentStepMeta.number,
+              currentStepMeta.shortLabel,
+            )}
+          </p>
+          <WorkflowStepTrail
+            currentStepId={currentStep}
+            testId="job-workflow-step-trail"
+            stepTestIdPrefix="job-workflow"
+          />
+        </div>
+      ) : null}
 
       <ol
         className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-8"
@@ -129,7 +149,7 @@ export function JobWorkflowGuide({
         ))}
       </ol>
 
-      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3">
+      <div className={workflowRecommendedPanelClass()}>
         <p className="text-xs font-medium text-muted-foreground">
           Siguiente paso recomendado
         </p>
@@ -174,11 +194,14 @@ export function JobWorkflowGuide({
         <p className="mt-3 text-xs text-muted-foreground">{deliveryNote}</p>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Resumen del trabajo
-        </p>
-        <ul className="space-y-1.5">
+      <details
+        className="rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
+        data-testid="job-workflow-step-details"
+      >
+        <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-primary marker:content-none">
+          Ver resumen por paso
+        </summary>
+        <ul className="space-y-1.5 border-t px-3 py-3">
           {steps
             .filter((step) => step.status !== "blocked")
             .map((step) => (
@@ -207,7 +230,7 @@ export function JobWorkflowGuide({
               </li>
             ))}
         </ul>
-      </div>
-    </section>
+      </details>
+    </WorkflowGuideShell>
   );
 }

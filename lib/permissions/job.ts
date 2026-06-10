@@ -7,6 +7,7 @@ import { requireCompanyMember } from "@/lib/permissions/company";
 
 const EDIT_JOB_ROLES: CompanyRole[] = ["owner", "admin", "engineer"];
 const ARCHIVE_JOB_ROLES: CompanyRole[] = ["owner", "admin"];
+const DELETE_JOB_ROLES: CompanyRole[] = ["owner"];
 
 export function canManageJobs(role: CompanyRole): boolean {
   return EDIT_JOB_ROLES.includes(role);
@@ -18,6 +19,10 @@ export function canEditJob(role: CompanyRole): boolean {
 
 export function canArchiveJob(role: CompanyRole): boolean {
   return ARCHIVE_JOB_ROLES.includes(role);
+}
+
+export function canDeleteJob(role: CompanyRole): boolean {
+  return DELETE_JOB_ROLES.includes(role);
 }
 
 export async function getJobForUser(companyId: string, jobId: string) {

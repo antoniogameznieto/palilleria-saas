@@ -3,15 +3,19 @@
 import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 
+import { revalidatePath } from "next/cache";
+
 import type { AuthActionState } from "@/lib/actions/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_JOB_SETTINGS } from "@/lib/jobs/labels";
 import {
   canArchiveJob,
+  canDeleteJob,
   canEditJob,
   requireCompanyMember,
   requireJobAccess,
 } from "@/lib/permissions";
+import { deleteFile } from "@/lib/storage";
 import {
   createJobSchema,
   jobSettingsSchema,
@@ -202,6 +206,58 @@ export async function archiveJobAction(formData: FormData) {
   });
 
   redirect(`/companies/${companyId}/jobs/${jobId}`);
+}
+
+export async function deleteJobAction(formData: FormData) {
+  const companyId = formData.get("companyId");
+  const jobId = formData.get("jobId");
+
+  if (typeof companyId !== "string" || companyId.length === 0) {
+    redirect("/dashboard");
+  }
+
+  if (typeof jobId !== "string" || jobId.length === 0) {
+    redirect(`/companies/${companyId}/jobs`);
+  }
+
+  const { membership } = await requireJobAccess(companyId, jobId);
+
+  if (!canDeleteJob(membership.role)) {
+    redirect(`/companies/${companyId}/jobs/${jobId}`);
+  }
+
+  const drawings = await prisma.drawing.findMany({
+    where: {
+      companyId,
+      jobId,
+    },
+    select: {
+      storagePath: true,
+    },
+  });
+
+  const deleted = await prisma.job.deleteMany({
+    where: {
+      id: jobId,
+      companyId,
+    },
+  });
+
+  if (deleted.count === 0) {
+    redirect(`/companies/${companyId}/jobs`);
+  }
+
+  await Promise.all(
+    drawings.map((drawing) =>
+      drawing.storagePath
+        ? deleteFile({ storagePath: drawing.storagePath }).catch(() => undefined)
+        : Promise.resolve(),
+    ),
+  );
+
+  revalidatePath(`/companies/${companyId}/jobs`);
+
+  redirect(`/companies/${companyId}/jobs`);
 }
 
 export async function updateJobSettingsAction(

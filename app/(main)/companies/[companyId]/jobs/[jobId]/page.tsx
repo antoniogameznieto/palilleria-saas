@@ -1,9 +1,13 @@
+import Link from "next/link";
+
 import { JobDetailCompactHeader } from "@/components/jobs/job-detail-compact-header";
+import { Button } from "@/components/ui/button";
 import { JobDetailKpis } from "@/components/jobs/job-detail-kpis";
 import { JobDrawingsSection } from "@/components/jobs/job-drawings-section";
 import { JobTakeoffConsolidatedSection } from "@/components/jobs/job-takeoff-consolidated-section";
 import { JobSettingsCollapsible } from "@/components/jobs/job-settings-collapsible";
 import { JobWorkflowGuide } from "@/components/jobs/job-workflow-guide";
+import { JobWorkflowSecondarySections } from "@/components/jobs/job-workflow-secondary-sections";
 import { getDrawingProgress, buildJobDrawingProgressSummary } from "@/lib/drawings/drawing-progress";
 import { buildJobDrawingStatusSummary } from "@/lib/drawings/drawing-status-summary";
 import { canAccessExperimentalAutoTakeoff } from "@/lib/drawings/experimental-auto-takeoff-config";
@@ -12,10 +16,17 @@ import { buildJobTakeoffReviewSummary } from "@/lib/drawings/takeoff-review";
 import { buildJobTakeoffSummary } from "@/lib/drawings/takeoff-summary";
 import { getJobTrameadoWorkflowSummary } from "@/lib/jobs/get-job-trameado-summary";
 import { buildJobWorkflowState } from "@/lib/jobs/job-workflow-state";
+import {
+  shouldCollapseJobSettings,
+  shouldCollapseJobTechnicalSummary,
+  shouldCollapseTakeoffConsolidated,
+  shouldShowJobTakeoffExports,
+} from "@/lib/jobs/workflow-layout";
 import { serializeJobSettings } from "@/lib/jobs/serialize-settings";
 import {
   canArchiveJob,
   canDeleteDrawings,
+  canDeleteJob,
   canEditJob,
   canUploadDrawings,
   getJobDrawings,
@@ -40,8 +51,9 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
   const canEdit = canEditJob(membership.role);
   const canArchive = canArchiveJob(membership.role);
+  const canDelete = canDeleteJob(membership.role);
   const canUpload = canUploadDrawings(membership.role);
-  const canDelete = canDeleteDrawings(membership.role);
+  const canDeleteDrawing = canDeleteDrawings(membership.role);
   const jobTakeoffSummary = buildJobTakeoffSummary(
     jobTakeoffItems.map((item) => ({
       drawingId: item.drawingId,
@@ -105,6 +117,18 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     trameado: trameadoSummary,
   });
   const canAdvanceWorkflow = canEdit || canUpload;
+  const collapseTechnicalSummary = shouldCollapseJobTechnicalSummary(
+    workflowState.currentStep,
+  );
+  const collapseTakeoffConsolidated = shouldCollapseTakeoffConsolidated(
+    workflowState.currentStep,
+    jobTakeoffItems.length,
+  );
+  const collapseJobSettings = shouldCollapseJobSettings(workflowState.currentStep);
+  const showTakeoffExports = shouldShowJobTakeoffExports(
+    workflowState.currentStep,
+    jobTakeoffItems.length,
+  );
 
   return (
     <div className="space-y-6">
@@ -120,15 +144,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         createdByName={job.createdBy.name}
         canEdit={canEdit}
         canArchive={canArchive}
+        canDelete={canDelete}
         canUpload={canUpload}
+        showTakeoffExports={showTakeoffExports}
         takeoffItems={jobTakeoffItems}
-      />
-
-      <JobDetailKpis
-        drawingSummary={drawingSummary}
-        takeoffSummary={jobTakeoffSummary}
-        takeoffReviewSummary={takeoffReviewSummary}
-        drawingProgressSummary={drawingProgressSummary}
       />
 
       <JobWorkflowGuide
@@ -136,23 +155,53 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         canAdvance={canAdvanceWorkflow}
       />
 
-      <JobTakeoffConsolidatedSection
-        companyId={companyId}
-        jobId={jobId}
-        items={jobTakeoffItems}
-        drawingProgressByDrawingId={drawingProgressByDrawingId}
-      />
-
       <JobDrawingsSection
         companyId={companyId}
         jobId={jobId}
         drawings={serializedDrawings}
-        canDelete={canDelete}
+        canDelete={canDeleteDrawing}
       />
 
-      {job.settings ? (
-        <JobSettingsCollapsible settings={serializeJobSettings(job.settings)} />
-      ) : null}
+      <JobWorkflowSecondarySections
+        showTechnicalSummary
+        technicalSummaryDefaultOpen={!collapseTechnicalSummary}
+        technicalSummary={
+          <JobDetailKpis
+            drawingSummary={drawingSummary}
+            takeoffSummary={jobTakeoffSummary}
+            takeoffReviewSummary={takeoffReviewSummary}
+            drawingProgressSummary={drawingProgressSummary}
+          />
+        }
+        showTakeoffConsolidated
+        takeoffConsolidatedDefaultOpen={!collapseTakeoffConsolidated}
+        takeoffConsolidated={
+          <JobTakeoffConsolidatedSection
+            companyId={companyId}
+            jobId={jobId}
+            items={jobTakeoffItems}
+            drawingProgressByDrawingId={drawingProgressByDrawingId}
+          />
+        }
+        showSettings={job.settings != null}
+        settingsDefaultOpen={!collapseJobSettings}
+        settings={
+          job.settings ? (
+            <div className="space-y-3">
+              {canEdit ? (
+                <Link href={`/companies/${companyId}/jobs/${jobId}/settings`}>
+                  <Button type="button" variant="outline" size="sm">
+                    Editar settings
+                  </Button>
+                </Link>
+              ) : null}
+              <JobSettingsCollapsible
+                settings={serializeJobSettings(job.settings)}
+              />
+            </div>
+          ) : null
+        }
+      />
     </div>
   );
 }

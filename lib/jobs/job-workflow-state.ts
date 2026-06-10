@@ -492,10 +492,10 @@ function resolveRecommendedAction(
       return drawing
         ? {
             stepId: currentStep,
-            label: "Confirmar metadatos",
+            label: "Revisar metadatos pendientes",
             href: drawingDetailHref(companyId, jobId, drawing.id),
             requiresEditPermission: true,
-            testId: "job-workflow-confirm-metadata",
+            testId: "job-workflow-review-metadata",
           }
         : null;
     }
@@ -507,7 +507,7 @@ function resolveRecommendedAction(
       return drawing
         ? {
             stepId: currentStep,
-            label: "Analizar relación de materiales",
+            label: "Ir a analizar materiales",
             href: drawingDetailHref(companyId, jobId, drawing.id),
             requiresEditPermission: true,
             testId: "job-workflow-analyze-materials",
@@ -522,7 +522,7 @@ function resolveRecommendedAction(
       return drawing
         ? {
             stepId: currentStep,
-            label: "Ir a propuesta beta",
+            label: "Ir a revisar propuesta",
             href: drawingDetailHref(companyId, jobId, drawing.id),
             requiresEditPermission: true,
             testId: "job-workflow-review-beta",
@@ -541,7 +541,7 @@ function resolveRecommendedAction(
       return drawing
         ? {
             stepId: currentStep,
-            label: "Ir a palillería",
+            label: "Ir a revisar palillería",
             href: drawingDetailHref(companyId, jobId, drawing.id),
             requiresEditPermission: true,
             testId: "job-workflow-review-palilleria",

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { JobStatus } from "@prisma/client";
 
 import { ArchiveJobButton } from "@/components/jobs/archive-job-button";
+import { DeleteJobButton } from "@/components/jobs/delete-job-button";
 import { ExportJobTakeoffCsvButton } from "@/components/jobs/export-job-takeoff-csv-button";
 import { ExportJobTakeoffExcelButton } from "@/components/jobs/export-job-takeoff-excel-button";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
@@ -22,7 +23,9 @@ type JobDetailCompactHeaderProps = {
   createdByName: string | null;
   canEdit: boolean;
   canArchive: boolean;
+  canDelete: boolean;
   canUpload: boolean;
+  showTakeoffExports?: boolean;
   takeoffItems: SerializedJobTakeoffExportItem[];
 };
 
@@ -38,7 +41,9 @@ export function JobDetailCompactHeader({
   createdByName,
   canEdit,
   canArchive,
+  canDelete,
   canUpload,
+  showTakeoffExports = true,
   takeoffItems,
 }: JobDetailCompactHeaderProps) {
   const metadataParts = [
@@ -98,39 +103,45 @@ export function JobDetailCompactHeader({
             </Link>
           ) : null}
 
-          <ExportJobTakeoffCsvButton
-            items={takeoffItems}
-            jobName={name}
-            jobId={jobId}
-            size="sm"
-          />
+          {showTakeoffExports ? (
+            <>
+              <ExportJobTakeoffCsvButton
+                items={takeoffItems}
+                jobName={name}
+                jobId={jobId}
+                size="sm"
+              />
 
-          <ExportJobTakeoffExcelButton
-            companyId={companyId}
-            jobId={jobId}
-            itemCount={takeoffItems.length}
-            size="sm"
-          />
+              <ExportJobTakeoffExcelButton
+                companyId={companyId}
+                jobId={jobId}
+                itemCount={takeoffItems.length}
+                size="sm"
+              />
+            </>
+          ) : null}
 
           {canEdit ? (
-            <>
-              <Link href={`/companies/${companyId}/jobs/${jobId}/edit`}>
-                <Button variant="outline" size="sm" type="button">
-                  Editar trabajo
-                </Button>
-              </Link>
-              <Link href={`/companies/${companyId}/jobs/${jobId}/settings`}>
-                <Button variant="outline" size="sm" type="button">
-                  Editar settings
-                </Button>
-              </Link>
-            </>
+            <Link href={`/companies/${companyId}/jobs/${jobId}/edit`}>
+              <Button variant="outline" size="sm" type="button">
+                Editar trabajo
+              </Button>
+            </Link>
           ) : null}
 
           {canArchive && status !== "archived" ? (
             <ArchiveJobButton
               companyId={companyId}
               jobId={jobId}
+              size="sm"
+            />
+          ) : null}
+
+          {canDelete ? (
+            <DeleteJobButton
+              companyId={companyId}
+              jobId={jobId}
+              jobName={name}
               size="sm"
             />
           ) : null}
