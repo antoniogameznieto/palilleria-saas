@@ -222,6 +222,7 @@ Para **prepropuesta con revisión obligatoria** en subconjunto `-02`: **marginal
 | **2** | Panel de **cotas candidatas** filtradas y rankeadas junto al PDF/hoja | ✅ 18K-A + 18M-A |
 | **3** | **Tramos sugeridos** desde cotas + revisión obligatoria (18O-A) | ✅ `-02` útil; `-01` conservador (`unreliable`) |
 | **3b** | **Validación orientativa** Σ PALILLO vs BOM (18O-B) | ✅ Informativa; no bloquea cierre |
+| **3c** | **Marcado manual** tramo ↔ zona PDF (18O-C) | ✅ Punto/rect; sesión; sin geom. auto |
 | **4** | Interpretación geométrica vectorial (paths, topología iso) | Research; requiere motor nuevo |
 | **5** | Iso trameado automático completo + marcas `<n>` | No viable MVP; OCR/visión alto riesgo |
 

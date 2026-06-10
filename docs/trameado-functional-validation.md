@@ -225,7 +225,21 @@ Para **HL-1291-01** con la app actual:
 
 **No hace:** bloquear export/revisión; afirmar «correcto/incorrecto»; igualdad estricta BOM = Σ PALILLO.
 
-## 14. Fase siguiente (backlog)
+## 14. Fase 18O-C — Marcado manual del isométrico
+
+**Implementado (jun 2026).** Estado temporal en UI (`lib/trameado/pdf-annotations.ts`); sin persistencia en BD.
+
+| Capacidad | Detalle |
+|-----------|---------|
+| Tipo de marca | **Punto** (clic) o **rectángulo** (arrastrar) |
+| Coordenadas | Relativas 0–1 sobre el visor PDF, no coords PDF reales |
+| Selección | «Marcar en plano» en tabla o panel «Marcado del isométrico» |
+| Resumen | Tramos marcados X/Y, pendiente / marcado por tramo |
+| Viewer | Solo lectura; sin botones de marcado |
+
+**No hace:** trameado automático, geometría vectorial, OCR, persistencia entre sesiones.
+
+## 15. Fase siguiente (backlog)
 
 ### Alternativas descartadas por ahora:
 
@@ -235,7 +249,7 @@ Para **HL-1291-01** con la app actual:
 | 18M-C Anotaciones PDF | Requiere UX nueva + render; no desbloquea -01 |
 | 18M-D Vector engine | Alto coste; research 18J ya documentó límites |
 
-## 15. Criterios MVP — estado tras 18O-B
+## 16. Criterios MVP — estado tras 18O-C
 
 | Criterio | Estado |
 |----------|--------|
@@ -245,7 +259,7 @@ Para **HL-1291-01** con la app actual:
 | Beta BOM sin regresión | ✅ (fuera de alcance 18L) |
 | Cliente valida export con iso real | ⏳ Pendiente sesión con cliente |
 
-## 16. Referencias
+## 17. Referencias
 
 - [trameado-mvp-proposal.md](./trameado-mvp-proposal.md)
 - [trameado-vector-research.md](./trameado-vector-research.md) (18J)
@@ -254,4 +268,4 @@ Para **HL-1291-01** con la app actual:
 
 ---
 
-*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B — jun 2026. Datos con `validate-trameado-functional.ts`.*
+*Validación Fase 18L; scoring 18M-A; tramos sugeridos 18O-A; validación hoja 18O-B; marcado isométrico 18O-C — jun 2026. Datos con `validate-trameado-functional.ts`.*

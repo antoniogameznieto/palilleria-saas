@@ -22,7 +22,10 @@ type TrameadoSegmentsTableProps = {
   canManage: boolean;
   editingSegmentId: string | null;
   showSummary?: boolean;
+  markingSegmentId?: string | null;
+  markedSegmentIds?: Set<string>;
   onEdit: (segmentId: string) => void;
+  onMarkOnDrawing?: (segmentId: string) => void;
 };
 
 function formatCell(value: string | null): string {
@@ -42,7 +45,10 @@ export function TrameadoSegmentsTable({
   canManage,
   editingSegmentId,
   showSummary = true,
+  markingSegmentId = null,
+  markedSegmentIds,
   onEdit,
+  onMarkOnDrawing,
 }: TrameadoSegmentsTableProps) {
   const sortedSegments = sortTrameadoSegmentsForDisplay(segments);
   const nextSegmentNumber = getNextSegmentNumber(segments);
@@ -107,6 +113,7 @@ export function TrameadoSegmentsTable({
                 className={cn(
                   "border-b last:border-b-0 hover:bg-muted/15",
                   editingSegmentId === segment.id && "bg-muted/25",
+                  markingSegmentId === segment.id && "bg-primary/5",
                 )}
                 data-testid="trameado-segment-row"
               >
@@ -136,6 +143,20 @@ export function TrameadoSegmentsTable({
                 {canManage ? (
                   <td className="px-2.5 py-2 align-middle">
                     <div className="flex flex-wrap gap-0.5">
+                      {onMarkOnDrawing ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                          data-testid="trameado-mark-on-drawing"
+                          onClick={() => onMarkOnDrawing(segment.id)}
+                        >
+                          {markedSegmentIds?.has(segment.id)
+                            ? "Volver a marcar"
+                            : "Marcar en plano"}
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         variant="ghost"

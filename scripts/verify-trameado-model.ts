@@ -33,6 +33,14 @@ import {
   type CandidateDimensionsExtractionResult,
 } from "../lib/trameado/candidate-dimensions";
 import { buildTrameadoSegmentSuggestions } from "../lib/trameado/segment-suggestions";
+import {
+  buildTrameadoPdfAnnotationSummary,
+  createPointAnnotation,
+  createRectAnnotation,
+  isValidRelativeCoordinate,
+  removeAnnotationForSegment,
+  upsertAnnotationForSegment,
+} from "../lib/trameado/pdf-annotations";
 import { validateTrameadoSheet } from "../lib/trameado/sheet-validation";
 import {
   calculateTrameadoTotals,
@@ -899,6 +907,48 @@ function verifyTrameadoSheetValidation(): void {
   );
 }
 
+function verifyPdfAnnotations(): void {
+  assert(isValidRelativeCoordinate(0.5), "0.5 should be valid relative coordinate");
+  assert(!isValidRelativeCoordinate(1.2), "1.2 should be invalid relative coordinate");
+
+  const segment = {
+    id: "seg-1",
+    segmentNumber: "1",
+    segmentLabel: "<1>",
+    palilloLength: "100",
+  };
+
+  const point = createPointAnnotation({
+    segment,
+    x: 0.4,
+    y: 0.6,
+  });
+
+  assert(point.type === "point", "Should create point annotation");
+  assert(point.segmentLabel === "1", "Annotation label should normalize segment number");
+
+  const invalidRect = createRectAnnotation({
+    segment,
+    x: 0.1,
+    y: 0.1,
+    width: 0.005,
+    height: 0.02,
+  });
+
+  assert(invalidRect === null, "Tiny rect should be rejected");
+
+  const annotations = upsertAnnotationForSegment([], point);
+  const summary = buildTrameadoPdfAnnotationSummary([segment], annotations);
+
+  assert(summary.markedCount === 1, "Summary should count one marked segment");
+  assert(summary.totalCount === 1, "Summary should count one total segment");
+
+  const cleared = removeAnnotationForSegment(annotations, segment.id);
+  const emptySummary = buildTrameadoPdfAnnotationSummary([segment], cleared);
+
+  assert(emptySummary.markedCount === 0, "Removing annotation should clear marked count");
+}
+
 async function verifyXlsxExport(): Promise<void> {
   const sheet = buildSampleExportSheet();
   const buffer = await buildTrameadoXlsxBuffer(sheet);
@@ -991,6 +1041,7 @@ async function main(): Promise<void> {
   verifyCandidateDimensions();
   verifySegmentSuggestions();
   verifyTrameadoSheetValidation();
+  verifyPdfAnnotations();
   await verifyXlsxExport();
   console.log("verify-trameado-model: all checks passed");
 }

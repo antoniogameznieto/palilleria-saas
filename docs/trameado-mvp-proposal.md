@@ -287,6 +287,13 @@ Columnas:
 - Copy prudente: «Parece razonable», «Revisar diferencia», «Sin referencia suficiente».
 - **No** garantiza exactitud ni sustituye revisión del ingeniero.
 
+### 18O-C — Marcado manual del isométrico (completado)
+
+- Helper: `lib/trameado/pdf-annotations.ts` — marcas punto/rect con coords relativas 0–1.
+- UI: overlay en `TrameadoPdfPanel`, panel **Marcado del isométrico**, acción **Marcar en plano** en tabla.
+- Estado **temporal en sesión**; sin Prisma ni migraciones en esta fase.
+- **No** trameado automático, **no** coordenadas PDF reales, **no** geometría vectorial.
+
 ### 18M-F — Export/plantilla cliente (backlog)
 
 - Formato visual más cercano a `Hoja de palilleo.pdf` escaneada.
@@ -320,6 +327,7 @@ Columnas:
 - Demo interna 18N-A: [trameado-demo-checklist.md](./trameado-demo-checklist.md)
 - Tramos sugeridos 18O-A: `lib/trameado/segment-suggestions.ts`
 - Validación hoja 18O-B: `lib/trameado/sheet-validation.ts`
+- Marcado isométrico 18O-C: `lib/trameado/pdf-annotations.ts`
 
 ---
 

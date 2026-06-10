@@ -259,6 +259,16 @@ Tablas: `DrawingTrameadoSheet`, `DrawingTrameadoSegment`.
 
 **No bloquea** export CSV/XLSX ni marcar revisada.
 
+## Marcado manual del isométrico (18O-C)
+
+**Helper:** `lib/trameado/pdf-annotations.ts` — tipos y resumen marcado/pendiente.
+
+**UI:** overlay en `TrameadoPdfPanel`; panel `TrameadoIsoMarkingPanel`; acción en `TrameadoSegmentsTable`.
+
+**Persistencia:** ninguna en esta fase (estado React por hoja en `TrameadoSection`).
+
+**Coordenadas:** relativas al contenedor del visor (0–1), no espacio PDF.
+
 ## Archivos tocados en 18B
 
 - `prisma/schema.prisma`
