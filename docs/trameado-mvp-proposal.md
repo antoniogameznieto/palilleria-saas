@@ -390,6 +390,13 @@ Columnas:
 - **Tras analizar:** prompt desaparece; asistente beta vuelve al flujo revisar/importar.
 - **Qué no cambia:** lógica de análisis, propuesta beta, permisos ni exports.
 
+### 18S-G — Foco único en revisión de propuesta beta (completado)
+
+- **Feedback:** tras analizar, seguía visible el foco de análisis y demasiados bloques abiertos (KPIs, listas, acordeones).
+- **Qué hace:** `DrawingBetaReviewPromptCard` con resumen y CTA único; asistente en `beta-proposal-details-section` plegado; oculta CTAs duplicados de selección/importación en detalle.
+- **CTAs:** «Seleccionar recomendadas» → «Importar propuesta revisada» reutilizando acciones existentes.
+- **Qué no cambia:** lógica de análisis, selección, importación ni permisos.
+
 ### 18S-A — Flujo guiado del trabajo (completado)
 
 - **Por qué:** el wizard de Trameado ayuda en un plano, pero el usuario necesita entender el recorrido completo del trabajo.

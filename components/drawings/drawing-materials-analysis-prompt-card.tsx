@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useBetaAssistantNotAnalyzed } from "@/components/drawings/use-beta-assistant-not-analyzed";
+import {
+  useBetaAssistantNotAnalyzed,
+  useBetaAssistantStatus,
+} from "@/components/drawings/use-beta-assistant-status";
 
 type DrawingMaterialsAnalysisPromptCardProps = {
   jobHasOtherMetadataPending?: boolean;
@@ -18,9 +21,10 @@ function runMaterialsAnalysis(): void {
 export function DrawingMaterialsAnalysisPromptCard({
   jobHasOtherMetadataPending = false,
 }: DrawingMaterialsAnalysisPromptCardProps) {
+  const assistantStatus = useBetaAssistantStatus();
   const notAnalyzed = useBetaAssistantNotAnalyzed();
 
-  if (!notAnalyzed) {
+  if (!notAnalyzed || assistantStatus === "analyzed" || assistantStatus === "with_selection") {
     return null;
   }
 

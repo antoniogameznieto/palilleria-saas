@@ -11,6 +11,7 @@ import {
   type ExperimentalAutoTakeoffActionState,
   type ExperimentalAutoTakeoffImportActionState,
 } from "@/lib/actions/experimental-auto-takeoff";
+import { DrawingBetaReviewPromptCard } from "@/components/drawings/drawing-beta-review-prompt-card";
 import { ConfirmImportProposalDialog } from "@/components/drawings/confirm-import-proposal-dialog";
 import {
   TAKEOFF_COMPARISON_STATUS_BADGE_CLASS,
@@ -72,6 +73,7 @@ type DrawingExperimentalAutoTakeoffProps = {
   drawingId: string;
   existingTakeoffLineCount: number;
   deferPrimaryAnalyzeCta?: boolean;
+  focusReviewFlow?: boolean;
 };
 
 const initialAnalyzeState: ExperimentalAutoTakeoffActionState = {};
@@ -450,6 +452,7 @@ export function DrawingExperimentalAutoTakeoff({
   drawingId,
   existingTakeoffLineCount,
   deferPrimaryAnalyzeCta = false,
+  focusReviewFlow = false,
 }: DrawingExperimentalAutoTakeoffProps) {
   const router = useRouter();
   const [analyzeState, analyzeAction, analyzePending] = useActionState(
@@ -595,6 +598,27 @@ export function DrawingExperimentalAutoTakeoff({
   }
 
   const hasImportableMissing = hasBetaImportableProposal(suggestedItems);
+  const showReviewFocus =
+    focusReviewFlow &&
+    hasResult &&
+    hasSuggestions &&
+    importState.success == null;
+  const hidePrimaryReviewActions = showReviewFocus;
+
+  function openBetaProposalDetails(): void {
+    const details = document.querySelector<HTMLDetailsElement>(
+      '[data-testid="beta-proposal-details-section"]',
+    );
+    if (details) {
+      details.open = true;
+    }
+  }
+
+  function handleReviewImport(): void {
+    if (importPreview && selectedKeys.size > 0) {
+      setImportDialogOpen(true);
+    }
+  }
 
   if (deferPrimaryAnalyzeCta && !hasResult) {
     return (
@@ -639,7 +663,7 @@ export function DrawingExperimentalAutoTakeoff({
     );
   }
 
-  return (
+  const assistantSection = (
     <div
       className="space-y-4"
       data-testid="experimental-auto-takeoff-section"
@@ -653,22 +677,28 @@ export function DrawingExperimentalAutoTakeoff({
             <p className="text-sm font-medium text-foreground">
               Propuesta beta supervisada de palillería
             </p>
-            <Badge
-              variant="outline"
-              data-testid="experimental-auto-takeoff-assistant-status"
-              data-status={assistantStatus}
-            >
-              {ASSISTANT_STATUS_LABELS[assistantStatus]}
-            </Badge>
+            {showReviewFocus ? null : (
+              <Badge
+                variant="outline"
+                data-testid="experimental-auto-takeoff-assistant-status"
+                data-status={assistantStatus}
+              >
+                {ASSISTANT_STATUS_LABELS[assistantStatus]}
+              </Badge>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Beta supervisada: analizar → revisar propuesta → importar solo lo
-            seleccionado → revisar palillería. No se importa nada automáticamente.
-          </p>
-          <AssistantStepIndicator
-            activeStepId={activeStepId}
-            status={assistantStatus}
-          />
+          {hidePrimaryReviewActions ? null : (
+            <p className="text-xs text-muted-foreground">
+              Beta supervisada: analizar → revisar propuesta → importar solo lo
+              seleccionado → revisar palillería. No se importa nada automáticamente.
+            </p>
+          )}
+          {hidePrimaryReviewActions ? null : (
+            <AssistantStepIndicator
+              activeStepId={activeStepId}
+              status={assistantStatus}
+            />
+          )}
         </div>
 
         <section
@@ -727,7 +757,11 @@ export function DrawingExperimentalAutoTakeoff({
               propuesta importable en este plano.
             </p>
           ) : null}
-          <form action={analyzeAction}>
+          <form
+            action={analyzeAction}
+            className={hidePrimaryReviewActions && hasResult ? "sr-only" : undefined}
+            aria-hidden={hidePrimaryReviewActions && hasResult ? true : undefined}
+          >
             <input type="hidden" name="companyId" value={companyId} />
             <input type="hidden" name="jobId" value={jobId} />
             <input type="hidden" name="drawingId" value={drawingId} />
@@ -736,6 +770,7 @@ export function DrawingExperimentalAutoTakeoff({
               variant="outline"
               disabled={analyzePending}
               data-testid="experimental-auto-takeoff-run"
+              tabIndex={hidePrimaryReviewActions && hasResult ? -1 : undefined}
             >
               {analyzePending
                 ? "Analizando..."
@@ -748,7 +783,7 @@ export function DrawingExperimentalAutoTakeoff({
 
         {hasResult && hasSuggestions ? (
           <>
-            {compactDiscoveryCopy ? (
+            {!hidePrimaryReviewActions && compactDiscoveryCopy ? (
               <div
                 className="space-y-1 text-sm"
                 data-testid="experimental-auto-takeoff-discovery-copy"
@@ -763,17 +798,25 @@ export function DrawingExperimentalAutoTakeoff({
               </div>
             ) : null}
 
-            <BetaProposalSummaryBar
-              summary={betaProposalSummary}
-              selectedCount={selectedKeys.size}
-            />
+            {!hidePrimaryReviewActions ? (
+              <BetaProposalSummaryBar
+                summary={betaProposalSummary}
+                selectedCount={selectedKeys.size}
+              />
+            ) : null}
 
             {hasImportableMissing ? (
               <section
                 className="space-y-3 rounded-md border bg-background p-3"
                 data-testid="experimental-auto-takeoff-step-import"
               >
-                <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center gap-2",
+                    hidePrimaryReviewActions && "sr-only",
+                  )}
+                  aria-hidden={hidePrimaryReviewActions ? true : undefined}
+                >
                   {allReadyKeys.length > 0 ? (
                     <Button
                       type="button"
@@ -781,6 +824,7 @@ export function DrawingExperimentalAutoTakeoff({
                       size="sm"
                       onClick={selectAllReady}
                       data-testid="auto-takeoff-select-all-ready"
+                      tabIndex={hidePrimaryReviewActions ? -1 : undefined}
                     >
                       {`Seleccionar ${allReadyKeys.length} listas para incluir`}
                     </Button>
@@ -790,6 +834,7 @@ export function DrawingExperimentalAutoTakeoff({
                     variant="ghost"
                     size="sm"
                     onClick={clearSelection}
+                    tabIndex={hidePrimaryReviewActions ? -1 : undefined}
                   >
                     Deseleccionar todo
                   </Button>
@@ -862,6 +907,9 @@ export function DrawingExperimentalAutoTakeoff({
                     size="sm"
                     disabled={importPending || selectedKeys.size === 0}
                     data-testid="auto-takeoff-import-reviewed-proposal"
+                    className={hidePrimaryReviewActions ? "sr-only" : undefined}
+                    tabIndex={hidePrimaryReviewActions ? -1 : undefined}
+                    aria-hidden={hidePrimaryReviewActions ? true : undefined}
                     onClick={() => {
                       if (importPreview) {
                         setImportDialogOpen(true);
@@ -886,7 +934,18 @@ export function DrawingExperimentalAutoTakeoff({
               </section>
             ) : null}
 
-            <BetaProposalGroupsPanel groups={betaProposalGroups} />
+            {hidePrimaryReviewActions ? (
+              <CollapsibleSection
+                title="Listas recomendadas, revisión y excluidas"
+                toggleTestId="beta-proposal-groups-toggle"
+                testId="beta-proposal-groups-collapsed"
+                defaultOpen={false}
+              >
+                <BetaProposalGroupsPanel groups={betaProposalGroups} />
+              </CollapsibleSection>
+            ) : (
+              <BetaProposalGroupsPanel groups={betaProposalGroups} />
+            )}
 
             <ManualChecklistPanel checklist={analyzeState.manualChecklist} />
 
@@ -1192,4 +1251,56 @@ export function DrawingExperimentalAutoTakeoff({
       </div>
     </div>
   );
+
+  if (showReviewFocus) {
+    return (
+      <div className="space-y-4">
+        <Badge
+          variant="outline"
+          className="sr-only"
+          aria-hidden
+          data-testid="experimental-auto-takeoff-assistant-status"
+          data-status={assistantStatus}
+        >
+          {ASSISTANT_STATUS_LABELS[assistantStatus]}
+        </Badge>
+
+        <DrawingBetaReviewPromptCard
+          summary={betaProposalSummary}
+          selectedCount={selectedKeys.size}
+          suggestedCount={suggestedItems.length}
+          hasImportableMissing={hasImportableMissing}
+          onSelectRecommended={selectAllReady}
+          onImport={handleReviewImport}
+          onOpenDetails={openBetaProposalDetails}
+        />
+
+        <details
+          className="group rounded-lg border border-border/60 bg-muted/10 [&>summary::-webkit-details-marker]:hidden"
+          data-testid="beta-proposal-details-section"
+        >
+          <summary
+            className="cursor-pointer list-none px-4 py-3 marker:content-none"
+            data-testid="beta-proposal-details-toggle"
+          >
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold">Detalles de la propuesta beta</h3>
+              <p className="text-sm text-muted-foreground">
+                Listas completas, filtros y detalle técnico de las sugerencias.
+              </p>
+              <p className="text-sm font-medium text-primary group-open:hidden">
+                Mostrar detalles de la propuesta beta
+              </p>
+              <p className="hidden text-sm font-medium text-primary group-open:block">
+                Ocultar detalles de la propuesta beta
+              </p>
+            </div>
+          </summary>
+          <div className="border-t px-4 pb-4">{assistantSection}</div>
+        </details>
+      </div>
+    );
+  }
+
+  return assistantSection;
 }

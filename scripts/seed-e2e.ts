@@ -69,7 +69,7 @@ export async function resetE2eMetadataSuggestionDrawing(
   const originalFileName = "2301GB47G-C1-L-HL-1289-01.pdf";
   const fixturePath = path.join(
     process.cwd(),
-    "tests/fixtures/e2e-trameado-candidates.pdf",
+    "tests/fixtures/e2e-dms-703-bom.pdf",
   );
   const drawingPdf = await readFile(fixturePath);
   const storagePath = buildDrawingStoragePath(

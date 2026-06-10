@@ -10,7 +10,10 @@ import {
 } from "react";
 
 import { DrawingOperationalStatusPanel } from "@/components/drawings/drawing-operational-status-panel";
-import { useBetaAssistantNotAnalyzed } from "@/components/drawings/use-beta-assistant-not-analyzed";
+import {
+  useBetaAssistantNotAnalyzed,
+  useBetaAssistantStatus,
+} from "@/components/drawings/use-beta-assistant-status";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DrawingProgressState } from "@/lib/drawings/drawing-progress";
@@ -61,15 +64,18 @@ export function DrawingDetailWorkspace({
 }: DrawingDetailWorkspaceProps) {
   const metadataAttention = needsMetadataAttention(progress);
   const betaNotAnalyzed = useBetaAssistantNotAnalyzed();
+  const betaAssistantStatus = useBetaAssistantStatus();
   const defaultTab = useMemo(
     () => resolveDrawingWorkspaceDefaultTab(showBetaProposal, progress),
     [progress, showBetaProposal],
   );
   const [activeTab, setActiveTab] = useState<DrawingWorkspaceTab>(defaultTab);
-  const hideOperationalBannerForMaterialsFocus =
+  const hideOperationalBannerForBetaFocus =
     showMaterialsAnalysisPrompt &&
     activeTab === "propuesta-beta" &&
-    betaNotAnalyzed;
+    (betaNotAnalyzed ||
+      betaAssistantStatus === "analyzed" ||
+      betaAssistantStatus === "with_selection");
   const previousProgressRef = useRef(progress);
 
   useEffect(() => {
@@ -140,7 +146,7 @@ export function DrawingDetailWorkspace({
     <div className="space-y-4">
       {metadataConfirmation}
 
-      {metadataConfirmation || hideOperationalBannerForMaterialsFocus ? null : (
+      {metadataConfirmation || hideOperationalBannerForBetaFocus ? null : (
         <DrawingOperationalStatusPanel
           progress={progress}
           showBetaProposal={showBetaProposal}

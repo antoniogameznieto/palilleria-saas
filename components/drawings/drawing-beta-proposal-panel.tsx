@@ -41,6 +41,7 @@ export function DrawingBetaProposalPanel({
         drawingId={drawingId}
         existingTakeoffLineCount={existingTakeoffLineCount}
         deferPrimaryAnalyzeCta={showMaterialsAnalysisPrompt}
+        focusReviewFlow={showMaterialsAnalysisPrompt}
       />
     </div>
   );

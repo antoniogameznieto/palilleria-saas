@@ -60,6 +60,7 @@ test.describe("drawing metadata suggestions", () => {
     await expect(page.getByTestId("materials-analysis-primary-cta")).toBeVisible();
     await expect(page.getByTestId("drawing-operational-status")).toHaveCount(0);
     await expect(page.getByTestId("drawing-operational-analyze-materials")).toHaveCount(0);
+    await expect(page.getByTestId("beta-review-prompt-card")).toHaveCount(0);
     await expect(page.getByTestId("beta-assistant-secondary-section")).toBeVisible();
     await expect(page.getByTestId("experimental-auto-takeoff-run")).toBeHidden();
     await expect(

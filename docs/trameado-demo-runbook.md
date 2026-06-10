@@ -58,6 +58,15 @@ Con metadatos confirmados y materiales sin analizar en Propuesta beta:
 - El asistente beta queda plegado en **Detalles del asistente beta** hasta completar el análisis.
 - Tras analizar, la tarjeta desaparece y el asistente beta recupera el flujo normal de revisión e importación.
 
+## Foco único en revisión de propuesta beta (18S-G)
+
+Tras analizar materiales:
+
+- Desaparece la tarjeta de análisis; aparece **Revisa la propuesta beta** con resumen y CTA único (seleccionar recomendadas o importar).
+- El asistente técnico queda plegado en **Detalles de la propuesta beta** (listas, filtros, tabla).
+- El banner operativo sigue oculto en Propuesta beta hasta importar o salir del paso.
+- No cambia la lógica de análisis ni importación.
+
 ---
 
 ## Flujo del trabajo (18S-A)
